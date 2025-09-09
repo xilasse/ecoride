@@ -68,7 +68,7 @@ EcoRide est une plateforme web moderne de covoiturage qui met l'accent sur l'éc
 
 1. **Cloner le projet**
    ```bash
-   git clone https://github.com/xilasse/ecoride.git
+   git clone https://github.com/username/ecoride.git
    cd ecoride
    ```
 
