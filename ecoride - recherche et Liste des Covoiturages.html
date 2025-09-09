@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rechercher un Covoiturage - EcoRide</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --eco-primary: #2d5016;
+            --eco-secondary: #4a7c59;
+            --eco-accent: #7fb069;
+            --eco-light: #d6efc7;
+            --eco-white: #f8fff4;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
+            padding-top: 76px;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
+            box-shadow: 0 2px 20px rgba(45, 80, 22, 0.3);
+        }
+
+        .search-header {
+            background: var(--eco-primary);
+            color: white;
+            padding: 30px 0;
+        }
+
+        .search-form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .filters-sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 100px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .ride-card {
+            border: none;
+            border-bottom: 1px solid #eee;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .ride-card:hover {
+            background: var(--eco-white);
+            transform: translateX(5px);
+        }
+
+        .ride-card:last-child {
+            border-bottom: none;
+        }
+
+        .driver-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .driver-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--eco-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .rating {
+            color: #ffa500;
+        }
+
+        .eco-badge {
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .price-highlight {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--eco-secondary);
+        }
+
+        .btn-detail {
+            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+            border: none;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-detail:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(127, 176, 105, 0.3);
+            color: white;
+        }
+
+        .filter-group {
+            margin-bottom: 25px;
+        }
+
+        .filter-group h6 {
+            color: var(--eco-primary);
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--eco-accent);
+            border-color: var(--eco-accent);
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background: var(--eco-accent);
+        }
+
+        .form-range::-moz-range-thumb {
+            background: var(--eco-accent);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .filters-sidebar {
+                position: relative;
+                top: auto;
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-leaf me-2"></i>EcoRide
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#covoiturages">Covoiturages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#connexion">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Header -->
+    <section class="search-header">
+        <div class="container">
+            <h1 class="h3 mb-0">Trouvez votre covoiturage écologique</h1>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <!-- Search Form -->
+        <div class="search-form-container">
+            <form id="searchForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Départ</label>
+                        <input type="text" class="form-control" id="departure" placeholder="Ville de départ" value="Paris">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Arrivée</label>
+                        <input type="text" class="form-control" id="arrival" placeholder="Ville d'arrivée" value="Lyon">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-detail w-100">
+                            <i class="fas fa-search me-2"></i>Rechercher
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="row">
+            <!-- Filters Sidebar -->
+            <div class="col-lg-3">
+                <div class="filters-sidebar">
+                    <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtres</h5>
+                    
+                    <!-- Ecological Filter -->
+                    <div class="filter-group">
+                        <h6>Écologique</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ecoOnly">
+                            <label class="form-check-label" for="ecoOnly">
+                                <i class="fas fa-leaf text-success"></i> Véhicules électriques uniquement
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Price Filter -->
+                    <div class="filter-group">
+                        <h6>Prix maximum</h6>
+                        <div class="mb-2">
+                            <input type="range" class="form-range" id="priceRange" min="0" max="100" value="50">
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>0€</span>
+                            <span id="priceValue">50€</span>
+                            <span>100€</span>
+                        </div>
+                    </div>
+
+                    <!-- Duration Filter -->
+                    <div class="filter-group">
+                        <h6>Durée maximum</h6>
+                        <select class="form-select" id="durationFilter">
+                            <option value="">Toutes durées</option>
+                            <option value="120">2h maximum</option>
+                            <option value="180">3h maximum</option>
+                            <option value="300">5h maximum</option>
+                            <option value="480">8h maximum</option>
+                        </select>
+                    </div>
+
+                    <!-- Rating Filter -->
+                    <div class="filter-group">
+                        <h6>Note minimum du chauffeur</h6>
+                        <select class="form-select" id="ratingFilter">
+                            <option value="0">Toutes notes</option>
+                            <option value="3">3 étoiles et plus</option>
+                            <option value="4">4 étoiles et plus</option>
+                            <option value="4.5">4.5 étoiles et plus</option>
+                        </select>
+                    </div>
+
+                    <!-- Preferences -->
+                    <div class="filter-group">
+                        <h6>Préférences</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="petsAllowed">
+                            <label class="form-check-label" for="petsAllowed">
+                                <i class="fas fa-paw"></i> Animaux acceptés
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="smokingAllowed">
+                            <label class="form-check-label" for="smokingAllowed">
+                                <i class="fas fa-smoking-ban"></i> Non-fumeur
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
+                        <i class="fas fa-eraser me-2"></i>Effacer les filtres
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="col-lg-9">
+                <div class="results-container">
+                    <!-- Results Header -->
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h6 class="mb-0" id="resultsCount">5 covoiturages trouvés</h6>
+                            </div>
+                            <div class="col-auto">
+                                <select class="form-select form-select-sm" id="sortBy">
+                                    <option value="datetime">Trier par heure de départ</option>
+                                    <option value="price">Trier par prix</option>
+                                    <option value="rating">Trier par note</option>
+                                    <option value="ecological">Trajets écologiques d'abord</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loading Spinner -->
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Recherche en cours...</span>
+                        </div>
+                        <p class="mt-2">Recherche des meilleurs trajets...</p>
+                    </div>
+
+                    <!-- Results List -->
+                    <div id="ridesList">
+                        <!-- Ride Card 1 -->
+                        <div class="ride-card" data-price="35" data-rating="4.8" data-ecological="true" data-duration="270">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="driver-info">
+                                        <div class="driver-avatar">M</div>
+                                        <div>
+                                            <h6 class="mb-1">MarieDriveGreen</h6>
+                                            <div class="rating">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <span class="text-muted ms-1">4.8 (24 avis)</span>
+                                            </div>
+                                        </div>
+                                        <span class="eco-badge ms-auto">
+                                            <i class="fas fa-leaf"></i> Écologique
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="route-info mb-2">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3">
+                                                <i class="fas fa-circle text-success"></i>
+                                                <strong>14:00</strong> Paris
+                                            </div>
+                                            <div class="flex-fill">
+                                                <hr class="my-0">
+                                            </div>
+                                            <div class="ms-3">
+                                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                                <strong>18:30</strong> Lyon
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>4h 30min
+                                            <i class="fas fa-car ms-3 me-1"></i>Tesla Model 3 - Blanche
+                                        </small>
+                                    </div>
+
+                                    <div class="ride-details">
+                                        <p class="mb-2 small">Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !</p>
+                                        <div class="d-flex gap-3 small text-muted">
+                                            <span><i class="fas fa-users me-1"></i>3 places restantes</span>
+                                            <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
+                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 text-end">
+                                    <div class="price-highlight mb-2">35€</div>
+                                    <small class="text-muted d-block mb-3">par personne</small>
+                                    <button class="btn btn-detail" onclick="viewRideDetails(1)">
+                                        <i class="fas fa-eye me-2"></i>Détails
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ride Card 2 -->
+                        <div class="ride-card" data-price="28" data-rating="4.6" data-ecological="true" data-duration="195">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="driver-info">
+                                        <div class="driver-avatar">M</div>
+                                        <div>
+                                            <h6 class="mb-1">MarieDriveGreen</h6>
+                                            <div class="rating">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star-half-alt"></i>
+                                                <span class="text-muted ms-1">4.6 (18 avis)</span>
+                                            </div>
+                                        </div>
+                                        <span class="eco-badge ms-auto">
+                                            <i class="fas fa-leaf"></i> Écologique
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="route-info mb-2">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3">
+                                                <i class="fas fa-circle text-success"></i>
+                                                <strong>09:00</strong> Lyon
+                                            </div>
+                                            <div class="flex-fill">
+                                                <hr class="my-0">
+                                            </div>
+                                            <div class="ms-3">
+                                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                                <strong>12:15</strong> Marseille
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>3h 15min
+                                            <i class="fas fa-car ms-3 me-1"></i>Renault ZOE - Bleue
+                                        </small>
+                                    </div>
+
+                                    <div class="ride-details">
+                                        <p class="mb-2 small">Trajet matinal Lyon-Marseille. Véhicule 100% électrique !</p>
+                                        <div class="d-flex gap-3 small text-muted">
+                                            <span><i class="fas fa-users me-1"></i>2 places restantes</span>
+                                            <span><i class="fas fa-ban me-1"></i>Pas d'animaux</span>
+                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 text-end">
+                                    <div class="price-highlight mb-2">28€</div>
+                                    <small class="text-muted d-block mb-3">par personne</small>
+                                    <button class="btn btn-detail" onclick="viewRideDetails(2)">
+                                        <i class="fas fa-eye me-2"></i>Détails
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ride Card 3 -->
+                        <div class="ride-card" data-price="42" data-rating="4.2" data-ecological="false" data-duration="345">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="driver-info">
+                                        <div class="driver-avatar">J</div>
+                                        <div>
+                                            <h6 class="mb-1">JeanEcoDriver</h6>
+                                            <div class="rating">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="far fa-star"></i>
+                                                <span class="text-muted ms-1">4.2 (31 avis)</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-warning text-dark ms-auto">
+                                            <i class="fas fa-leaf"></i> Hybride
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="route-info mb-2">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3">
+                                                <i class="fas fa-circle text-success"></i>
+                                                <strong>08:00</strong> Paris
+                                            </div>
+                                            <div class="flex-fill">
+                                                <hr class="my-0">
+                                            </div>
+                                            <div class="ms-3">
+                                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                                <strong>13:45</strong> Bordeaux
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>5h 45min
+                                            <i class="fas fa-car ms-3 me-1"></i>Toyota Prius - Grise
+                                        </small>
+                                    </div>
+
+                                    <div class="ride-details">
+                                        <p class="mb-2 small">Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.</p>
+                                        <div class="d-flex gap-3 small text-muted">
+                                            <span><i class="fas fa-users me-1"></i>3 places restantes</span>
+                                            <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
+                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 text-end">
+                                    <div class="price-highlight mb-2">42€</div>
+                                    <small class="text-muted d-block mb-3">par personne</small>
+                                    <button class="btn btn-detail" onclick="viewRideDetails(3)">
+                                        <i class="fas fa-eye me-2"></i>Détails
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ride Card 4 -->
+                        <div class="ride-card" data-price="22" data-rating="4.5" data-ecological="false" data-duration="150">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="driver-info">
+                                        <div class="driver-avatar">J</div>
+                                        <div>
+                                            <h6 class="mb-1">JeanEcoDriver</h6>
+                                            <div class="rating">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star-half-alt"></i>
+                                                <span class="text-muted ms-1">4.5 (12 avis)</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-secondary ms-auto">
+                                            <i class="fas fa-gas-pump"></i> Essence
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="route-info mb-2">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3">
+                                                <i class="fas fa-circle text-success"></i>
+                                                <strong>16:30</strong> Toulouse
+                                            </div>
+                                            <div class="flex-fill">
+                                                <hr class="my-0">
+                                            </div>
+                                            <div class="ms-3">
+                                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                                <strong>19:00</strong> Montpellier
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>2h 30min
+                                            <i class="fas fa-car ms-3 me-1"></i>Peugeot 308 - Noire
+                                        </small>
+                                    </div>
+
+                                    <div class="ride-details">
+                                        <p class="mb-2 small">Trajet Toulouse-Montpellier en fin de journée.</p>
+                                        <div class="d-flex gap-3 small text-muted">
+                                            <span><i class="fas fa-users me-1"></i>4 places restantes</span>
+                                            <span><i class="fas fa-ban me-1"></i>Pas d'animaux</span>
+                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 text-end">
+                                    <div class="price-highlight mb-2">22€</div>
+                                    <small class="text-muted d-block mb-3">par personne</small>
+                                    <button class="btn btn-detail" onclick="viewRideDetails(4)">
+                                        <i class="fas fa-eye me-2"></i>Détails
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ride Card 5 -->
+                        <div class="ride-card" data-price="18" data-rating="4.9" data-ecological="true" data-duration="105">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="driver-info">
+                                        <div class="driver-avatar">S</div>
+                                        <div>
+                                            <h6 class="mb-1">SophieVerte</h6>
+                                            <div class="rating">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <span class="text-muted ms-1">4.9 (15 avis)</span>
+                                            </div>
+                                        </div>
+                                        <span class="eco-badge ms-auto">
+                                            <i class="fas fa-leaf"></i> Écologique
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="route-info mb-2">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-3">
+                                                <i class="fas fa-circle text-success"></i>
+                                                <strong>10:15</strong> Lille
+                                            </div>
+                                            <div class="flex-fill">
+                                                <hr class="my-0">
+                                            </div>
+                                            <div class="ms-3">
+                                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                                <strong>12:00</strong> Bruxelles
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>1h 45min
+                                            <i class="fas fa-car ms-3 me-1"></i>Nissan Leaf - Verte
+                                        </small>
+                                    </div>
+
+                                    <div class="ride-details">
+                                        <p class="mb-2 small">Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !</p>
+                                        <div class="d-flex gap-3 small text-muted">
+                                            <span><i class="fas fa-users me-1"></i>4 places restantes</span>
+                                            <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
+                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 text-end">
+                                    <div class="price-highlight mb-2">18€</div>
+                                    <small class="text-muted d-block mb-3">par personne</small>
+                                    <button class="btn btn-detail" onclick="viewRideDetails(5)">
+                                        <i class="fas fa-eye me-2"></i>Détails
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No Results -->
+                    <div class="no-results" id="noResults" style="display: none;">
+                        <i class="fas fa-search text-muted fa-3x mb-3"></i>
+                        <h5>Aucun covoiturage trouvé</h5>
+                        <p class="text-muted">Essayez de modifier vos critères de recherche ou vos filtres.</p>
+                        <div class="mt-4">
+                            <h6>Suggestions :</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-calendar me-2"></i>Élargissez votre période de recherche</li>
+                                <li><i class="fas fa-euro-sign me-2"></i>Augmentez votre budget maximum</li>
+                                <li><i class="fas fa-map me-2"></i>Vérifiez l'orthographe des villes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+        // Price range update
+        const priceRange = document.getElementById('priceRange');
+        const priceValue = document.getElementById('priceValue');
+        
+        priceRange.addEventListener('input', function() {
+            priceValue.textContent = this.value + '€';
+            applyFilters();
+        });
+
+        // Apply filters function
+        function applyFilters() {
+            const rides = document.querySelectorAll('.ride-card');
+            const ecoOnly = document.getElementById('ecoOnly').checked;
+            const maxPrice = parseInt(document.getElementById('priceRange').value);
+            const maxDuration = parseInt(document.getElementById('durationFilter').value) || 999999;
+            const minRating = parseFloat(document.getElementById('ratingFilter').value) || 0;
+            const petsAllowed = document.getElementById('petsAllowed').checked;
+            const nonSmoking = document.getElementById('smokingAllowed').checked;
+
+            let visibleCount = 0;
+
+            rides.forEach(ride => {
+                const price = parseInt(ride.dataset.price);
+                const rating = parseFloat(ride.dataset.rating);
+                const isEcological = ride.dataset.ecological === 'true';
+                const duration = parseInt(ride.dataset.duration);
+                
+                // Check pets - if filter is checked, only show rides that allow pets
+                const rideAllowsPets = ride.querySelector('.fa-paw') !== null;
+                const petsMatch = !petsAllowed || rideAllowsPets;
+                
+                // Check smoking - if non-smoking filter is checked, only show non-smoking rides
+                const rideIsNonSmoking = ride.querySelector('.fa-smoking-ban') !== null;
+                const smokingMatch = !nonSmoking || rideIsNonSmoking;
+
+                const matches = 
+                    (!ecoOnly || isEcological) &&
+                    price <= maxPrice &&
+                    duration <= maxDuration &&
+                    rating >= minRating &&
+                    petsMatch &&
+                    smokingMatch;
+
+                ride.style.display = matches ? 'block' : 'none';
+                if (matches) visibleCount++;
+            });
+
+            // Update results count
+            document.getElementById('resultsCount').textContent = 
+                visibleCount + ' covoiturage' + (visibleCount > 1 ? 's' : '') + ' trouvé' + (visibleCount > 1 ? 's' : '');
+
+            // Show/hide no results
+            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+            document.getElementById('ridesList').style.display = visibleCount === 0 ? 'none' : 'block';
+        }
+
+        // Sort function
+        function sortRides(criteria) {
+            const ridesList = document.getElementById('ridesList');
+            const rides = Array.from(ridesList.children);
+
+            rides.sort((a, b) => {
+                switch(criteria) {
+                    case 'price':
+                        return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+                    case 'rating':
+                        return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+                    case 'ecological':
+                        const aEco = a.dataset.ecological === 'true';
+                        const bEco = b.dataset.ecological === 'true';
+                        return bEco - aEco;
+                    default: // datetime
+                        return 0; // Keep original order for demo
+                }
+            });
+
+            rides.forEach(ride => ridesList.appendChild(ride));
+        }
+
+        // Event listeners
+        document.getElementById('ecoOnly').addEventListener('change', applyFilters);
+        document.getElementById('durationFilter').addEventListener('change', applyFilters);
+        document.getElementById('ratingFilter').addEventListener('change', applyFilters);
+        document.getElementById('petsAllowed').addEventListener('change', applyFilters);
+        document.getElementById('smokingAllowed').addEventListener('change', applyFilters);
+
+        document.getElementById('sortBy').addEventListener('change', function() {
+            sortRides(this.value);
+        });
+
+        document.getElementById('clearFilters').addEventListener('click', function() {
+            document.getElementById('ecoOnly').checked = false;
+            document.getElementById('priceRange').value = 50;
+            document.getElementById('priceValue').textContent = '50€';
+            document.getElementById('durationFilter').value = '';
+            document.getElementById('ratingFilter').value = '0';
+            document.getElementById('petsAllowed').checked = false;
+            document.getElementById('smokingAllowed').checked = false;
+            applyFilters();
+        });
+
+        // Search form submission
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('ridesList').style.display = 'none';
+            
+            // Simulate search delay
+            setTimeout(() => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('ridesList').style.display = 'block';
+                applyFilters();
+            }, 1500);
+        });
+
+        // View ride details function
+        function viewRideDetails(rideId) {
+            // In a real application, this would redirect to a detailed view
+            alert('Redirection vers les détails du covoiturage #' + rideId + '\n\nCette fonctionnalité sera implémentée dans la page détail.');
+        }
+
+        // Initialize filters
+        applyFilters();
+    </script>
+</body>
+</html>
