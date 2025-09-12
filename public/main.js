@@ -710,3 +710,22 @@ function forceEnableInputs() {
     });
     console.log('🔓 All inputs force-enabled');
 }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fix inputs
+    const inputs = document.querySelectorAll('.search-input');
+    inputs.forEach(input => {
+        input.style.pointerEvents = 'auto';
+        input.style.cursor = 'text';
+        input.removeAttribute('readonly');
+    });
+    
+    // Date minimum
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.min = new Date().toISOString().split('T')[0];
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+});
+</script>
+
