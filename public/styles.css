@@ -682,4 +682,18 @@ body {
 /*.search-input:hover {
     border-color: red !important;
 }*/
+.search-input {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+    cursor: text !important;
+}
+
+.hero-section::before {
+    pointer-events: none !important;
+}
+
+.hero-content {
+    pointer-events: auto !important;
+}
 
