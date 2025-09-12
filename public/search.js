@@ -643,3 +643,184 @@ window.viewRideDetails = viewRideDetails;
 window.applyFilters = applyFilters;
 
 console.log('🎯 Module de filtres EcoRide chargé et prêt !');
+
+// teste filtre
+<script>
+// Initialisation des filtres
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initialisation des filtres...');
+    
+    // Price range slider
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
+    
+    if (priceRange && priceValue) {
+        priceRange.addEventListener('input', function() {
+            priceValue.textContent = this.value + '€';
+            applyFilters();
+        });
+    }
+    
+    // Tous les autres filtres
+    const filterInputs = document.querySelectorAll('#ecoOnly, #durationFilter, #ratingFilter, #petsAllowed, #smokingAllowed');
+    filterInputs.forEach(input => {
+        input.addEventListener('change', applyFilters);
+    });
+    
+    // Bouton clear filters
+    const clearBtn = document.getElementById('clearFilters');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearAllFilters);
+    }
+    
+    // Sort dropdown
+    const sortSelect = document.getElementById('sortBy');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            sortRides(this.value);
+        });
+    }
+    
+    // Définir la date minimum
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.min = new Date().toISOString().split('T')[0];
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
+    console.log('Filtres initialisés !');
+});
+
+// Fonction principale d'application des filtres
+function applyFilters() {
+    console.log('Application des filtres...');
+    
+    const rides = document.querySelectorAll('.ride-card');
+    if (rides.length === 0) {
+        console.log('Aucune carte trouvée');
+        return;
+    }
+    
+    // Récupérer les valeurs des filtres
+    const ecoOnly = document.getElementById('ecoOnly')?.checked || false;
+    const maxPrice = parseInt(document.getElementById('priceRange')?.value) || 100;
+    const maxDuration = parseInt(document.getElementById('durationFilter')?.value) || 999999;
+    const minRating = parseFloat(document.getElementById('ratingFilter')?.value) || 0;
+    const petsAllowed = document.getElementById('petsAllowed')?.checked || false;
+    const nonSmoking = document.getElementById('smokingAllowed')?.checked || false;
+    
+    console.log('Filtres appliqués:', { ecoOnly, maxPrice, maxDuration, minRating, petsAllowed, nonSmoking });
+    
+    let visibleCount = 0;
+
+    rides.forEach(ride => {
+        const price = parseInt(ride.dataset.price) || 0;
+        const rating = parseFloat(ride.dataset.rating) || 0;
+        const isEcological = ride.dataset.ecological === 'true';
+        const duration = parseInt(ride.dataset.duration) || 0;
+        
+        // Check pets
+        const rideAllowsPets = ride.querySelector('.fa-paw') !== null;
+        const petsMatch = !petsAllowed || rideAllowsPets;
+        
+        // Check smoking
+        const rideIsNonSmoking = ride.querySelector('.fa-smoking-ban') !== null;
+        const smokingMatch = !nonSmoking || rideIsNonSmoking;
+
+        const matches = 
+            (!ecoOnly || isEcological) &&
+            (price <= maxPrice) &&
+            (duration <= maxDuration) &&
+            (rating >= minRating) &&
+            petsMatch &&
+            smokingMatch;
+        
+        ride.style.display = matches ? 'block' : 'none';
+        if (matches) visibleCount++;
+    });
+
+    // Mettre à jour le compteur
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        const text = visibleCount + ' covoiturage' + (visibleCount > 1 ? 's' : '') + ' trouvé' + (visibleCount > 1 ? 's' : '');
+        resultsCount.textContent = text;
+    }
+    
+    // Afficher/masquer le message "aucun résultat"
+    const noResults = document.getElementById('noResults');
+    const ridesList = document.getElementById('ridesList');
+    
+    if (noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    if (ridesList) ridesList.style.display = visibleCount === 0 ? 'none' : 'block';
+    
+    console.log(visibleCount + ' trajets visibles');
+}
+
+// Fonction pour effacer tous les filtres
+function clearAllFilters() {
+    console.log('Effacement des filtres...');
+    
+    // Reset checkboxes
+    const checkboxes = document.querySelectorAll('.filters-sidebar input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    
+    // Reset selects
+    const selects = document.querySelectorAll('.filters-sidebar select');
+    selects.forEach(select => select.selectedIndex = 0);
+    
+    // Reset price range
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
+    if (priceRange && priceValue) {
+        priceRange.value = 50;
+        priceValue.textContent = '50€';
+    }
+    
+    // Réappliquer les filtres
+    applyFilters();
+}
+
+// Fonction de tri
+function sortRides(criteria) {
+    console.log('Tri par:', criteria);
+    
+    const ridesList = document.getElementById('ridesList');
+    if (!ridesList) return;
+    
+    const rides = Array.from(ridesList.children);
+    
+    rides.sort((a, b) => {
+        switch(criteria) {
+            case 'price':
+                return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+            case 'rating':
+                return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+            case 'ecological':
+                const aEco = a.dataset.ecological === 'true';
+                const bEco = b.dataset.ecological === 'true';
+                return bEco - aEco;
+            default:
+                return 0;
+        }
+    });
+
+    rides.forEach(ride => ridesList.appendChild(ride));
+}
+
+// Fonction pour voir les détails (appelée par les boutons)
+function viewRideDetails(rideId) {
+    alert('Redirection vers les détails du covoiturage #' + rideId + '\n\nCette fonctionnalité sera implémentée dans une future version.');
+}
+
+// Test de fonctionnalité
+function testFilters() {
+    console.log('Test des filtres...');
+    const ecoCheckbox = document.getElementById('ecoOnly');
+    if (ecoCheckbox) {
+        ecoCheckbox.checked = true;
+        applyFilters();
+        console.log('Filtre écologique activé pour test');
+    }
+}
+</script>
+
