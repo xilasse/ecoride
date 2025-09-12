@@ -566,6 +566,78 @@
 
                     <!-- Duration Filter -->
 
+                    
+                    <!-- Exemple de structure corrigée pour une carte de covoiturage -->
+<div class="ride-card" data-price="35" data-rating="4.8" data-ecological="true" data-duration="270" data-ride-id="1">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Informations du chauffeur et du trajet -->
+            <div class="driver-info">
+                <div class="driver-avatar">M</div>
+                <div>
+                    <h6 class="mb-1">MarieDriveGreen</h6>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span class="text-muted ms-1">4.8 (24 avis)</span>
+                    </div>
+                </div>
+                <span class="eco-badge ms-auto">
+                    <i class="fas fa-leaf"></i> Écologique
+                </span>
+            </div>
+            
+            <div class="route-info mb-2">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="me-3">
+                        <i class="fas fa-circle text-success"></i>
+                        <strong class="departure-time">14:00</strong> <span class="departure-city">Paris</span>
+                    </div>
+                    <div class="flex-fill">
+                        <hr class="my-0">
+                    </div>
+                    <div class="ms-3">
+                        <i class="fas fa-map-marker-alt text-danger"></i>
+                        <strong>18:30</strong> <span class="arrival-city">Lyon</span>
+                    </div>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>4h 30min
+                    <i class="fas fa-car ms-3 me-1"></i>Tesla Model 3 - Blanche
+                </small>
+            </div>
+
+            <div class="ride-details">
+                <p class="mb-2 small">Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !</p>
+                <div class="d-flex gap-3 small text-muted">
+                    <span><i class="fas fa-users me-1"></i><span class="seats-available">3</span> places restantes</span>
+                    <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
+                    <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section prix et boutons CORRIGÉE -->
+        <div class="col-md-4 text-end">
+            <div class="price-highlight mb-2">35€</div>
+            <small class="text-muted d-block mb-3">par personne</small>
+            
+            <!-- BOUTONS CORRIGÉS -->
+            <div class="d-grid gap-2">
+                <button class="btn btn-detail" data-ride-id="1" onclick="viewRideDetails(1)">
+                    <i class="fas fa-eye me-2"></i>Détails
+                </button>
+                <button class="btn btn-reserve btn-success" data-ride-id="1" onclick="showReservationModal(1)">
+                    <i class="fas fa-calendar-plus me-2"></i>Réserver
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 
