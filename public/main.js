@@ -584,4 +584,129 @@ window.EcoRide = {
     applyFilters,
     sortRides,
     clearAllFilters
+
 };
+// Fix pour les inputs non-cliquables
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Initializing input fixes...');
+    
+    // Forcer l'activation des inputs
+    const inputs = document.querySelectorAll('.search-input, input[type="text"], input[type="date"]');
+    
+    inputs.forEach(input => {
+        // Supprimer tous les attributs qui pourraient bloquer
+        input.removeAttribute('readonly');
+        input.removeAttribute('disabled');
+        
+        // Forcer les styles CSS
+        input.style.pointerEvents = 'auto';
+        input.style.cursor = 'text';
+        input.style.userSelect = 'text';
+        input.style.position = 'relative';
+        input.style.zIndex = '10';
+        
+        // Ajouter les événements manuellement
+        input.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.focus();
+        });
+        
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#7fb069';
+            this.style.boxShadow = '0 0 0 3px rgba(127, 176, 105, 0.2)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.style.borderColor = '#d6efc7';
+            this.style.boxShadow = 'none';
+        });
+        
+        // Test de fonctionnalité
+        input.addEventListener('input', function() {
+            console.log(`✅ Input working: ${this.id} = ${this.value}`);
+        });
+    });
+    
+    // Fix spécial pour le champ date
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        // Définir la date minimum à aujourd'hui
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+        dateInput.value = today;
+        
+        console.log('📅 Date input configured:', today);
+    }
+    
+    // Fix pour le formulaire
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const departure = document.getElementById('departure').value;
+            const arrival = document.getElementById('arrival').value;
+            const date = document.getElementById('date').value;
+            
+            console.log('🔍 Search submitted:', { departure, arrival, date });
+            
+            if (departure && arrival && date) {
+                // Rediriger vers la page covoiturages
+                const params = new URLSearchParams({
+                    depart: departure,
+                    arrivee: arrival,
+                    date: date
+                });
+                
+                window.location.href = `covoiturages.html?${params.toString()}`;
+            } else {
+                alert('Veuillez remplir tous les champs');
+            }
+        });
+    }
+    
+    // Diagnostic : vérifier si les inputs sont accessibles
+    setTimeout(() => {
+        inputs.forEach((input, index) => {
+            const rect = input.getBoundingClientRect();
+            const isVisible = rect.width > 0 && rect.height > 0;
+            const isClickable = window.getComputedStyle(input).pointerEvents !== 'none';
+            
+            console.log(`Input ${index + 1} (${input.id}):`, {
+                visible: isVisible,
+                clickable: isClickable,
+                zIndex: window.getComputedStyle(input).zIndex,
+                position: window.getComputedStyle(input).position
+            });
+            
+            if (!isVisible || !isClickable) {
+                console.warn(`⚠️ Input ${input.id} may not be functional`);
+            }
+        });
+    }, 1000);
+});
+
+// Debug function - à supprimer en production
+function testInputs() {
+    const inputs = document.querySelectorAll('.search-input');
+    inputs.forEach(input => {
+        input.style.border = '3px solid red';
+        input.focus();
+        setTimeout(() => {
+            input.style.border = '';
+        }, 2000);
+    });
+}
+
+// Fonction utilitaire pour débloquer les inputs manuellement
+function forceEnableInputs() {
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.disabled = false;
+        input.readOnly = false;
+        input.style.pointerEvents = 'auto';
+        input.style.cursor = 'text';
+        input.tabIndex = 0;
+    });
+    console.log('🔓 All inputs force-enabled');
+}
