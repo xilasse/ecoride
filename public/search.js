@@ -1,267 +1,645 @@
 /**
- * EcoRide - JavaScript spécifique à la page de recherche de covoiturages
- * Gestion avancée des filtres et de la recherche
+ * EcoRide - JavaScript Complet pour la Page Covoiturages
+ * Toutes les fonctionnalités de recherche, filtres et interactions
  */
 
-// ========================================
-// INITIALISATION SPÉCIFIQUE COVOITURAGES
-// ========================================
+// Variables globales
+let currentFilters = {
+    ecoOnly: false,
+    maxPrice: 100,
+    maxDuration: 999999,
+    minRating: 0,
+    petsAllowed: false,
+    nonSmoking: false
+};
+
+let currentSort = 'datetime';
+let allRides = [];
+
+// =====================================
+// INITIALISATION AU CHARGEMENT DE LA PAGE
+// =====================================
 document.addEventListener('DOMContentLoaded', function() {
-    if (!isSearchPage()) return;
+    console.log('🚗 Initialisation de la page Covoiturages...');
     
-    initAdvancedFilters();
-    initSearchResults();
-    initMapIntegration();
-    initBookingActions();
+    // Initialiser tous les composants
+    initDateInputs();
+    initSearchForm();
+    initFilters();
+    initSorting();
+    initRideCards();
+    populateFromURL();
     
-    console.log('🚗 Search page features initialized');
+    // Sauvegarder la liste initiale des trajets
+    saveInitialRides();
+    
+    console.log('✅ Page Covoiturages initialisée avec succès');
 });
 
-function isSearchPage() {
-    return window.location.pathname.includes('covoiturages') || 
-           document.getElementById('ridesList') !== null;
-}
+// =====================================
+// INITIALISATION DES COMPOSANTS
+// =====================================
 
-// ========================================
-// FILTRES AVANCÉS
-// ========================================
-function initAdvancedFilters() {
-    // Filtres par préférences
-    initPreferenceFilters();
-    
-    // Filtres par horaires
-    initTimeFilters();
-    
-    // Filtres géographiques
-    initLocationFilters();
-    
-    // Sauvegarde des préférences de filtres
-    loadSavedFilters();
-}
-
-function initPreferenceFilters() {
-    // Groupes de préférences
-    const preferenceGroups = [
-        { id: 'petsAllowed', label: 'Animaux acceptés', icon: 'fa-paw' },
-        { id: 'smokingAllowed', label: 'Non-fumeur', icon: 'fa-smoking-ban' },
-        { id: 'musicAllowed', label: 'Musique', icon: 'fa-music' },
-        { id: 'conversationLevel', label: 'Discussion', icon: 'fa-comments' }
-    ];
-    
-    preferenceGroups.forEach(pref => {
-        const checkbox = document.getElementById(pref.id);
-        if (checkbox) {
-            checkbox.addEventListener('change', function() {
-                applyAdvancedFilters();
-                saveFilterPreferences();
-            });
-        }
-    });
-}
-
-function initTimeFilters() {
-    // Ajouter des filtres par tranche horaire si pas présents
-    const timeFilterContainer = document.querySelector('.time-filters');
-    if (timeFilterContainer) {
-        const timeRanges = [
-            { value: 'morning', label: 'Matin (6h-12h)', hours: [6, 12] },
-            { value: 'afternoon', label: 'Après-midi (12h-18h)', hours: [12, 18] },
-            { value: 'evening', label: 'Soir (18h-22h)', hours: [18, 22] },
-            { value: 'night', label: 'Nuit (22h-6h)', hours: [22, 6] }
-        ];
+function initDateInputs() {
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
         
-        timeRanges.forEach(range => {
-            const checkbox = createTimeFilterCheckbox(range);
-            timeFilterContainer.appendChild(checkbox);
+        if (!dateInput.value) {
+            dateInput.value = today;
+        }
+    }
+}
+
+function initSearchForm() {
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', handleSearchSubmit);
+    }
+}
+
+function initFilters() {
+    console.log('🔧 Initialisation des filtres...');
+    
+    // Price range slider
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
+    
+    if (priceRange && priceValue) {
+        priceRange.addEventListener('input', function() {
+            priceValue.textContent = this.value + '€';
+            currentFilters.maxPrice = parseInt(this.value);
+            applyFilters();
+        });
+        
+        // Initialiser la valeur affichée
+        priceValue.textContent = priceRange.value + '€';
+        currentFilters.maxPrice = parseInt(priceRange.value);
+    }
+    
+    // Checkbox filters
+    const ecoOnly = document.getElementById('ecoOnly');
+    if (ecoOnly) {
+        ecoOnly.addEventListener('change', function() {
+            currentFilters.ecoOnly = this.checked;
+            applyFilters();
+        });
+    }
+    
+    const petsAllowed = document.getElementById('petsAllowed');
+    if (petsAllowed) {
+        petsAllowed.addEventListener('change', function() {
+            currentFilters.petsAllowed = this.checked;
+            applyFilters();
+        });
+    }
+    
+    const smokingAllowed = document.getElementById('smokingAllowed');
+    if (smokingAllowed) {
+        smokingAllowed.addEventListener('change', function() {
+            currentFilters.nonSmoking = this.checked;
+            applyFilters();
+        });
+    }
+    
+    // Select filters
+    const durationFilter = document.getElementById('durationFilter');
+    if (durationFilter) {
+        durationFilter.addEventListener('change', function() {
+            currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
+            applyFilters();
+        });
+    }
+    
+    const ratingFilter = document.getElementById('ratingFilter');
+    if (ratingFilter) {
+        ratingFilter.addEventListener('change', function() {
+            currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
+            applyFilters();
+        });
+    }
+    
+    // Clear filters button
+    const clearBtn = document.getElementById('clearFilters');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearAllFilters);
+    }
+    
+    console.log('✅ Filtres initialisés');
+}
+
+function initSorting() {
+    const sortSelect = document.getElementById('sortBy');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            currentSort = this.value;
+            sortRides(this.value);
         });
     }
 }
 
-function createTimeFilterCheckbox(timeRange) {
-    const div = document.createElement('div');
-    div.className = 'form-check mb-2';
+function initRideCards() {
+    // Ajouter les event listeners pour tous les boutons "Détails"
+    const detailButtons = document.querySelectorAll('.btn-detail');
+    detailButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const rideCard = this.closest('.ride-card');
+            const rideId = rideCard ? rideCard.dataset.rideId : Math.floor(Math.random() * 100);
+            viewRideDetails(rideId);
+        });
+    });
     
-    div.innerHTML = `
-        <input class="form-check-input" type="checkbox" id="time_${timeRange.value}" 
-               data-hours="${timeRange.hours.join(',')}">
-        <label class="form-check-label" for="time_${timeRange.value}">
-            ${timeRange.label}
-        </label>
-    `;
-    
-    const checkbox = div.querySelector('input');
-    checkbox.addEventListener('change', applyAdvancedFilters);
-    
-    return div;
+    // Animation d'entrée des cartes
+    animateRideCards();
 }
 
-// ========================================
-// GESTION DES RÉSULTATS DE RECHERCHE
-// ========================================
-function initSearchResults() {
-    // Animation d'apparition des résultats
-    animateResultsAppearance();
+function saveInitialRides() {
+    allRides = Array.from(document.querySelectorAll('.ride-card')).map(card => ({
+        element: card,
+        price: parseInt(card.dataset.price) || 0,
+        rating: parseFloat(card.dataset.rating) || 0,
+        ecological: card.dataset.ecological === 'true',
+        duration: parseInt(card.dataset.duration) || 0,
+        rideId: card.dataset.rideId || Math.floor(Math.random() * 1000)
+    }));
     
-    // Lazy loading des images de profil
-    initLazyLoading();
-    
-    // Gestion du scroll infini (si beaucoup de résultats)
-    initInfiniteScroll();
+    console.log(`📊 ${allRides.length} trajets sauvegardés`);
 }
 
-function animateResultsAppearance() {
-    const rideCards = document.querySelectorAll('.ride-card');
+// =====================================
+// FONCTIONS DE RECHERCHE
+// =====================================
+
+function handleSearchSubmit(event) {
+    event.preventDefault();
     
-    rideCards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'all 0.5s ease';
+    const departure = document.getElementById('departure').value;
+    const arrival = document.getElementById('arrival').value;
+    const date = document.getElementById('date').value;
+    
+    if (!validateSearchInputs(departure, arrival, date)) {
+        return;
+    }
+    
+    // Animation du bouton de recherche
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    showLoadingButton(submitBtn);
+    
+    // Simuler la recherche
+    performSearch(departure, arrival, date).then(() => {
+        resetButton(submitBtn);
+    });
+}
+
+function validateSearchInputs(departure, arrival, date) {
+    const errors = [];
+    
+    if (!departure.trim()) {
+        errors.push('Veuillez saisir une ville de départ');
+        highlightError('departure');
+    }
+    
+    if (!arrival.trim()) {
+        errors.push('Veuillez saisir une ville d\'arrivée');
+        highlightError('arrival');
+    }
+    
+    if (!date) {
+        errors.push('Veuillez sélectionner une date');
+        highlightError('date');
+    }
+    
+    if (departure.toLowerCase() === arrival.toLowerCase()) {
+        errors.push('Les villes de départ et d\'arrivée doivent être différentes');
+        highlightError('departure');
+        highlightError('arrival');
+    }
+    
+    if (errors.length > 0) {
+        showNotification(errors.join('\n'), 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+function performSearch(departure, arrival, date) {
+    return new Promise((resolve) => {
+        console.log(`🔍 Recherche: ${departure} → ${arrival} le ${date}`);
+        
+        // Afficher le spinner de chargement
+        showLoadingSpinner();
         
         setTimeout(() => {
+            // Masquer le spinner
+            hideLoadingSpinner();
+            
+            // Réappliquer les filtres sur les résultats
+            applyFilters();
+            
+            // Notification de succès
+            showNotification(`Recherche effectuée pour ${departure} → ${arrival}`, 'success');
+            
+            resolve();
+        }, 1500);
+    });
+}
+
+function populateFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const departure = urlParams.get('depart');
+    const arrival = urlParams.get('arrivee');
+    const date = urlParams.get('date');
+    
+    if (departure) {
+        const departureField = document.getElementById('departure');
+        if (departureField) departureField.value = departure;
+    }
+    
+    if (arrival) {
+        const arrivalField = document.getElementById('arrival');
+        if (arrivalField) arrivalField.value = arrival;
+    }
+    
+    if (date) {
+        const dateField = document.getElementById('date');
+        if (dateField) dateField.value = date;
+    }
+    
+    // Si tous les paramètres sont présents, lancer une recherche automatique
+    if (departure && arrival && date) {
+        setTimeout(() => {
+            performSearch(departure, arrival, date);
+        }, 500);
+    }
+}
+
+// =====================================
+// SYSTÈME DE FILTRES
+// =====================================
+
+function applyFilters() {
+    console.log('🔧 Application des filtres...', currentFilters);
+    
+    const rides = document.querySelectorAll('.ride-card');
+    if (rides.length === 0) {
+        console.warn('⚠️ Aucune carte de trajet trouvée');
+        return;
+    }
+    
+    let visibleCount = 0;
+    
+    rides.forEach(ride => {
+        const rideData = extractRideData(ride);
+        const isVisible = matchesAllFilters(rideData, currentFilters);
+        
+        // Appliquer l'affichage avec animation
+        if (isVisible) {
+            showRideCard(ride);
+            visibleCount++;
+        } else {
+            hideRideCard(ride);
+        }
+    });
+    
+    // Mettre à jour l'interface
+    updateResultsCount(visibleCount);
+    toggleNoResultsMessage(visibleCount === 0);
+    
+    // Réappliquer le tri sur les éléments visibles
+    if (currentSort !== 'datetime') {
+        sortRides(currentSort);
+    }
+    
+    console.log(`✅ Filtrage terminé: ${visibleCount} trajets visibles`);
+}
+
+function extractRideData(rideElement) {
+    return {
+        price: parseInt(rideElement.dataset.price) || 0,
+        rating: parseFloat(rideElement.dataset.rating) || 0,
+        ecological: rideElement.dataset.ecological === 'true',
+        duration: parseInt(rideElement.dataset.duration) || 0,
+        allowsPets: rideElement.querySelector('.fa-paw') !== null,
+        nonSmoking: rideElement.querySelector('.fa-smoking-ban') !== null
+    };
+}
+
+function matchesAllFilters(rideData, filters) {
+    return (
+        (!filters.ecoOnly || rideData.ecological) &&
+        (rideData.price <= filters.maxPrice) &&
+        (rideData.duration <= filters.maxDuration) &&
+        (rideData.rating >= filters.minRating) &&
+        (!filters.petsAllowed || rideData.allowsPets) &&
+        (!filters.nonSmoking || rideData.nonSmoking)
+    );
+}
+
+function clearAllFilters() {
+    console.log('🧹 Effacement de tous les filtres');
+    
+    // Reset des checkboxes
+    const checkboxes = document.querySelectorAll('.filters-sidebar input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Reset des selects
+    const selects = document.querySelectorAll('.filters-sidebar select');
+    selects.forEach(select => {
+        select.selectedIndex = 0;
+    });
+    
+    // Reset du price range
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
+    if (priceRange && priceValue) {
+        priceRange.value = 100;
+        priceValue.textContent = '100€';
+    }
+    
+    // Reset de l'objet filters
+    currentFilters = {
+        ecoOnly: false,
+        maxPrice: 100,
+        maxDuration: 999999,
+        minRating: 0,
+        petsAllowed: false,
+        nonSmoking: false
+    };
+    
+    // Réappliquer les filtres
+    applyFilters();
+    
+    showNotification('Filtres effacés', 'success');
+}
+
+// =====================================
+// SYSTÈME DE TRI
+// =====================================
+
+function sortRides(criteria) {
+    console.log(`🔄 Tri par: ${criteria}`);
+    
+    const ridesList = document.getElementById('ridesList');
+    if (!ridesList) return;
+    
+    const rides = Array.from(ridesList.querySelectorAll('.ride-card:not([style*="display: none"])'));
+    
+    rides.sort((a, b) => {
+        switch(criteria) {
+            case 'price':
+                return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+            
+            case 'rating':
+                return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+            
+            case 'ecological':
+                const aEco = a.dataset.ecological === 'true';
+                const bEco = b.dataset.ecological === 'true';
+                if (aEco === bEco) {
+                    // Si même type, trier par prix
+                    return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+                }
+                return bEco - aEco;
+            
+            case 'duration':
+                return parseInt(a.dataset.duration) - parseInt(b.dataset.duration);
+            
+            default: // datetime
+                return 0; // Garder l'ordre original
+        }
+    });
+    
+    // Réorganiser les éléments dans le DOM
+    rides.forEach(ride => ridesList.appendChild(ride));
+    
+    // Animer les cartes réorganisées
+    animateRideCards();
+}
+
+// =====================================
+// FONCTIONS D'ANIMATION ET UI
+// =====================================
+
+function showRideCard(card) {
+    card.style.display = 'block';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    
+    // Animation d'apparition
+    setTimeout(() => {
+        card.style.transition = 'all 0.3s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 50);
+}
+
+function hideRideCard(card) {
+    card.style.transition = 'all 0.3s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(-20px)';
+    
+    setTimeout(() => {
+        card.style.display = 'none';
+    }, 300);
+}
+
+function animateRideCards() {
+    const visibleCards = document.querySelectorAll('.ride-card:not([style*="display: none"])');
+    
+    visibleCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
 }
 
-function initLazyLoading() {
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    const src = img.dataset.src;
-                    if (src) {
-                        img.src = src;
-                        img.removeAttribute('data-src');
-                        observer.unobserve(img);
-                    }
-                }
-            });
-        });
-
-        document.querySelectorAll('img[data-src]').forEach(img => {
-            imageObserver.observe(img);
-        });
+function updateResultsCount(count) {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        const text = `${count} covoiturage${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}`;
+        resultsCount.textContent = text;
     }
 }
 
-// ========================================
-// ACTIONS DE RÉSERVATION
-// ========================================
-function initBookingActions() {
-    // Gestionnaires pour les boutons "Détails"
-    document.querySelectorAll('.btn-detail').forEach(btn => {
-        btn.addEventListener('click', handleDetailsClick);
-    });
+function toggleNoResultsMessage(show) {
+    const noResults = document.getElementById('noResults');
+    const ridesList = document.getElementById('ridesList');
     
-    // Gestionnaires pour les boutons de réservation rapide
-    document.querySelectorAll('.btn-quick-book').forEach(btn => {
-        btn.addEventListener('click', handleQuickBooking);
-    });
-}
-
-function handleDetailsClick(event) {
-    const rideCard = event.target.closest('.ride-card');
-    const rideId = rideCard?.dataset.rideId;
+    if (noResults) {
+        noResults.style.display = show ? 'block' : 'none';
+    }
     
-    if (rideId) {
-        showRideDetailsModal(rideId);
-    } else {
-        // Fallback vers la fonction globale
-        const rideNumber = Math.floor(Math.random() * 100) + 1;
-        viewRideDetails(rideNumber);
+    if (ridesList) {
+        ridesList.style.display = show ? 'none' : 'block';
     }
 }
 
-function showRideDetailsModal(rideId) {
-    // Créer une modal Bootstrap dynamiquement
-    const modalHtml = createRideDetailsModal(rideId);
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+function showLoadingSpinner() {
+    const spinner = document.getElementById('loadingSpinner');
+    const ridesList = document.getElementById('ridesList');
     
-    const modal = new bootstrap.Modal(document.getElementById('rideDetailsModal'));
-    modal.show();
-    
-    // Supprimer la modal après fermeture
-    document.getElementById('rideDetailsModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
+    if (spinner) spinner.style.display = 'block';
+    if (ridesList) ridesList.style.display = 'none';
 }
 
-function createRideDetailsModal(rideId) {
-    return `
-        <div class="modal fade" id="rideDetailsModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Détails du covoiturage #${rideId}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>Informations du trajet</h6>
-                                <p><i class="fas fa-map-marker-alt text-success"></i> <strong>Départ:</strong> Paris</p>
-                                <p><i class="fas fa-map-marker-alt text-danger"></i> <strong>Arrivée:</strong> Lyon</p>
-                                <p><i class="fas fa-clock"></i> <strong>Heure:</strong> 14:00</p>
-                                <p><i class="fas fa-euro-sign"></i> <strong>Prix:</strong> 35€ par personne</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Chauffeur</h6>
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="driver-avatar me-3">M</div>
-                                    <div>
-                                        <strong>MarieDriveGreen</strong>
-                                        <div class="rating">
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <span class="text-muted">4.8 (24 avis)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p><i class="fas fa-car"></i> Tesla Model 3 - Blanche</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                        <button type="button" class="btn btn-detail" onclick="initiateBooking('${rideId}')">Réserver</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+function hideLoadingSpinner() {
+    const spinner = document.getElementById('loadingSpinner');
+    const ridesList = document.getElementById('ridesList');
+    
+    if (spinner) spinner.style.display = 'none';
+    if (ridesList) ridesList.style.display = 'block';
+}
+
+// =====================================
+// FONCTIONS UTILITAIRES
+// =====================================
+
+function showLoadingButton(button) {
+    if (!button) return;
+    
+    button.dataset.originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Recherche...';
+    button.disabled = true;
+}
+
+function resetButton(button) {
+    if (!button) return;
+    
+    const originalText = button.dataset.originalText;
+    if (originalText) {
+        button.innerHTML = originalText;
+    }
+    button.disabled = false;
+}
+
+function highlightError(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.classList.add('is-invalid');
+        field.style.borderColor = '#dc3545';
+        
+        setTimeout(() => {
+            field.classList.remove('is-invalid');
+            field.style.borderColor = '';
+        }, 3000);
+    }
+}
+
+function showNotification(message, type = 'info') {
+    console.log(`📢 ${type.toUpperCase()}: ${message}`);
+    
+    // Créer la notification
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 1050;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     `;
-}
-
-// ========================================
-// SYSTÈME DE RÉSERVATION
-// ========================================
-function handleQuickBooking(event) {
-    const rideCard = event.target.closest('.ride-card');
-    const rideId = rideCard?.dataset.rideId || Math.floor(Math.random() * 100);
     
-    initiateBooking(rideId);
-}
-
-function initiateBooking(rideId) {
-    // Vérifier si l'utilisateur est connecté (simulation)
-    if (!isUserLoggedIn()) {
-        showLoginPrompt();
-        return;
-    }
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+    };
     
-    // Afficher la confirmation de réservation
-    showBookingConfirmation(rideId);
+    notification.innerHTML = `
+        <i class="${icons[type]} me-2"></i>
+        ${message.replace(/\n/g, '<br>')}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
 }
 
-function isUserLoggedIn() {
-    // Simulation - en réalité, vérifier le token/session
-    return localStorage.getItem('userToken') !== null;
+// =====================================
+// FONCTIONS D'INTERACTION
+// =====================================
+
+function viewRideDetails(rideId) {
+    console.log(`👁️ Affichage des détails du trajet ${rideId}`);
+    
+    // En production, rediriger vers une page de détails
+    // window.location.href = `detail-trajet.html?id=${rideId}`;
+    
+    // Pour la démo, afficher une modal ou notification
+    showNotification(`Redirection vers les détails du covoiturage #${rideId}`, 'info');
 }
 
-function showLoginPrompt() {
-    const loginModal = `
-        <div class="modal fade" id="loginModal
+// =====================================
+// FONCTIONS DE DÉBOGAGE
+// =====================================
+
+function debugFilters() {
+    console.log('🐛 État actuel des filtres:', currentFilters);
+    console.log('🐛 Nombre total de trajets:', allRides.length);
+    
+    const visibleRides = document.querySelectorAll('.ride-card:not([style*="display: none"])');
+    console.log('🐛 Trajets visibles:', visibleRides.length);
+    
+    // Test de chaque filtre
+    allRides.forEach((ride, index) => {
+        const rideData = extractRideData(ride.element);
+        const matches = matchesAllFilters(rideData, currentFilters);
+        console.log(`🐛 Trajet ${index + 1}:`, rideData, '→', matches ? '✅' : '❌');
+    });
+}
+
+function testAllFilters() {
+    console.log('🧪 Test de tous les filtres...');
+    
+    // Test filtre écologique
+    document.getElementById('ecoOnly').checked = true;
+    currentFilters.ecoOnly = true;
+    applyFilters();
+    
+    setTimeout(() => {
+        // Reset et test prix
+        clearAllFilters();
+        setTimeout(() => {
+            document.getElementById('priceRange').value = '30';
+            document.getElementById('priceRange').dispatchEvent(new Event('input'));
+        }, 500);
+    }, 2000);
+}
+
+// =====================================
+// EXPORT GLOBAL
+// =====================================
+
+// Rendre certaines fonctions accessibles globalement
+window.EcoRideFilters = {
+    applyFilters,
+    clearAllFilters,
+    sortRides,
+    viewRideDetails,
+    debugFilters,
+    testAllFilters
+};
+
+// Pour compatibilité avec les anciens appels
+window.viewRideDetails = viewRideDetails;
+window.applyFilters = applyFilters;
+
+console.log('🎯 Module de filtres EcoRide chargé et prêt !');
