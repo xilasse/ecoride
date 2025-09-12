@@ -10,7 +10,6 @@
     
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
     <style>
         :root {
             --eco-primary: #2d5016;
@@ -437,7 +436,6 @@
         document.getElementById('registerForm')?.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
             const pseudo = this.querySelector('input[type="text"]').value;
             const email = this.querySelector('input[type="email"]').value;
             
@@ -459,4 +457,5 @@
     </script>
 </body>
 </html>
+
 
