@@ -13,6 +13,7 @@
     
     <!-- Custom CSS -->
     <link href="./styles.css" rel="stylesheet">
+    <link href="./covoiturages.css" rel="stylesheet">
 </head>
 <body>
     <!-- Navigation -->
@@ -230,7 +231,10 @@
                                     <div class="ride-details">
                                         <p class="mb-2 small">Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !</p>
                                         <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">3</span> places restantes</span>
+                                            <span class="seats-info">
+                                                <i class="fas fa-users me-1"></i>
+                                                <span class="seats-available">3</span> places restantes
+                                            </span>
                                             <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
                                             <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
                                         </div>
@@ -240,9 +244,14 @@
                                 <div class="col-md-4 text-end">
                                     <div class="price-highlight mb-2">35€</div>
                                     <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail" onclick="viewRideDetails(1)">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-detail btn-sm" onclick="viewRideDetails(1)">
+                                            <i class="fas fa-eye me-1"></i>Détails
+                                        </button>
+                                        <button class="btn btn-book btn-sm" onclick="bookRide(1)" data-ride-id="1">
+                                            <i class="fas fa-ticket-alt me-1"></i>Réserver
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -252,9 +261,9 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="driver-info">
-                                        <div class="driver-avatar">M</div>
+                                        <div class="driver-avatar">P</div>
                                         <div>
-                                            <h6 class="mb-1">MarieDriveGreen</h6>
+                                            <h6 class="mb-1">PaulEcoDriver</h6>
                                             <div class="rating">
                                                 <i class="fas fa-star"></i>
                                                 <i class="fas fa-star"></i>
@@ -292,7 +301,10 @@
                                     <div class="ride-details">
                                         <p class="mb-2 small">Trajet matinal Lyon-Marseille. Véhicule 100% électrique !</p>
                                         <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">2</span> places restantes</span>
+                                            <span class="seats-info">
+                                                <i class="fas fa-users me-1"></i>
+                                                <span class="seats-available">2</span> places restantes
+                                            </span>
                                             <span><i class="fas fa-ban me-1"></i>Pas d'animaux</span>
                                             <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
                                         </div>
@@ -302,9 +314,14 @@
                                 <div class="col-md-4 text-end">
                                     <div class="price-highlight mb-2">28€</div>
                                     <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail" onclick="viewRideDetails(2)">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-detail btn-sm" onclick="viewRideDetails(2)">
+                                            <i class="fas fa-eye me-1"></i>Détails
+                                        </button>
+                                        <button class="btn btn-book btn-sm" onclick="bookRide(2)" data-ride-id="2">
+                                            <i class="fas fa-ticket-alt me-1"></i>Réserver
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -327,7 +344,7 @@
                                             </div>
                                         </div>
                                         <span class="badge bg-warning text-dark ms-auto">
-                                            <i class="fas fa-leaf"></i> Hybride
+                                            <i class="fas fa-gas-pump"></i> Hybride
                                         </span>
                                     </div>
                                     
@@ -354,7 +371,10 @@
                                     <div class="ride-details">
                                         <p class="mb-2 small">Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.</p>
                                         <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">3</span> places restantes</span>
+                                            <span class="seats-info">
+                                                <i class="fas fa-users me-1"></i>
+                                                <span class="seats-available">3</span> places restantes
+                                            </span>
                                             <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
                                             <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
                                         </div>
@@ -364,9 +384,14 @@
                                 <div class="col-md-4 text-end">
                                     <div class="price-highlight mb-2">42€</div>
                                     <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail" onclick="viewRideDetails(3)">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-detail btn-sm" onclick="viewRideDetails(3)">
+                                            <i class="fas fa-eye me-1"></i>Détails
+                                        </button>
+                                        <button class="btn btn-book btn-sm" onclick="bookRide(3)" data-ride-id="3">
+                                            <i class="fas fa-ticket-alt me-1"></i>Réserver
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -376,9 +401,9 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <div class="driver-info">
-                                        <div class="driver-avatar">J</div>
+                                        <div class="driver-avatar">A</div>
                                         <div>
-                                            <h6 class="mb-1">JeanEcoDriver</h6>
+                                            <h6 class="mb-1">AnneClassic</h6>
                                             <div class="rating">
                                                 <i class="fas fa-star"></i>
                                                 <i class="fas fa-star"></i>
@@ -416,7 +441,10 @@
                                     <div class="ride-details">
                                         <p class="mb-2 small">Trajet Toulouse-Montpellier en fin de journée.</p>
                                         <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">4</span> places restantes</span>
+                                            <span class="seats-info seats-warning">
+                                                <i class="fas fa-users me-1"></i>
+                                                <span class="seats-available">1</span> place restante
+                                            </span>
                                             <span><i class="fas fa-ban me-1"></i>Pas d'animaux</span>
                                             <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
                                         </div>
@@ -426,14 +454,19 @@
                                 <div class="col-md-4 text-end">
                                     <div class="price-highlight mb-2">22€</div>
                                     <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail" onclick="viewRideDetails(4)">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-detail btn-sm" onclick="viewRideDetails(4)">
+                                            <i class="fas fa-eye me-1"></i>Détails
+                                        </button>
+                                        <button class="btn btn-book btn-sm" onclick="bookRide(4)" data-ride-id="4">
+                                            <i class="fas fa-ticket-alt me-1"></i>Réserver
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Ride Card 5 -->
+                        <!-- Ride Card 5 - Complet -->
                         <div class="ride-card" data-price="18" data-rating="4.9" data-ecological="true" data-duration="105" data-ride-id="5">
                             <div class="row">
                                 <div class="col-md-8">
@@ -478,7 +511,10 @@
                                     <div class="ride-details">
                                         <p class="mb-2 small">Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !</p>
                                         <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">4</span> places restantes</span>
+                                            <span class="seats-info text-danger">
+                                                <i class="fas fa-users me-1"></i>
+                                                <span class="seats-available">0</span> places (COMPLET)
+                                            </span>
                                             <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
                                             <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
                                         </div>
@@ -488,9 +524,14 @@
                                 <div class="col-md-4 text-end">
                                     <div class="price-highlight mb-2">18€</div>
                                     <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail" onclick="viewRideDetails(5)">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-detail btn-sm" onclick="viewRideDetails(5)">
+                                            <i class="fas fa-eye me-1"></i>Détails
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" disabled>
+                                            <i class="fas fa-times me-1"></i>Complet
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -518,57 +559,14 @@
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Custom JavaScript -->
+    <script src="./covoiturages.js"></script>
 </body>
-</html>" id="date">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-detail w-100">
-                            <i class="fas fa-search me-2"></i>Rechercher
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="row">
-            <!-- Filters Sidebar -->
-            <div class="col-lg-3">
-                <div class="filters-sidebar">
-                    <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filtres</h5>
-                    
-                    <!-- Ecological Filter -->
-                    <div class="filter-group">
-                        <h6>Écologique</h6>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="ecoOnly">
-                            <label class="form-check-label" for="ecoOnly">
-                                <i class="fas fa-leaf text-success"></i> Véhicules électriques uniquement
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Price Filter -->
-                    <div class="filter-group">
-                        <h6>Prix maximum</h6>
-                        <div class="mb-2">
-                            <input type="range" class="form-range" id="priceRange" min="0" max="100" value="50">
-                        </div>
-                        <div class="d-flex justify-content-between text-muted small">
-                            <span>0€</span>
-                            <span id="priceValue">50€</span>
-                            <span>100€</span>
-                        </div>
-                    </div>
-
-
-                    <!-- Custom JavaScript -->
-    <script src="./main.js"></script>
-    <script src="./search.js"></script>
-
-                    <!-- Duration Filter -->
+</html>
 
                     
                    
+
 
 
 
