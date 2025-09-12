@@ -383,19 +383,134 @@ body {
    ======================================== */
 .no-results {
     text-align: center;
-    padding: 60px 20px;
-    color: #666;
+    padding: 80px 40px;
+    background: linear-gradient(135deg, var(--eco-white) 0%, rgba(215, 239, 199, 0.3) 100%);
+    border-radius: 20px;
+    margin: 20px;
+    border: 2px dashed var(--eco-accent);
+}
+
+.no-results .fa-search {
+    color: var(--eco-accent);
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.no-results h5 {
+    color: var(--eco-primary);
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.no-results p {
+    color: var(--eco-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+}
+
+.no-results h6 {
+    color: var(--eco-primary);
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.no-results ul li {
+    color: var(--eco-secondary);
+    font-weight: 500;
+    margin-bottom: 10px;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    display: inline-block;
+    margin-right: 10px;
 }
 
 .loading-spinner {
     display: none;
     text-align: center;
-    padding: 40px;
+    padding: 60px 40px;
+    background: linear-gradient(135deg, var(--eco-white) 0%, rgba(215, 239, 199, 0.3) 100%);
+    border-radius: 20px;
+    margin: 20px;
 }
 
-/* Padding pour navbar fixe */
+.loading-spinner .spinner-border {
+    width: 4rem;
+    height: 4rem;
+    border-width: 5px;
+}
+
+.loading-spinner p {
+    color: var(--eco-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Toast notifications (pour les notifications) */
+.toast-notification {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(127, 176, 105, 0.3);
+    border-radius: 15px !important;
+    font-weight: 500;
+}
+
+.toast-notification i {
+    font-size: 1.2rem;
+}
+
+/* Padding pour navbar fixe - ajustement pour la page covoiturages */
 body {
     padding-top: 76px;
+    background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
+    min-height: 100vh;
+}
+
+/* Animations d'entrée pour les cartes */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ride-card {
+    animation: slideInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.ride-card:nth-child(1) { animation-delay: 0.1s; }
+.ride-card:nth-child(2) { animation-delay: 0.2s; }
+.ride-card:nth-child(3) { animation-delay: 0.3s; }
+.ride-card:nth-child(4) { animation-delay: 0.4s; }
+.ride-card:nth-child(5) { animation-delay: 0.5s; }
+
+/* Amélioration du contraste et de la lisibilité */
+.text-muted {
+    color: var(--eco-secondary) !important;
+    font-weight: 500;
+}
+
+/* Scrollbar personnalisée pour la sidebar */
+.filters-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.filters-sidebar::-webkit-scrollbar-track {
+    background: var(--eco-light);
+    border-radius: 4px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb {
+    background: var(--eco-accent);
+    border-radius: 4px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--eco-secondary);
 }
 
 /* ========================================
