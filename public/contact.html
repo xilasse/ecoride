@@ -84,6 +84,7 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             font-size: 3rem;
             font-weight: bold;
+            text-align: center;
         }
 
         .contact-header p {
@@ -91,6 +92,7 @@
             z-index: 2;
             font-size: 1.2rem;
             opacity: 0.9;
+            text-align: center;
         }
 
         .contact-section {
@@ -350,3 +352,996 @@
                         <a class="nav-link" href="index.html">Accueil</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="connexion.html">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contact Header -->
+    <section class="contact-header">
+        <div class="container">
+            <h1>Contactez-nous</h1>
+            <p>Une question ? Une suggestion ? Notre équipe est là pour vous aider !</p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="row">
+                <!-- Email Card -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h4>Email</h4>
+                        <p>Contactez-nous par email pour toute question générale ou support technique.</p>
+                        <p><a href="mailto:contact@ecoride.fr">contact@ecoride.fr</a></p>
+                        <p><a href="mailto:support@ecoride.fr">support@ecoride.fr</a></p>
+                    </div>
+                </div>
+                
+                <!-- Phone Card -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <h4>Téléphone</h4>
+                        <p>Appelez-nous du lundi au vendredi de 9h à 18h pour une assistance immédiate.</p>
+                        <p><a href="tel:+33123456789">01 23 45 67 89</a></p>
+                        <p><small>Service client gratuit</small></p>
+                    </div>
+                </div>
+                
+                <!-- Address Card -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h4>Adresse</h4>
+                        <p>Venez nous rendre visite dans nos bureaux écologiques au coeur de Toulouse.</p>
+                        <p>123 Avenue Verte<br>31000 Toulouse<br>France</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form -->
+    <div class="container">
+        <div class="contact-form-container">
+            <h3><i class="fas fa-paper-plane me-3"></i>Envoyez-nous un message</h3>
+            
+            <form id="contactForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Prénom *</label>
+                            <input type="text" class="form-control" required placeholder="Votre prénom">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" class="form-control" required placeholder="Votre nom">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" required placeholder="votre@email.com">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" placeholder="01 23 45 67 89">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Sujet *</label>
+                    <select class="form-select" required>
+                        <option value="">Sélectionnez un sujet</option>
+                        <option value="support">Support technique</option>
+                        <option value="question">Question générale</option>
+                        <option value="suggestion">Suggestion d'amélioration</option>
+                        <option value="partnership">Partenariat</option>
+                        <option value="media">Demande média</option>
+                        <option value="other">Autre</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Message *</label>
+                    <textarea class="form-control" required placeholder="Décrivez votre demande en détail..." rows="5"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="newsletter">
+                        <label class="form-check-label" for="newsletter">
+                            Je souhaite recevoir la newsletter EcoRide avec les dernières actualités écologiques
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-send">
+                    <i class="fas fa-paper-plane me-2"></i>Envoyer le message
+                </button>
+            </form>
+            
+            <!-- Success Message (hidden by default) -->
+            <div class="alert alert-success mt-4" id="successMessage" style="display: none;">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Message envoyé avec succès !</strong> Nous vous répondrons dans les plus brefs délais.
+            </div>
+        </div>
+        
+        <!-- FAQ Section -->
+        <div class="faq-section">
+            <h3><i class="fas fa-question-circle me-3"></i>Questions Fréquentes</h3>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Comment créer un compte sur EcoRide ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Cliquez sur "Connexion" puis "Inscription". Il vous suffit de fournir un pseudo, un email et un mot de passe sécurisé. Vous recevrez automatiquement 20 crédits de bienvenue !
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Comment fonctionne le système de crédits ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Chaque trajet coûte des crédits selon le prix fixé par le chauffeur. La plateforme prélève 2 crédits par transaction. Les chauffeurs reçoivent leurs crédits une fois le trajet terminé et validé.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Qu'est-ce qu'un trajet écologique ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Un trajet est considéré comme écologique s'il est effectué avec un véhicule 100% électrique. Ces trajets sont marqués d'un badge vert spécial et sont mis en avant dans les résultats de recherche.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Comment annuler une réservation ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Rendez-vous dans votre espace personnel, section "Mes réservations". Vous pouvez annuler jusqu'à 24h avant le départ. Vos crédits seront automatiquement remboursés.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    EcoRide est-il sécurisé ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Oui ! Tous nos utilisateurs sont vérifiés, nous avons un système d'avis modérés par nos équipes, et nos données sont protégées selon les standards RGPD européens.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Links -->
+        <div class="social-links">
+            <h5 class="mb-4" style="color: var(--eco-primary);">Suivez-nous sur les réseaux sociaux</h5>
+            <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Contact form submission
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulate form submission
+            const submitBtn = this.querySelector('.btn-send');
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Envoi en cours...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                // Show success message
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Reset form
+                this.reset();
+                
+                // Reset button
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Scroll to success message
+                document.getElementById('successMessage').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 5000);
+                
+            }, 2000);
+        });
+
+        // FAQ toggle function
+        function toggleFAQ(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            // Close all other FAQs
+            document.querySelectorAll('.faq-answer').forEach(faq => {
+                if (faq !== answer) {
+                    faq.classList.remove('active');
+                    faq.previousElementSibling.querySelector('i').classList.remove('fa-chevron-up');
+                    faq.previousElementSibling.querySelector('i').classList.add('fa-chevron-down');
+                }
+            });
+            
+            // Toggle current FAQ
+            answer.classList.toggle('active');
+            
+            if (answer.classList.contains('active')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Smooth scrolling for contact cards
+        document.querySelectorAll('.contact-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.getElementById('contactForm').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+    </script>
+</body>
+</html>--eco-accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .contact-card a:hover {
+            color: var(--eco-primary);
+        }
+
+        .contact-form-container {
+            background: white;
+            border-radius: 25px;
+            padding: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid var(--eco-light);
+            margin-top: -60px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .contact-form-container h3 {
+            color: var(--eco-primary);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            color: var(--eco-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid var(--eco-light);
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--eco-white);
+        }
+
+        .form-control:focus {
+            border-color: var(--eco-accent);
+            box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.2);
+            outline: none;
+            transform: translateY(-2px);
+        }
+
+        .form-select {
+            border: 2px solid var(--eco-light);
+            border-radius: 12px;
+            padding: 15px 20px;
+            background: var(--eco-white);
+            color: var(--eco-primary);
+            font-weight: 500;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(127, 176, 105, 0.3);
+            width: 100%;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(127, 176, 105, 0.4);
+            color: white;
+        }
+
+        .faq-section {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 25px;
+            padding: 40px;
+            margin-top: 50px;
+            border: 1px solid var(--eco-light);
+        }
+
+        .faq-section h3 {
+            color: var(--eco-primary);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--eco-light);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            background: var(--eco-light);
+            padding: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--eco-primary);
+            transition: background-color 0.3s ease;
+            border: none;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .faq-question:hover {
+            background: var(--eco-accent);
+            color: white;
+        }
+
+        .faq-answer {
+            padding: 20px;
+            color: var(--eco-secondary);
+            display: none;
+            border-top: 1px solid var(--eco-light);
+        }
+
+        .faq-answer.active {
+            display: block;
+        }
+
+        .social-links {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .social-links a {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 1.5rem;
+            line-height: 60px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(127, 176, 105, 0.3);
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(127, 176, 105, 0.4);
+            color: white;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, var(--eco-light), var(--eco-white));
+            border: 2px solid var(--eco-accent);
+            color: var(--eco-primary);
+            border-radius: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .contact-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .contact-form-container {
+                padding: 30px 20px;
+                margin-top: -40px;
+            }
+            
+            .contact-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-leaf me-2"></i>EcoRide
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="connexion.html">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contact Header -->
+    <section class="contact-header">
+        <div class="container">
+            <h1>Contactez-nous</h1>
+            <p>Une question ? Une suggestion ? Notre équipe est là pour vous aider !</p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="row">
+                <!-- Email Card -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h4>Email</h4>
+                        <p>Contactez-nous par email pour toute question générale ou support technique.</p>
+                        <p><a href="mailto:contact@ecoride.fr">contact@ecoride.fr</a></p>
+                        <p><a href="mailto:support@ecoride.fr">support@ecoride.fr</a></p>
+                    </div>
+                </div>
+                
+                <!-- Phone Card -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <h4>Téléphone</h4>
+                        <p>Appelez-nous du lundi au vendredi de 9h à 18h pour une assistance immédiate.</p>
+                        <p><a href="tel:+33123456789">01 23 45 67 89</a></p>
+                        <p><small>Service client gratuit</small></p>
+                    </div>
+                </div>
+                
+                <!-- Address Card -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h4>Adresse</h4>
+                        <p>Venez nous rendre visite dans nos bureaux écologiques au coeur de Toulouse.</p>
+                        <p>123 Avenue Verte<br>31000 Toulouse<br>France</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form -->
+    <div class="container">
+        <div class="contact-form-container">
+            <h3><i class="fas fa-paper-plane me-3"></i>Envoyez-nous un message</h3>
+            
+            <form id="contactForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Prénom *</label>
+                            <input type="text" class="form-control" required placeholder="Votre prénom">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" class="form-control" required placeholder="Votre nom">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" required placeholder="votre@email.com">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" placeholder="01 23 45 67 89">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Sujet *</label>
+                    <select class="form-select" required>
+                        <option value="">Sélectionnez un sujet</option>
+                        <option value="support">Support technique</option>
+                        <option value="question">Question générale</option>
+                        <option value="suggestion">Suggestion d'amélioration</option>
+                        <option value="partnership">Partenariat</option>
+                        <option value="media">Demande média</option>
+                        <option value="other">Autre</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Message *</label>
+                    <textarea class="form-control" required placeholder="Décrivez votre demande en détail..." rows="5"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="newsletter">
+                        <label class="form-check-label" for="newsletter">
+                            Je souhaite recevoir la newsletter EcoRide avec les dernières actualités écologiques
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-send">
+                    <i class="fas fa-paper-plane me-2"></i>Envoyer le message
+                </button>
+            </form>
+            
+            <!-- Success Message (hidden by default) -->
+            <div class="alert alert-success mt-4" id="successMessage" style="display: none;">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Message envoyé avec succès !</strong> Nous vous répondrons dans les plus brefs délais.
+            </div>
+        </div>
+        
+        <!-- FAQ Section -->
+        <div class="faq-section">
+            <h3><i class="fas fa-question-circle me-3"></i>Questions Fréquentes</h3>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Comment créer un compte sur EcoRide ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Cliquez sur "Connexion" puis "Inscription". Il vous suffit de fournir un pseudo, un email et un mot de passe sécurisé. Vous recevrez automatiquement 20 crédits de bienvenue !
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Comment fonctionne le système de crédits ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Chaque trajet coûte des crédits selon le prix fixé par le chauffeur. La plateforme prélève 2 crédits par transaction. Les chauffeurs reçoivent leurs crédits une fois le trajet terminé et validé.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Qu'est-ce qu'un trajet écologique ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Un trajet est considéré comme écologique s'il est effectué avec un véhicule 100% électrique. Ces trajets sont marqués d'un badge vert spécial et sont mis en avant dans les résultats de recherche.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    Comment annuler une réservation ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Rendez-vous dans votre espace personnel, section "Mes réservations". Vous pouvez annuler jusqu'à 24h avant le départ. Vos crédits seront automatiquement remboursés.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFAQ(this)">
+                    EcoRide est-il sécurisé ?
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    Oui ! Tous nos utilisateurs sont vérifiés, nous avons un système d'avis modérés par nos équipes, et nos données sont protégées selon les standards RGPD européens.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Links -->
+        <div class="social-links">
+            <h5 class="mb-4" style="color: var(--eco-primary);">Suivez-nous sur les réseaux sociaux</h5>
+            <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Contact form submission
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(this);
+            const name = formData.get('text') || 'Utilisateur';
+            
+            // Simulate form submission
+            const submitBtn = this.querySelector('.btn-send');
+            const originalText = submitBtn.innerHTML;
+            
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Envoi en cours...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                // Show success message
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Reset form
+                this.reset();
+                
+                // Reset button
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                // Scroll to success message
+                document.getElementById('successMessage').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 5000);
+                
+            }, 2000);
+        });
+
+        // FAQ toggle function
+        function toggleFAQ(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            // Close all other FAQs
+            document.querySelectorAll('.faq-answer').forEach(faq => {
+                if (faq !== answer) {
+                    faq.classList.remove('active');
+                    faq.previousElementSibling.querySelector('i').classList.remove('fa-chevron-up');
+                    faq.previousElementSibling.querySelector('i').classList.add('fa-chevron-down');
+                }
+            });
+            
+            // Toggle current FAQ
+            answer.classList.toggle('active');
+            
+            if (answer.classList.contains('active')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Smooth scrolling for contact cards
+        document.querySelectorAll('.contact-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.getElementById('contactForm').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+    </script>
+</body>
+</html>--eco-accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .contact-card a:hover {
+            color: var(--eco-primary);
+        }
+
+        .contact-form-container {
+            background: white;
+            border-radius: 25px;
+            padding: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid var(--eco-light);
+            margin-top: -60px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .contact-form-container h3 {
+            color: var(--eco-primary);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            color: var(--eco-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid var(--eco-light);
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--eco-white);
+        }
+
+        .form-control:focus {
+            border-color: var(--eco-accent);
+            box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.2);
+            outline: none;
+            transform: translateY(-2px);
+        }
+
+        .form-select {
+            border: 2px solid var(--eco-light);
+            border-radius: 12px;
+            padding: 15px 20px;
+            background: var(--eco-white);
+            color: var(--eco-primary);
+            font-weight: 500;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(127, 176, 105, 0.3);
+            width: 100%;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(127, 176, 105, 0.4);
+            color: white;
+        }
+
+        .faq-section {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 25px;
+            padding: 40px;
+            margin-top: 50px;
+            border: 1px solid var(--eco-light);
+        }
+
+        .faq-section h3 {
+            color: var(--eco-primary);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--eco-light);
+            overflow: hidden;
+        }
+
+        .faq-question {
+            background: var(--eco-light);
+            padding: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--eco-primary);
+            transition: background-color 0.3s ease;
+            border: none;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .faq-question:hover {
+            background: var(--eco-accent);
+            color: white;
+        }
+
+        .faq-answer {
+            padding: 20px;
+            color: var(--eco-secondary);
+            display: none;
+            border-top: 1px solid var(--eco-light);
+        }
+
+        .faq-answer.active {
+            display: block;
+        }
+
+        .social-links {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .social-links a {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 1.5rem;
+            line-height: 60px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(127, 176, 105, 0.3);
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(127, 176, 105, 0.4);
+            color: white;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, var(--eco-light), var(--eco-white));
+            border: 2px solid var(--eco-accent);
+            color: var(--eco-primary);
+            border-radius: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .contact-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .contact-form-container {
+                padding: 30px 20px;
+                margin-top: -40px;
+            }
+            
+            .contact-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-leaf me-2"></i>EcoRide
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+
