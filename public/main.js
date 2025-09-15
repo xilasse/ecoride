@@ -1,128 +1,113 @@
 /**
- * EcoRide - JavaScript Principal
- * Fonctionnalités communes à toutes les pages
+ * EcoRide - JavaScript pour la Page Covoiturages
+ * Version corrigée avec boutons détails fonctionnels
  */
 
-// ========================================
-// INITIALISATION AU CHARGEMENT DE LA PAGE
-// ========================================
+// Variables globales
+let currentFilters = {
+    ecoOnly: false,
+    maxPrice: 100,
+    maxDuration: 999999,
+    minRating: 0,
+    petsAllowed: false,
+    nonSmoking: false
+};
+
+let currentSort = 'datetime';
+
+// Données simulées pour les détails des covoiturages
+const ridesDetailsData = {
+    1: {
+        id: 1,
+        driver: "MarieDriveGreen",
+        avatar: "M",
+        rating: 4.8,
+        reviewCount: 24,
+        departure: { city: "Paris", time: "14:00" },
+        arrival: { city: "Lyon", time: "18:30" },
+        duration: "4h 30min",
+        car: { model: "Tesla Model 3", color: "Blanche", type: "electric" },
+        price: 35,
+        seatsAvailable: 3,
+        ecological: true,
+        preferences: { pets: true, smoking: false, music: true },
+        description: "Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !",
+        driverBio: "Passionnée d'écologie et de conduite responsable. 5 ans d'expérience en covoiturage.",
+        reviews: [
+            { author: "Pierre", rating: 5, comment: "Excellent trajet, très ponctuelle !" },
+            { author: "Sophie", rating: 5, comment: "Conductrice sympa, voyage agréable" },
+            { author: "Marc", rating: 4, comment: "Très bien, je recommande" }
+        ]
+    },
+    2: {
+        id: 2,
+        driver: "PaulEcoDriver",
+        avatar: "P",
+        rating: 4.6,
+        reviewCount: 18,
+        departure: { city: "Lyon", time: "09:00" },
+        arrival: { city: "Marseille", time: "12:15" },
+        duration: "3h 15min",
+        car: { model: "Renault ZOE", color: "Bleue", type: "electric" },
+        price: 28,
+        seatsAvailable: 2,
+        ecological: true,
+        preferences: { pets: false, smoking: false, music: true },
+        description: "Trajet matinal Lyon-Marseille. Véhicule 100% électrique !",
+        driverBio: "Adepte des voyages matinaux et des véhicules électriques.",
+        reviews: [
+            { author: "Julie", rating: 5, comment: "Parfait pour un trajet matinal" },
+            { author: "Thomas", rating: 4, comment: "Très professionnel" }
+        ]
+    },
+    3: {
+        id: 3,
+        driver: "JeanEcoDriver",
+        avatar: "J",
+        rating: 4.2,
+        reviewCount: 31,
+        departure: { city: "Paris", time: "08:00" },
+        arrival: { city: "Bordeaux", time: "13:45" },
+        duration: "5h 45min",
+        car: { model: "Toyota Prius", color: "Grise", type: "hybrid" },
+        price: 42,
+        seatsAvailable: 3,
+        ecological: false,
+        preferences: { pets: true, smoking: false, music: false },
+        description: "Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.",
+        driverBio: "Conducteur expérimenté, voyages longue distance.",
+        reviews: [
+            { author: "Marie", rating: 4, comment: "Trajet agréable et sécurisé" },
+            { author: "Luc", rating: 4, comment: "Ponctuel et sympathique" }
+        ]
+    }
+};
+
+// =====================================
+// INITIALISATION
+// =====================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les composants
-    initDateInputs();
-    initSearchForm();
-    initSmoothScrolling();
-    initFilters();
-    initTooltips();
+    console.log('Initialisation de la page Covoiturages...');
     
-    console.log('✅ EcoRide JavaScript initialized');
+    initDateInputs();
+    initFilters();
+    initSorting();
+    initDetailButtons();
+    
+    console.log('Page Covoiturages initialisée avec succès');
 });
 
-// ========================================
-// GESTION DES DATES
-// ========================================
 function initDateInputs() {
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    const today = new Date().toISOString().split('T')[0];
-    
-    dateInputs.forEach(input => {
-        // Définir la date minimum à aujourd'hui
-        input.min = today;
-        
-        // Si pas de valeur, définir à aujourd'hui
-        if (!input.value) {
-            input.value = today;
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+        if (!dateInput.value) {
+            dateInput.value = today;
         }
-    });
-}
-
-// ========================================
-// FORMULAIRE DE RECHERCHE
-// ========================================
-function initSearchForm() {
-    const searchForm = document.getElementById('searchForm');
-    if (!searchForm) return;
-    
-    searchForm.addEventListener('submit', handleSearchSubmit);
-}
-
-function handleSearchSubmit(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const departure = document.getElementById('departure')?.value || '';
-    const arrival = document.getElementById('arrival')?.value || '';
-    const date = document.getElementById('date')?.value || '';
-    
-    // Validation des champs
-    if (!validateSearchForm(departure, arrival, date)) {
-        return;
-    }
-    
-    // Animation du bouton
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    showLoadingButton(submitBtn);
-    
-    // Simulation de recherche (en réalité, redirection vers la page de résultats)
-    setTimeout(() => {
-        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-            // Redirection vers la page de covoiturages avec paramètres
-            const params = new URLSearchParams({
-                depart: departure,
-                arrivee: arrival,
-                date: date
-            });
-            window.location.href = `covoiturages.html?${params.toString()}`;
-        } else {
-            // On est déjà sur la page de covoiturages, effectuer la recherche
-            performSearch(departure, arrival, date);
-            resetLoadingButton(submitBtn);
-        }
-    }, 1500);
-}
-
-function validateSearchForm(departure, arrival, date) {
-    const errors = [];
-    
-    if (!departure.trim()) {
-        errors.push('Veuillez saisir une ville de départ');
-        highlightError('departure');
-    }
-    
-    if (!arrival.trim()) {
-        errors.push('Veuillez saisir une ville d\'arrivée');
-        highlightError('arrival');
-    }
-    
-    if (!date) {
-        errors.push('Veuillez sélectionner une date');
-        highlightError('date');
-    }
-    
-    if (departure.toLowerCase() === arrival.toLowerCase()) {
-        errors.push('Les villes de départ et d\'arrivée doivent être différentes');
-        highlightError('departure');
-        highlightError('arrival');
-    }
-    
-    if (errors.length > 0) {
-        showNotification(errors.join('\n'), 'error');
-        return false;
-    }
-    
-    return true;
-}
-
-function highlightError(fieldId) {
-    const field = document.getElementById(fieldId);
-    if (field) {
-        field.classList.add('is-invalid');
-        setTimeout(() => field.classList.remove('is-invalid'), 3000);
     }
 }
 
-// ========================================
-// GESTION DES FILTRES (PAGE COVOITURAGES)
-// ========================================
 function initFilters() {
     // Price range slider
     const priceRange = document.getElementById('priceRange');
@@ -131,109 +116,156 @@ function initFilters() {
     if (priceRange && priceValue) {
         priceRange.addEventListener('input', function() {
             priceValue.textContent = this.value + '€';
+            currentFilters.maxPrice = parseInt(this.value);
+            applyFilters();
+        });
+        priceValue.textContent = priceRange.value + '€';
+        currentFilters.maxPrice = parseInt(priceRange.value);
+    }
+    
+    // Checkbox filters
+    const ecoOnly = document.getElementById('ecoOnly');
+    if (ecoOnly) {
+        ecoOnly.addEventListener('change', function() {
+            currentFilters.ecoOnly = this.checked;
             applyFilters();
         });
     }
     
-    // Filter checkboxes and selects
-    const filterInputs = document.querySelectorAll('.filters-sidebar input, .filters-sidebar select');
-    filterInputs.forEach(input => {
-        input.addEventListener('change', applyFilters);
-    });
+    const petsAllowed = document.getElementById('petsAllowed');
+    if (petsAllowed) {
+        petsAllowed.addEventListener('change', function() {
+            currentFilters.petsAllowed = this.checked;
+            applyFilters();
+        });
+    }
+    
+    const smokingAllowed = document.getElementById('smokingAllowed');
+    if (smokingAllowed) {
+        smokingAllowed.addEventListener('change', function() {
+            currentFilters.nonSmoking = this.checked;
+            applyFilters();
+        });
+    }
+    
+    // Select filters
+    const durationFilter = document.getElementById('durationFilter');
+    if (durationFilter) {
+        durationFilter.addEventListener('change', function() {
+            currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
+            applyFilters();
+        });
+    }
+    
+    const ratingFilter = document.getElementById('ratingFilter');
+    if (ratingFilter) {
+        ratingFilter.addEventListener('change', function() {
+            currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
+            applyFilters();
+        });
+    }
     
     // Clear filters button
     const clearBtn = document.getElementById('clearFilters');
     if (clearBtn) {
         clearBtn.addEventListener('click', clearAllFilters);
     }
-    
-    // Sort dropdown
+}
+
+function initSorting() {
     const sortSelect = document.getElementById('sortBy');
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
+            currentSort = this.value;
             sortRides(this.value);
         });
     }
 }
 
-function applyFilters() {
-    const rides = document.querySelectorAll('.ride-card');
-    if (rides.length === 0) return;
+function initDetailButtons() {
+    // Attacher les event listeners aux boutons détails existants
+    const detailButtons = document.querySelectorAll('.btn-detail');
+    console.log(`Initialisation de ${detailButtons.length} boutons détails`);
     
-    // Récupérer les valeurs des filtres
-    const filters = getFilterValues();
-    let visibleCount = 0;
+    detailButtons.forEach((button, index) => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const rideCard = this.closest('.ride-card');
+            let rideId = rideCard ? rideCard.dataset.rideId : (index + 1);
+            
+            console.log(`Clic sur bouton détail - ID: ${rideId}`);
+            viewRideDetails(rideId);
+        });
+    });
+}
 
+// =====================================
+// FONCTIONS DE FILTRAGE
+// =====================================
+
+function applyFilters() {
+    console.log('Application des filtres...', currentFilters);
+    
+    const rides = document.querySelectorAll('.ride-card');
+    if (rides.length === 0) {
+        console.warn('Aucune carte de trajet trouvée');
+        return;
+    }
+    
+    let visibleCount = 0;
+    
     rides.forEach(ride => {
-        const rideData = getRideData(ride);
-        const isVisible = matchesAllFilters(rideData, filters);
+        const rideData = extractRideData(ride);
+        const isVisible = matchesAllFilters(rideData, currentFilters);
         
         ride.style.display = isVisible ? 'block' : 'none';
         if (isVisible) visibleCount++;
     });
-
-    // Mettre à jour le compteur de résultats
-    updateResultsCount(visibleCount);
     
-    // Afficher/masquer le message "aucun résultat"
-    toggleNoResults(visibleCount === 0);
+    updateResultsCount(visibleCount);
+    toggleNoResultsMessage(visibleCount === 0);
+    
+    console.log(`Filtrage terminé: ${visibleCount} trajets visibles`);
 }
 
-function getFilterValues() {
-    return {
-        ecoOnly: document.getElementById('ecoOnly')?.checked || false,
-        maxPrice: parseInt(document.getElementById('priceRange')?.value) || 100,
-        maxDuration: parseInt(document.getElementById('durationFilter')?.value) || 999999,
-        minRating: parseFloat(document.getElementById('ratingFilter')?.value) || 0,
-        petsAllowed: document.getElementById('petsAllowed')?.checked || false,
-        nonSmoking: document.getElementById('smokingAllowed')?.checked || false
-    };
-}
-
-function getRideData(rideElement) {
+function extractRideData(rideElement) {
     return {
         price: parseInt(rideElement.dataset.price) || 0,
         rating: parseFloat(rideElement.dataset.rating) || 0,
-        isEcological: rideElement.dataset.ecological === 'true',
+        ecological: rideElement.dataset.ecological === 'true',
         duration: parseInt(rideElement.dataset.duration) || 0,
         allowsPets: rideElement.querySelector('.fa-paw') !== null,
-        isNonSmoking: rideElement.querySelector('.fa-smoking-ban') !== null
+        nonSmoking: rideElement.querySelector('.fa-smoking-ban') !== null
     };
 }
 
 function matchesAllFilters(rideData, filters) {
-    return (!filters.ecoOnly || rideData.isEcological) &&
-           (rideData.price <= filters.maxPrice) &&
-           (rideData.duration <= filters.maxDuration) &&
-           (rideData.rating >= filters.minRating) &&
-           (!filters.petsAllowed || rideData.allowsPets) &&
-           (!filters.nonSmoking || rideData.isNonSmoking);
-}
-
-function updateResultsCount(count) {
-    const resultsCount = document.getElementById('resultsCount');
-    if (resultsCount) {
-        const text = count + ' covoiturage' + (count > 1 ? 's' : '') + ' trouvé' + (count > 1 ? 's' : '');
-        resultsCount.textContent = text;
-    }
-}
-
-function toggleNoResults(show) {
-    const noResults = document.getElementById('noResults');
-    const ridesList = document.getElementById('ridesList');
-    
-    if (noResults) noResults.style.display = show ? 'block' : 'none';
-    if (ridesList) ridesList.style.display = show ? 'none' : 'block';
+    return (
+        (!filters.ecoOnly || rideData.ecological) &&
+        (rideData.price <= filters.maxPrice) &&
+        (rideData.duration <= filters.maxDuration) &&
+        (rideData.rating >= filters.minRating) &&
+        (!filters.petsAllowed || rideData.allowsPets) &&
+        (!filters.nonSmoking || rideData.nonSmoking)
+    );
 }
 
 function clearAllFilters() {
-    // Reset tous les filtres
+    console.log('Effacement de tous les filtres');
+    
+    // Reset checkboxes
     const checkboxes = document.querySelectorAll('.filters-sidebar input[type="checkbox"]');
-    checkboxes.forEach(cb => cb.checked = false);
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
     
+    // Reset selects
     const selects = document.querySelectorAll('.filters-sidebar select');
-    selects.forEach(select => select.selectedIndex = 0);
+    selects.forEach(select => {
+        select.selectedIndex = 0;
+    });
     
+    // Reset price range
     const priceRange = document.getElementById('priceRange');
     const priceValue = document.getElementById('priceValue');
     if (priceRange && priceValue) {
@@ -241,20 +273,31 @@ function clearAllFilters() {
         priceValue.textContent = '50€';
     }
     
-    // Réappliquer les filtres
-    applyFilters();
+    // Reset filters object
+    currentFilters = {
+        ecoOnly: false,
+        maxPrice: 50,
+        maxDuration: 999999,
+        minRating: 0,
+        petsAllowed: false,
+        nonSmoking: false
+    };
     
+    applyFilters();
     showNotification('Filtres effacés', 'success');
 }
 
-// ========================================
-// TRI DES RÉSULTATS
-// ========================================
+// =====================================
+// FONCTIONS DE TRI
+// =====================================
+
 function sortRides(criteria) {
+    console.log(`Tri par: ${criteria}`);
+    
     const ridesList = document.getElementById('ridesList');
     if (!ridesList) return;
     
-    const rides = Array.from(ridesList.children);
+    const rides = Array.from(ridesList.querySelectorAll('.ride-card:not([style*="display: none"])'));
     
     rides.sort((a, b) => {
         switch(criteria) {
@@ -265,113 +308,55 @@ function sortRides(criteria) {
             case 'ecological':
                 const aEco = a.dataset.ecological === 'true';
                 const bEco = b.dataset.ecological === 'true';
+                if (aEco === bEco) {
+                    return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+                }
                 return bEco - aEco;
-            case 'duration':
-                return parseInt(a.dataset.duration) - parseInt(b.dataset.duration);
-            default: // datetime
-                return 0; // Garder l'ordre original
+            default:
+                return 0;
         }
     });
-
-    // Réorganiser les éléments
-    rides.forEach(ride => ridesList.appendChild(ride));
     
-    showNotification('Résultats triés', 'info');
+    rides.forEach(ride => ridesList.appendChild(ride));
 }
 
-// ========================================
-// RECHERCHE ET CHARGEMENT
-// ========================================
-function performSearch(departure, arrival, date) {
-    const loadingSpinner = document.getElementById('loadingSpinner');
+// =====================================
+// FONCTIONS D'INTERFACE
+// =====================================
+
+function updateResultsCount(count) {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        const text = `${count} covoiturage${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}`;
+        resultsCount.textContent = text;
+    }
+}
+
+function toggleNoResultsMessage(show) {
+    const noResults = document.getElementById('noResults');
     const ridesList = document.getElementById('ridesList');
     
-    // Afficher le spinner
-    if (loadingSpinner) loadingSpinner.style.display = 'block';
-    if (ridesList) ridesList.style.display = 'none';
-    
-    // Simulation d'appel API
-    setTimeout(() => {
-        // Masquer le spinner
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (ridesList) ridesList.style.display = 'block';
-        
-        // Réappliquer les filtres sur les nouveaux résultats
-        applyFilters();
-        
-        showNotification(`Recherche effectuée pour ${departure} → ${arrival}`, 'success');
-    }, 1500);
-}
-
-// ========================================
-// NAVIGATION ET UX
-// ========================================
-function initSmoothScrolling() {
-    // Smooth scrolling pour les liens d'ancrage
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-}
-
-function initTooltips() {
-    // Initialiser les tooltips Bootstrap si présents
-    if (typeof bootstrap !== 'undefined') {
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => 
-            new bootstrap.Tooltip(tooltipTriggerEl)
-        );
+    if (noResults) {
+        noResults.style.display = show ? 'block' : 'none';
     }
-}
-
-// ========================================
-// UTILITAIRES UI
-// ========================================
-function showLoadingButton(button) {
-    if (!button) return;
-    
-    const originalText = button.innerHTML;
-    button.dataset.originalText = originalText;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Recherche...';
-    button.disabled = true;
-}
-
-function resetLoadingButton(button) {
-    if (!button) return;
-    
-    const originalText = button.dataset.originalText;
-    if (originalText) {
-        button.innerHTML = originalText;
+    if (ridesList) {
+        ridesList.style.display = show ? 'none' : 'block';
     }
-    button.disabled = false;
 }
 
 function showNotification(message, type = 'info') {
-    // Créer une notification toast
-    const toast = createToast(message, type);
-    document.body.appendChild(toast);
+    console.log(`${type.toUpperCase()}: ${message}`);
     
-    // Afficher avec animation
-    setTimeout(() => toast.classList.add('show'), 100);
-    
-    // Masquer et supprimer après 3 secondes
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => document.body.removeChild(toast), 300);
-    }, 3000);
-}
-
-function createToast(message, type) {
-    const toast = document.createElement('div');
-    toast.className = `toast-notification toast-${type}`;
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 1050;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
     
     const icons = {
         success: 'fas fa-check-circle',
@@ -380,352 +365,238 @@ function createToast(message, type) {
         info: 'fas fa-info-circle'
     };
     
-    const colors = {
-        success: '#4CAF50',
-        error: '#f44336',
-        warning: '#ff9800',
-        info: '#2196F3'
-    };
-    
-    toast.innerHTML = `
-        <i class="${icons[type]}" style="color: ${colors[type]}"></i>
-        <span>${message}</span>
+    notification.innerHTML = `
+        <i class="${icons[type]} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     
-    // Styles inline pour le toast
-    Object.assign(toast.style, {
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        background: 'white',
-        padding: '15px 20px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        zIndex: '9999',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        transform: 'translateX(100%)',
-        transition: 'transform 0.3s ease',
-        maxWidth: '300px',
-        fontSize: '14px'
-    });
+    document.body.appendChild(notification);
     
-    // Classe pour l'animation
-    const style = document.createElement('style');
-    style.textContent = `
-        .toast-notification.show {
-            transform: translateX(0) !important;
-        }
-    `;
-    document.head.appendChild(style);
-    
-    return toast;
-}
-
-// ========================================
-// GESTION DES DÉTAILS DE COVOITURAGE
-// ========================================
-function viewRideDetails(rideId) {
-    // En production, rediriger vers la page de détails
-    // Pour la démo, afficher une modal ou une notification
-    showNotification(`Redirection vers les détails du covoiturage #${rideId}`, 'info');
-    
-    // Exemple de redirection (à activer en production)
-    // window.location.href = `detail-covoiturage.html?id=${rideId}`;
-}
-
-// ========================================
-// GESTION DES PARAMÈTRES URL
-// ========================================
-function getUrlParameter(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-}
-
-function populateSearchFromUrl() {
-    const departure = getUrlParameter('depart');
-    const arrival = getUrlParameter('arrivee');
-    const date = getUrlParameter('date');
-    
-    if (departure) {
-        const departureField = document.getElementById('departure');
-        if (departureField) departureField.value = departure;
-    }
-    
-    if (arrival) {
-        const arrivalField = document.getElementById('arrival');
-        if (arrivalField) arrivalField.value = arrival;
-    }
-    
-    if (date) {
-        const dateField = document.getElementById('date');
-        if (dateField) dateField.value = date;
-    }
-    
-    // Si des paramètres sont présents, lancer automatiquement la recherche
-    if (departure && arrival && date) {
-        setTimeout(() => {
-            performSearch(departure, arrival, date);
-        }, 500);
-    }
-}
-
-// ========================================
-// VALIDATION TEMPS RÉEL
-// ========================================
-function initRealTimeValidation() {
-    const inputs = document.querySelectorAll('input[required]');
-    
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            validateField(this);
-        });
-        
-        input.addEventListener('input', function() {
-            // Supprimer l'indication d'erreur lors de la saisie
-            this.classList.remove('is-invalid');
-        });
-    });
-}
-
-function validateField(field) {
-    const value = field.value.trim();
-    const isValid = value.length > 0;
-    
-    if (!isValid) {
-        field.classList.add('is-invalid');
-        return false;
-    } else {
-        field.classList.remove('is-invalid');
-        field.classList.add('is-valid');
-        return true;
-    }
-}
-
-// ========================================
-// GESTION DE LA GÉOLOCALISATION (BONUS)
-// ========================================
-function initGeolocation() {
-    const geoButton = document.getElementById('useLocation');
-    if (!geoButton) return;
-    
-    geoButton.addEventListener('click', function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    const { latitude, longitude } = position.coords;
-                    getCityFromCoords(latitude, longitude);
-                },
-                error => {
-                    showNotification('Impossible d\'obtenir votre position', 'error');
-                }
-            );
-        } else {
-            showNotification('Géolocalisation non supportée', 'error');
-        }
-    });
-}
-
-function getCityFromCoords(lat, lon) {
-    // En production, utiliser une API de géocodage inverse
-    // Exemple avec OpenStreetMap Nominatim
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
-    
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const city = data.address.city || data.address.town || data.address.village;
-            if (city) {
-                const departureField = document.getElementById('departure');
-                if (departureField) {
-                    departureField.value = city;
-                    showNotification(`Position détectée: ${city}`, 'success');
-                }
-            }
-        })
-        .catch(error => {
-            showNotification('Erreur lors de la détection de la ville', 'error');
-        });
-}
-
-// ========================================
-// INITIALISATION SPÉCIFIQUE AUX PAGES
-// ========================================
-function initPageSpecificFeatures() {
-    // Identifier la page actuelle
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    switch(currentPage) {
-        case 'covoiturages.html':
-            populateSearchFromUrl();
-            initRealTimeValidation();
-            break;
-            
-        case 'index.html':
-        case '':
-            initGeolocation();
-            break;
-    }
-}
-
-// Initialiser les fonctionnalités spécifiques après le DOM
-document.addEventListener('DOMContentLoaded', function() {
-    initPageSpecificFeatures();
-});
-
-// ========================================
-// EXPORT POUR UTILISATION GLOBALE
-// ========================================
-// Rendre certaines fonctions accessibles globalement
-window.EcoRide = {
-    viewRideDetails,
-    showNotification,
-    applyFilters,
-    sortRides,
-    clearAllFilters
-
-};
-// Fix pour les inputs non-cliquables
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Initializing input fixes...');
-    
-    // Forcer l'activation des inputs
-    const inputs = document.querySelectorAll('.search-input, input[type="text"], input[type="date"]');
-    
-    inputs.forEach(input => {
-        // Supprimer tous les attributs qui pourraient bloquer
-        input.removeAttribute('readonly');
-        input.removeAttribute('disabled');
-        
-        // Forcer les styles CSS
-        input.style.pointerEvents = 'auto';
-        input.style.cursor = 'text';
-        input.style.userSelect = 'text';
-        input.style.position = 'relative';
-        input.style.zIndex = '10';
-        
-        // Ajouter les événements manuellement
-        input.addEventListener('click', function(e) {
-            e.stopPropagation();
-            this.focus();
-        });
-        
-        input.addEventListener('focus', function() {
-            this.style.borderColor = '#7fb069';
-            this.style.boxShadow = '0 0 0 3px rgba(127, 176, 105, 0.2)';
-        });
-        
-        input.addEventListener('blur', function() {
-            this.style.borderColor = '#d6efc7';
-            this.style.boxShadow = 'none';
-        });
-        
-        // Test de fonctionnalité
-        input.addEventListener('input', function() {
-            console.log(`✅ Input working: ${this.id} = ${this.value}`);
-        });
-    });
-    
-    // Fix spécial pour le champ date
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        // Définir la date minimum à aujourd'hui
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.min = today;
-        dateInput.value = today;
-        
-        console.log('📅 Date input configured:', today);
-    }
-    
-    // Fix pour le formulaire
-    const searchForm = document.getElementById('searchForm');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const departure = document.getElementById('departure').value;
-            const arrival = document.getElementById('arrival').value;
-            const date = document.getElementById('date').value;
-            
-            console.log('🔍 Search submitted:', { departure, arrival, date });
-            
-            if (departure && arrival && date) {
-                // Rediriger vers la page covoiturages
-                const params = new URLSearchParams({
-                    depart: departure,
-                    arrivee: arrival,
-                    date: date
-                });
-                
-                window.location.href = `covoiturages.html?${params.toString()}`;
-            } else {
-                alert('Veuillez remplir tous les champs');
-            }
-        });
-    }
-    
-    // Diagnostic : vérifier si les inputs sont accessibles
     setTimeout(() => {
-        inputs.forEach((input, index) => {
-            const rect = input.getBoundingClientRect();
-            const isVisible = rect.width > 0 && rect.height > 0;
-            const isClickable = window.getComputedStyle(input).pointerEvents !== 'none';
-            
-            console.log(`Input ${index + 1} (${input.id}):`, {
-                visible: isVisible,
-                clickable: isClickable,
-                zIndex: window.getComputedStyle(input).zIndex,
-                position: window.getComputedStyle(input).position
-            });
-            
-            if (!isVisible || !isClickable) {
-                console.warn(`⚠️ Input ${input.id} may not be functional`);
-            }
-        });
-    }, 1000);
-});
-
-// Debug function - à supprimer en production
-function testInputs() {
-    const inputs = document.querySelectorAll('.search-input');
-    inputs.forEach(input => {
-        input.style.border = '3px solid red';
-        input.focus();
-        setTimeout(() => {
-            input.style.border = '';
-        }, 2000);
-    });
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
 }
 
-// Fonction utilitaire pour débloquer les inputs manuellement
-function forceEnableInputs() {
-    const inputs = document.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.disabled = false;
-        input.readOnly = false;
-        input.style.pointerEvents = 'auto';
-        input.style.cursor = 'text';
-        input.tabIndex = 0;
-    });
-    console.log('🔓 All inputs force-enabled');
-}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Fix inputs
-    const inputs = document.querySelectorAll('.search-input');
-    inputs.forEach(input => {
-        input.style.pointerEvents = 'auto';
-        input.style.cursor = 'text';
-        input.removeAttribute('readonly');
-    });
+// =====================================
+// FONCTION PRINCIPALE - DÉTAILS COVOITURAGE
+// =====================================
+
+function viewRideDetails(rideId) {
+    console.log(`Affichage des détails du trajet ${rideId}`);
     
-    // Date minimum
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        dateInput.min = new Date().toISOString().split('T')[0];
-        dateInput.value = new Date().toISOString().split('T')[0];
+    const rideData = ridesDetailsData[rideId];
+    
+    if (!rideData) {
+        console.warn(`Aucune donnée trouvée pour le trajet ${rideId}`);
+        showNotification(`Détails du covoiturage #${rideId} non disponibles`, 'warning');
+        return;
     }
-});
-</script>
+    
+    showRideModal(rideData);
+}
 
+function showRideModal(ride) {
+    const modalHTML = `
+        <div class="modal fade" id="rideModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-route me-2"></i>
+                            ${ride.departure.city} → ${ride.arrival.city}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Informations du chauffeur -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-user me-2"></i>Chauffeur</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="driver-avatar me-3" style="width: 50px; height: 50px; background: #28a745; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">${ride.avatar}</div>
+                                <div>
+                                    <h6 class="mb-1">${ride.driver}</h6>
+                                    <div class="rating mb-1">
+                                        ${generateStars(ride.rating)}
+                                        <span class="text-muted ms-1">${ride.rating} (${ride.reviewCount} avis)</span>
+                                    </div>
+                                    <p class="small text-muted mb-0">${ride.driverBio}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Détails du trajet -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-route me-2"></i>Détails du trajet</h6>
+                            <div class="route-details">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-4">
+                                        <i class="fas fa-circle text-success"></i>
+                                        <strong>${ride.departure.time}</strong>
+                                        <div class="small text-muted">${ride.departure.city}</div>
+                                    </div>
+                                    <div class="flex-fill text-center">
+                                        <hr class="my-0">
+                                        <small class="text-muted">${ride.duration}</small>
+                                    </div>
+                                    <div class="ms-4">
+                                        <i class="fas fa-map-marker-alt text-danger"></i>
+                                        <strong>${ride.arrival.time}</strong>
+                                        <div class="small text-muted">${ride.arrival.city}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Véhicule -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-car me-2"></i>Véhicule</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-car fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                    <div><strong>${ride.car.model}</strong></div>
+                                    <div class="small text-muted">Couleur: ${ride.car.color}</div>
+                                    <div class="small">
+                                        ${ride.ecological ? 
+                                            '<span class="badge bg-success"><i class="fas fa-leaf me-1"></i>Écologique</span>' :
+                                            '<span class="badge bg-secondary">Véhicule classique</span>'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Préférences -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-cog me-2"></i>Préférences du conducteur</h6>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <span class="badge ${ride.preferences.pets ? 'bg-success' : 'bg-danger'}">
+                                    <i class="fas fa-paw me-1"></i>
+                                    ${ride.preferences.pets ? 'Animaux OK' : 'Pas d\'animaux'}
+                                </span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-smoking-ban me-1"></i>Non-fumeur
+                                </span>
+                                ${ride.preferences.music ? 
+                                    '<span class="badge bg-info"><i class="fas fa-music me-1"></i>Musique</span>' : ''
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-comment me-2"></i>Description</h6>
+                            <p class="text-muted">${ride.description}</p>
+                        </div>
+
+                        <!-- Avis récents -->
+                        <div class="mb-4">
+                            <h6><i class="fas fa-star me-2"></i>Avis récents</h6>
+                            ${ride.reviews.map(review => `
+                                <div class="border rounded p-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <strong class="small">${review.author}</strong>
+                                        <div class="rating-small">
+                                            ${generateStars(review.rating, true)}
+                                        </div>
+                                    </div>
+                                    <p class="small mb-0 text-muted">${review.comment}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Prix et places -->
+                        <div class="bg-light rounded p-3 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <div class="h4 mb-0 text-success">${ride.price}€</div>
+                                    <small class="text-muted">par personne</small>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="text-end">
+                                        <div><i class="fas fa-users me-1"></i>${ride.seatsAvailable} places restantes</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Fermer
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="participateRide(${ride.id})">
+                            <i class="fas fa-check me-2"></i>Participer au covoiturage
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Supprimer l'ancienne modale si elle existe
+    const existingModal = document.getElementById('rideModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Ajouter la modale au DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Afficher la modale
+    const modal = new bootstrap.Modal(document.getElementById('rideModal'));
+    modal.show();
+}
+
+function generateStars(rating, small = false) {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    
+    let stars = '';
+    
+    for (let i = 0; i < fullStars; i++) {
+        stars += `<i class="fas fa-star${small ? ' small' : ''}"></i>`;
+    }
+    
+    if (hasHalfStar) {
+        stars += `<i class="fas fa-star-half-alt${small ? ' small' : ''}"></i>`;
+    }
+    
+    for (let i = 0; i < emptyStars; i++) {
+        stars += `<i class="far fa-star${small ? ' small' : ''}"></i>`;
+    }
+    
+    return stars;
+}
+
+function participateRide(rideId) {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn) {
+        showNotification('Vous devez vous connecter pour participer à un covoiturage.', 'warning');
+        setTimeout(() => {
+            window.location.href = 'connexion.html';
+        }, 2000);
+        return;
+    }
+
+    if (confirm('Voulez-vous vraiment participer à ce covoiturage ?')) {
+        showNotification('Demande de participation envoyée ! Le conducteur vous contactera bientôt.', 'success');
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('rideModal'));
+        if (modal) {
+            modal.hide();
+        }
+    }
+}
+
+// Export global pour compatibilité
+window.viewRideDetails = viewRideDetails;
+window.participateRide = participateRide;
+window.applyFilters = applyFilters;
+
+console.log('Module EcoRide chargé et prêt !');

@@ -1,12 +1,12 @@
 /**
- * EcoRide - JavaScript pour la Page Covoiturages
- * Version corrigée avec boutons détails fonctionnels
+ * EcoRide - JavaScript principal pour la page Covoiturages
+ * Version nettoyée sans duplication
  */
 
 // Variables globales
 let currentFilters = {
     ecoOnly: false,
-    maxPrice: 100,
+    maxPrice: 50,
     maxDuration: 999999,
     minRating: 0,
     petsAllowed: false,
@@ -79,6 +79,48 @@ const ridesDetailsData = {
         reviews: [
             { author: "Marie", rating: 4, comment: "Trajet agréable et sécurisé" },
             { author: "Luc", rating: 4, comment: "Ponctuel et sympathique" }
+        ]
+    },
+    4: {
+        id: 4,
+        driver: "JeanEcoDriver",
+        avatar: "J",
+        rating: 4.5,
+        reviewCount: 12,
+        departure: { city: "Toulouse", time: "16:30" },
+        arrival: { city: "Montpellier", time: "19:00" },
+        duration: "2h 30min",
+        car: { model: "Peugeot 308", color: "Noire", type: "essence" },
+        price: 22,
+        seatsAvailable: 4,
+        ecological: false,
+        preferences: { pets: false, smoking: false, music: false },
+        description: "Trajet Toulouse-Montpellier en fin de journée.",
+        driverBio: "Conducteur expérimenté, voyages longue distance.",
+        reviews: [
+            { author: "Claire", rating: 5, comment: "Très bien, ponctuel" },
+            { author: "Marc", rating: 4, comment: "Trajet agréable" }
+        ]
+    },
+    5: {
+        id: 5,
+        driver: "SophieVerte",
+        avatar: "S",
+        rating: 4.9,
+        reviewCount: 15,
+        departure: { city: "Lille", time: "10:15" },
+        arrival: { city: "Bruxelles", time: "12:00" },
+        duration: "1h 45min",
+        car: { model: "Nissan Leaf", color: "Verte", type: "electric" },
+        price: 18,
+        seatsAvailable: 4,
+        ecological: true,
+        preferences: { pets: true, smoking: false, music: true },
+        description: "Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !",
+        driverBio: "Spécialiste des trajets internationaux écologiques.",
+        reviews: [
+            { author: "Pierre", rating: 5, comment: "Parfait, très écologique" },
+            { author: "Anne", rating: 5, comment: "Conductrice excellente" }
         ]
     }
 };
@@ -183,19 +225,20 @@ function initSorting() {
 }
 
 function initDetailButtons() {
-    // Attacher les event listeners aux boutons détails existants
-    const detailButtons = document.querySelectorAll('.btn-detail');
-    console.log(`Initialisation de ${detailButtons.length} boutons détails`);
-    
-    detailButtons.forEach((button, index) => {
-        button.addEventListener('click', function(e) {
+    // Utiliser la délégation d'événements pour éviter les duplications
+    document.addEventListener('click', function(e) {
+        // Gérer uniquement les boutons "Détails" qui ne sont pas des boutons de réservation
+        if (e.target.closest('.btn-detail') && !e.target.closest('.reservation-btn')) {
             e.preventDefault();
-            const rideCard = this.closest('.ride-card');
-            let rideId = rideCard ? rideCard.dataset.rideId : (index + 1);
+            const button = e.target.closest('.btn-detail');
+            const rideCard = button.closest('.ride-card');
+            let rideId = button.dataset.rideId || (rideCard ? rideCard.dataset.rideId : null);
             
-            console.log(`Clic sur bouton détail - ID: ${rideId}`);
-            viewRideDetails(rideId);
-        });
+            if (rideId) {
+                console.log(`Clic sur bouton détail - ID: ${rideId}`);
+                viewRideDetails(rideId);
+            }
+        }
     });
 }
 
@@ -600,4 +643,3 @@ window.participateRide = participateRide;
 window.applyFilters = applyFilters;
 
 console.log('Module EcoRide chargé et prêt !');
-
