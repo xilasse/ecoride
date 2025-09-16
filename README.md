@@ -1,7 +1,6 @@
 # 🌱 EcoRide - Plateforme de Covoiturage Écologique
 
 ![EcoRide Logo](https://img.shields.io/badge/EcoRide-Covoiturage%20Écologique-4CAF50?style=for-the-badge&logo=leaf)
-
 [![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php)](https://php.net)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql)](https://mysql.com)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.0-7952B3?logo=bootstrap)](https://getbootstrap.com)
