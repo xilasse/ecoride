@@ -12,31 +12,41 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
+    gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Installation des extensions PHP nécessaires
+# Installation des extensions PHP nécessaires (vérifier si déjà installées)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    gd \
-    pdo \
-    pdo_mysql \
-    mysqli \
-    zip \
-    opcache
+    && for ext in gd pdo pdo_mysql mysqli zip opcache; do \
+        if ! php -m | grep -q "^$ext$"; then \
+            docker-php-ext-install $ext; \
+        else \
+            echo "Extension $ext already installed"; \
+        fi; \
+    done
 
-# Installation de l'extension MongoDB
-RUN pecl install mongodb \
-    && docker-php-ext-enable mongodb
+# Installation de l'extension MongoDB (vérifier si déjà installée)
+RUN if ! php -m | grep -q "^mongodb$"; then \
+        pecl install mongodb && docker-php-ext-enable mongodb; \
+    else \
+        echo "Extension mongodb already installed"; \
+    fi
 
-# Installation de l'extension Redis
-RUN pecl install redis \
-    && docker-php-ext-enable redis
+# Installation de l'extension Redis (vérifier si déjà installée)
+RUN if ! php -m | grep -q "^redis$"; then \
+        pecl install redis && docker-php-ext-enable redis; \
+    else \
+        echo "Extension redis already installed"; \
+    fi
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configuration d'Apache
 RUN a2enmod rewrite headers
+COPY ./docker/apache/000-default.conf.template /etc/apache2/sites-available/000-default.conf.template
+COPY ./docker/apache/ports.conf.template /etc/apache2/ports.conf.template
+# Copier aussi la config de base pour le développement local
 COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Configuration PHP
@@ -63,8 +73,9 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; \
     && find /var/www/html -type d -exec chmod 755 {} \;
 
-# Exposition du port 80
+# Exposition du port (80 par défaut, mais peut être modifié par Railway)
 EXPOSE 80
+# Railway utilisera la variable PORT pour le binding
 
 # Script de démarrage unifié
 COPY ./docker/scripts/start-unified.sh /start.sh

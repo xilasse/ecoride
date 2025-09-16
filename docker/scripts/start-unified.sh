@@ -98,6 +98,40 @@ install_netcat() {
 ENVIRONMENT=$(detect_environment)
 echo "🔍 Environnement détecté: $ENVIRONMENT"
 
+# Configuration du port Apache
+configure_apache_port() {
+    # Déterminer le port selon l'environnement
+    if [ -n "$PORT" ]; then
+        # Railway ou autre service avec PORT défini
+        APACHE_PORT=$PORT
+        echo "🌐 Utilisation du port Railway: $APACHE_PORT"
+    else
+        # Docker local ou environnement standard
+        APACHE_PORT=80
+        echo "🐳 Utilisation du port standard: $APACHE_PORT"
+    fi
+
+    # Exporter la variable pour les templates
+    export APACHE_PORT
+
+    # Configurer Apache avec le bon port
+    echo "⚙️  Configuration d'Apache pour le port $APACHE_PORT..."
+
+    # Remplacer les templates par les vrais fichiers de config
+    if [ -f "/etc/apache2/sites-available/000-default.conf.template" ]; then
+        envsubst < /etc/apache2/sites-available/000-default.conf.template > /etc/apache2/sites-available/000-default.conf
+    fi
+
+    if [ -f "/etc/apache2/ports.conf.template" ]; then
+        envsubst < /etc/apache2/ports.conf.template > /etc/apache2/ports.conf
+    fi
+
+    echo "✅ Apache configuré pour le port $APACHE_PORT"
+}
+
+# Configurer Apache avant de continuer
+configure_apache_port
+
 # Logique basée sur l'environnement
 case $ENVIRONMENT in
     "railway")

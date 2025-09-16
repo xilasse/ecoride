@@ -1,0 +1,12 @@
+# Configuration des ports Apache avec support Railway
+
+# Port d'écoute (variable selon l'environnement)
+Listen ${APACHE_PORT}
+
+<IfModule ssl_module>
+    Listen 443
+</IfModule>
+
+<IfModule mod_gnutls.c>
+    Listen 443
+</IfModule>
