@@ -460,7 +460,7 @@ body {
 
 /* Padding pour navbar fixe - ajustement pour la page covoiturages */
 body {
-    padding-top: 76px;
+    padding-top: 56px;
     background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
     min-height: 100vh;
 }
@@ -518,7 +518,7 @@ body {
    ======================================== */
 @media (max-width: 768px) {
     body {
-        padding-top: 60px;
+        padding-top: 56px;
     }
     
     .hero-title {
@@ -698,21 +698,6 @@ body {
 }
 
 /* style page connexion */
-
-:root {
-            --eco-primary: #2d5016;
-            --eco-secondary: #4a7c59;
-            --eco-accent: #7fb069;
-            --eco-light: #d6efc7;
-            --eco-white: #f8fff4;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
-            min-height: 100vh;
-            padding-top: 76px;
-        }
 
         .navbar {
             background: linear-gradient(90deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
@@ -936,21 +921,6 @@ body {
         .strength-strong { background: var(--eco-accent); width: 100%; }
     
         /* style page contact */
-
-        :root {
-            --eco-primary: #2d5016;
-            --eco-secondary: #4a7c59;
-            --eco-accent: #7fb069;
-            --eco-light: #d6efc7;
-            --eco-white: #f8fff4;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
-            min-height: 100vh;
-            padding-top: 76px;
-        }
 
         .navbar {
             background: linear-gradient(90deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
