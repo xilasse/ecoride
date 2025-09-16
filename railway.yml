@@ -1,0 +1,23 @@
+# Configuration Railway pour EcoRide
+version: 2
+
+build:
+  # Utiliser le Dockerfile à la racine
+  dockerfile: Dockerfile
+
+deploy:
+  # Configuration du déploiement
+  healthcheckPath: /health.php
+  healthcheckTimeout: 300
+  restartPolicyType: always
+
+variables:
+  # Variables d'environnement spécifiques à Railway
+  APP_ENV: production
+  APP_DEBUG: false
+
+environments:
+  production:
+    variables:
+      APP_ENV: production
+      APP_DEBUG: false

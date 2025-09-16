@@ -66,8 +66,8 @@ RUN chown -R www-data:www-data /var/www/html \
 # Exposition du port 80
 EXPOSE 80
 
-# Script de démarrage
-COPY ./docker/scripts/start.sh /start.sh
+# Script de démarrage unifié
+COPY ./docker/scripts/start-unified.sh /start.sh
 RUN chmod +x /start.sh
 
 CMD ["/start.sh"]

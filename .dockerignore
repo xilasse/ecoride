@@ -2,20 +2,45 @@
 .git
 .gitignore
 
-# Node modules (si vous en avez)
-node_modules
+# Documentation
+README.md
+*.md
+
+# Logs
+logs/
+*.log
+
+# Cache
+cache/
+tmp/
+temp/
+
+# Backups
+backups/
+
+# Environment files (sauf .env.example)
+.env
+.env.local
+.env.production
+
+# Node modules si présents
+node_modules/
 npm-debug.log
 
 # Composer vendor (sera réinstallé dans le container)
-vendor
+vendor/
 
-# IDE files
-.vscode
-.idea
+# Tests
+tests/
+phpunit.xml
+
+# IDE
+.vscode/
+.idea/
 *.swp
 *.swo
 
-# OS generated files
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -24,13 +49,14 @@ vendor
 ehthumbs.db
 Thumbs.db
 
-# Log files
-*.log
+# Railway specific
+railway.yml
 
-# Temporary files
-tmp/
-temp/
+# Docker
+docker-compose.yml
+compose.yml
+Dockerfile.dev
 
-# Config files sensibles (si vous en avez)
-.env.local
-.env.production
+# Scripts non-utilisés
+docker/scripts/start.sh
+docker/scripts/start.railway.sh

@@ -1,5 +1,6 @@
-# Composer
 /backups/
+/dev-docs/
+# Composer
 /vendor/
 composer.phar
 
