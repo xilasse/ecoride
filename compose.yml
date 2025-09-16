@@ -7,10 +7,10 @@ services:
     container_name: ecoride_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_password_secure
+      MYSQL_ROOT_PASSWORD: mysqlDBmdp8_root
       MYSQL_DATABASE: ecoride_db
-      MYSQL_USER: ecoride_user
-      MYSQL_PASSWORD: ecoride_password
+      MYSQL_USER: ecoride_mysql_admin
+      MYSQL_PASSWORD: mysqlDBmdp8_
     volumes:
       - mysql_data:/var/lib/mysql
       - ./sql/structure.sql:/docker-entrypoint-initdb.d/01_structure.sql
@@ -30,8 +30,8 @@ services:
     container_name: ecoride_mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo_admin
-      MONGO_INITDB_ROOT_PASSWORD: mongo_password_secure
+      MONGO_INITDB_ROOT_USERNAME: ecoride_mongo_root
+      MONGO_INITDB_ROOT_PASSWORD: mongoDBmdp8_root
       MONGO_INITDB_DATABASE: ecoride_nosql
     volumes:
       - mongodb_data:/data/db
@@ -58,14 +58,14 @@ services:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ecoride_db
-      DB_USER: ecoride_user
-      DB_PASSWORD: ecoride_password
+      DB_USER: ecoride_mysql_admin
+      DB_PASSWORD: mysqlDBmdp8_
       
       # Configuration MongoDB
       MONGO_HOST: mongodb
       MONGO_PORT: 27017
-      MONGO_USER: mongo_admin
-      MONGO_PASSWORD: mongo_password_secure
+      MONGO_USER: ecoride_mongo_root
+      MONGO_PASSWORD: mongoDBmdp8_root
       MONGO_DB: ecoride_nosql
       
       # Configuration application
@@ -80,14 +80,11 @@ services:
       # Configuration mail (si nécessaire)
       MAIL_HOST: smtp.gmail.com
       MAIL_PORT: 587
-      MAIL_USERNAME: your_email@gmail.com
-      MAIL_PASSWORD: your_app_password
+      MAIL_USERNAME: ecoridesiteforstudi@gmail.com
+      MAIL_PASSWORD: EcrMPDemail8_
       
     volumes:
-      - ./public:/var/www/html
-      - ./src:/var/www/html/src
-      - ./composer.json:/var/www/html/composer.json
-      - ./composer.lock:/var/www/html/composer.lock
+      - .:/var/www/html
     ports:
       - "8080:80"
     networks:
@@ -104,9 +101,9 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      PMA_USER: ecoride_user
-      PMA_PASSWORD: ecoride_password
-      MYSQL_ROOT_PASSWORD: root_password_secure
+      PMA_USER: ecoride_mysql_admin
+      PMA_PASSWORD: mysqlDBmdp8_
+      MYSQL_ROOT_PASSWORD: mysqlDBmdp8_root
     ports:
       - "8081:80"
     networks:
@@ -120,11 +117,11 @@ services:
     depends_on:
       - mongodb
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: mongo_admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: mongo_password_secure
-      ME_CONFIG_MONGODB_URL: mongodb://mongo_admin:mongo_password_secure@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ecoride_mongo_root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: mongoDBmdp8_root
+      ME_CONFIG_MONGODB_URL: mongodb://ecoride_mongo_root:mongoDBmdp8_root@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: atm
+      ME_CONFIG_BASICAUTH_PASSWORD: adm8_
     ports:
       - "8082:8081"
     networks:
@@ -135,7 +132,7 @@ services:
     image: redis:7-alpine
     container_name: ecoride_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass redis_password_secure
+    command: redis-server --appendonly yes --requirepass redisMDP8_
     volumes:
       - redis_data:/data
     ports:
@@ -155,12 +152,12 @@ services:
         condition: service_started
     environment:
       MYSQL_HOST: mysql
-      MYSQL_USER: ecoride_user
-      MYSQL_PASSWORD: ecoride_password
+      MYSQL_USER: ecoride_mysql_admin
+      MYSQL_PASSWORD: mysqlDBmdp8_
       MYSQL_DATABASE: ecoride_db
       MONGO_HOST: mongodb
-      MONGO_USER: mongo_admin
-      MONGO_PASSWORD: mongo_password_secure
+      MONGO_USER: ecoride_mongo_root
+      MONGO_PASSWORD: mongoDBmdp8_root
     volumes:
       - ./backups:/backups
       - ./scripts/backup.sh:/backup.sh
