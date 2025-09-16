@@ -7,10 +7,10 @@ services:
     container_name: ecoride_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: mysqlDBmdp8_root
-      MYSQL_DATABASE: ecoride_db
-      MYSQL_USER: ecoride_mysql_admin
-      MYSQL_PASSWORD: mysqlDBmdp8_
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./sql/structure.sql:/docker-entrypoint-initdb.d/01_structure.sql
@@ -30,9 +30,9 @@ services:
     container_name: ecoride_mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ecoride_mongo_root
-      MONGO_INITDB_ROOT_PASSWORD: mongoDBmdp8_root
-      MONGO_INITDB_DATABASE: ecoride_nosql
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d
@@ -55,18 +55,18 @@ services:
         condition: service_started
     environment:
       # Configuration base de données MySQL
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: ecoride_db
-      DB_USER: ecoride_mysql_admin
-      DB_PASSWORD: mysqlDBmdp8_
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       
       # Configuration MongoDB
-      MONGO_HOST: mongodb
-      MONGO_PORT: 27017
-      MONGO_USER: ecoride_mongo_root
-      MONGO_PASSWORD: mongoDBmdp8_root
-      MONGO_DB: ecoride_nosql
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DB: ${MONGO_DB}
       
       # Configuration application
       APP_ENV: development
@@ -74,17 +74,20 @@ services:
       APP_URL: http://localhost:8080
       
       # Configuration des crédits
-      INITIAL_CREDITS: 20
-      PLATFORM_FEE_CREDITS: 2
+      INITIAL_CREDITS: ${INITIAL_CREDITS}
+      PLATFORM_FEE_CREDITS: ${PLATFORM_FEE_CREDITS}
       
       # Configuration mail (si nécessaire)
-      MAIL_HOST: smtp.gmail.com
-      MAIL_PORT: 587
-      MAIL_USERNAME: ecoridesiteforstudi@gmail.com
-      MAIL_PASSWORD: EcrMPDemail8_
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
       
     volumes:
-      - .:/var/www/html
+      - ./public:/var/www/html
+      - ./src:/var/www/html/src
+      - ./composer.json:/var/www/html/composer.json
+      - ./composer.lock:/var/www/html/composer.lock
     ports:
       - "8080:80"
     networks:
@@ -99,11 +102,11 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_USER: ecoride_mysql_admin
-      PMA_PASSWORD: mysqlDBmdp8_
-      MYSQL_ROOT_PASSWORD: mysqlDBmdp8_root
+      PMA_HOST: ${DB_HOST}
+      PMA_PORT: ${DB_PORT}
+      PMA_USER: ${DB_USER}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
       - "8081:80"
     networks:
@@ -117,11 +120,11 @@ services:
     depends_on:
       - mongodb
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ecoride_mongo_root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: mongoDBmdp8_root
-      ME_CONFIG_MONGODB_URL: mongodb://ecoride_mongo_root:mongoDBmdp8_root@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: atm
-      ME_CONFIG_BASICAUTH_PASSWORD: adm8_
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
     ports:
       - "8082:8081"
     networks:
@@ -132,7 +135,7 @@ services:
     image: redis:7-alpine
     container_name: ecoride_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass redisMDP8_
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     ports:
@@ -151,13 +154,13 @@ services:
       mongodb:
         condition: service_started
     environment:
-      MYSQL_HOST: mysql
-      MYSQL_USER: ecoride_mysql_admin
-      MYSQL_PASSWORD: mysqlDBmdp8_
-      MYSQL_DATABASE: ecoride_db
-      MONGO_HOST: mongodb
-      MONGO_USER: ecoride_mongo_root
-      MONGO_PASSWORD: mongoDBmdp8_root
+      MYSQL_HOST: ${DB_HOST}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - ./backups:/backups
       - ./scripts/backup.sh:/backup.sh
