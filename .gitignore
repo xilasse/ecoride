@@ -2,7 +2,6 @@
 /backups/
 /vendor/
 composer.phar
-composer.lock
 
 # PHP
 *.log
