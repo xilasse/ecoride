@@ -1,0 +1,120 @@
+# Dockerfile optimisé pour Railway
+# Évite les problèmes d'extensions déjà installées
+FROM php:8.2-apache
+
+# Installation des dépendances système uniquement
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libssl-dev \
+    pkg-config \
+    unzip \
+    git \
+    curl \
+    gettext-base \
+    default-mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installation SELECTIVE des extensions PHP
+# Vérifier d'abord ce qui est déjà disponible
+RUN set -ex; \
+    echo "=== Checking existing PHP extensions ==="; \
+    php -m; \
+    echo "=== Installing only missing extensions ==="; \
+    \
+    # Configuration GD si nécessaire
+    if ! php -m | grep -q "^gd$"; then \
+        docker-php-ext-configure gd --with-freetype --with-jpeg; \
+        docker-php-ext-install gd; \
+    fi; \
+    \
+    # PDO (généralement déjà présent)
+    if ! php -m | grep -q "^pdo$"; then \
+        docker-php-ext-install pdo; \
+    fi; \
+    \
+    # PDO MySQL
+    if ! php -m | grep -q "^pdo_mysql$"; then \
+        docker-php-ext-install pdo_mysql; \
+    fi; \
+    \
+    # MySQLi
+    if ! php -m | grep -q "^mysqli$"; then \
+        docker-php-ext-install mysqli; \
+    fi; \
+    \
+    # ZIP
+    if ! php -m | grep -q "^zip$"; then \
+        docker-php-ext-install zip; \
+    fi; \
+    \
+    # OPCache
+    if ! php -m | grep -q "^Zend OPcache$"; then \
+        docker-php-ext-install opcache; \
+    fi; \
+    \
+    echo "=== Final extension list ==="; \
+    php -m
+
+# Installation MongoDB avec vérification
+RUN set -ex; \
+    if ! php -m | grep -q "^mongodb$"; then \
+        pecl install mongodb; \
+        docker-php-ext-enable mongodb; \
+    else \
+        echo "MongoDB extension already available"; \
+    fi
+
+# Installation Redis avec vérification
+RUN set -ex; \
+    if ! php -m | grep -q "^redis$"; then \
+        pecl install redis; \
+        docker-php-ext-enable redis; \
+    else \
+        echo "Redis extension already available"; \
+    fi
+
+# Installation de Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configuration d'Apache
+RUN a2enmod rewrite headers
+
+# Copier les templates de configuration
+COPY ./docker/apache/000-default.conf.template /etc/apache2/sites-available/000-default.conf.template
+COPY ./docker/apache/ports.conf.template /etc/apache2/ports.conf.template
+
+# Configuration PHP
+COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/ecoride.ini
+
+# Configuration des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Copie des fichiers de l'application
+WORKDIR /var/www/html
+
+# Copie du composer.json en premier pour optimiser le cache Docker
+COPY composer.json composer.lock ./
+
+# Installation des dépendances PHP
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copie du reste de l'application
+COPY . .
+
+# Configuration finale des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
+    && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
+
+# Exposition du port dynamique
+EXPOSE 80
+
+# Script de démarrage unifié
+COPY ./docker/scripts/start-unified.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]

@@ -15,15 +15,29 @@ RUN apt-get update && apt-get install -y \
     gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Installation des extensions PHP nécessaires (vérifier si déjà installées)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && for ext in gd pdo pdo_mysql mysqli zip opcache; do \
-        if ! php -m | grep -q "^$ext$"; then \
-            docker-php-ext-install $ext; \
+# Installation des extensions PHP nécessaires
+# Utiliser une approche plus robuste pour éviter les doublons
+RUN set -ex; \
+    # Configuration de GD
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    \
+    # Installer seulement les extensions non présentes
+    EXTENSIONS=""; \
+    for ext in gd pdo pdo_mysql mysqli zip opcache; do \
+        if ! php -m 2>/dev/null | grep -q "^$ext$"; then \
+            EXTENSIONS="$EXTENSIONS $ext"; \
+            echo "Will install: $ext"; \
         else \
-            echo "Extension $ext already installed"; \
+            echo "Already installed: $ext"; \
         fi; \
-    done
+    done; \
+    \
+    # Installer les extensions en une fois si nécessaire
+    if [ -n "$EXTENSIONS" ]; then \
+        docker-php-ext-install $EXTENSIONS; \
+    else \
+        echo "All core extensions already available"; \
+    fi
 
 # Installation de l'extension MongoDB (vérifier si déjà installée)
 RUN if ! php -m | grep -q "^mongodb$"; then \

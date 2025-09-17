@@ -2,8 +2,8 @@
 version: 2
 
 build:
-  # Utiliser le Dockerfile à la racine
-  dockerfile: Dockerfile
+  # Utiliser le Dockerfile optimisé pour Railway
+  dockerfile: Dockerfile.railway
 
 deploy:
   # Configuration du déploiement

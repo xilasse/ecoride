@@ -119,11 +119,17 @@ configure_apache_port() {
 
     # Remplacer les templates par les vrais fichiers de config
     if [ -f "/etc/apache2/sites-available/000-default.conf.template" ]; then
-        envsubst < /etc/apache2/sites-available/000-default.conf.template > /etc/apache2/sites-available/000-default.conf
+        echo "🔧 Génération de 000-default.conf avec PORT=$APACHE_PORT"
+        envsubst '${APACHE_PORT}' < /etc/apache2/sites-available/000-default.conf.template > /etc/apache2/sites-available/000-default.conf
+        echo "📄 Contenu généré :"
+        cat /etc/apache2/sites-available/000-default.conf | head -3
     fi
 
     if [ -f "/etc/apache2/ports.conf.template" ]; then
-        envsubst < /etc/apache2/ports.conf.template > /etc/apache2/ports.conf
+        echo "🔧 Génération de ports.conf avec PORT=$APACHE_PORT"
+        envsubst '${APACHE_PORT}' < /etc/apache2/ports.conf.template > /etc/apache2/ports.conf
+        echo "📄 Contenu généré :"
+        cat /etc/apache2/ports.conf | head -3
     fi
 
     echo "✅ Apache configuré pour le port $APACHE_PORT"
@@ -225,6 +231,50 @@ echo "🔐 Configuration finale des permissions..."
 chown -R www-data:www-data /var/www/html
 find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true
 find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
+
+# Test final avant démarrage Apache
+echo "🧪 Test final de configuration..."
+
+# Vérifier que les fichiers de config sont corrects
+if [ -f "/etc/apache2/ports.conf" ]; then
+    echo "✅ ports.conf existe"
+    grep "Listen" /etc/apache2/ports.conf || echo "❌ Pas de Listen dans ports.conf"
+else
+    echo "❌ ports.conf manquant"
+fi
+
+if [ -f "/etc/apache2/sites-available/000-default.conf" ]; then
+    echo "✅ 000-default.conf existe"
+    grep "VirtualHost" /etc/apache2/sites-available/000-default.conf || echo "❌ Pas de VirtualHost"
+else
+    echo "❌ 000-default.conf manquant"
+fi
+
+# Vérifier que le health check est accessible
+if [ -f "/var/www/html/public/health.php" ]; then
+    echo "✅ health.php trouvé"
+else
+    echo "❌ health.php manquant - création d'un basique"
+    mkdir -p /var/www/html/public
+    cat > /var/www/html/public/health.php << 'EOF'
+<?php
+header('Content-Type: application/json');
+echo json_encode([
+    'status' => 'ok',
+    'timestamp' => date('c'),
+    'port' => $_SERVER['SERVER_PORT'] ?? 'unknown',
+    'environment' => getenv('APP_ENV') ?: 'unknown'
+]);
+?>
+EOF
+    chown www-data:www-data /var/www/html/public/health.php
+fi
+
+# Variables pour debug
+echo "🔍 Variables importantes:"
+echo "  PORT: ${PORT:-'non défini'}"
+echo "  APACHE_PORT: ${APACHE_PORT:-'non défini'}"
+echo "  RAILWAY_ENVIRONMENT: ${RAILWAY_ENVIRONMENT:-'non défini'}"
 
 # Démarrage d'Apache
 echo "🌐 Démarrage d'Apache..."
