@@ -1,0 +1,2 @@
+# Configuration globale pour supprimer le warning ServerName
+ServerName localhost

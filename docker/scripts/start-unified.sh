@@ -255,6 +255,12 @@ chown -R www-data:www-data /var/www/html
 find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true
 find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
+# Configuration Apache pour supprimer le warning ServerName
+if [ -f "/etc/apache2/apache2.conf" ] && [ -f "/var/www/html/docker/apache/apache2.conf.append" ]; then
+    echo "🔧 Suppression du warning Apache ServerName..."
+    cat /var/www/html/docker/apache/apache2.conf.append >> /etc/apache2/apache2.conf
+fi
+
 # Test final avant démarrage Apache
 echo "🧪 Test final de configuration..."
 
