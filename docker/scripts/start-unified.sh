@@ -66,28 +66,6 @@ wait_for_mysql_admin() {
     return 1
 }
 
-# Fonction pour attendre MongoDB (méthode mongo)
-wait_for_mongodb() {
-    local host=${MONGO_HOST:-mongodb}
-    local port=${MONGO_PORT:-27017}
-    local user=${MONGO_USER}
-    local password=${MONGO_PASSWORD}
-
-    echo "⏳ Attente de MongoDB ($host:$port)..."
-    if [ -n "$user" ] && [ -n "$password" ]; then
-        until mongo --host "$host:$port" --username "$user" --password "$password" --authenticationDatabase admin --eval "db.adminCommand('ismaster')" > /dev/null 2>&1; do
-            echo "MongoDB n'est pas encore prêt, attente..."
-            sleep 2
-        done
-    else
-        until mongo --host "$host:$port" --eval "db.adminCommand('ismaster')" > /dev/null 2>&1; do
-            echo "MongoDB n'est pas encore prêt, attente..."
-            sleep 2
-        done
-    fi
-    echo "✅ MongoDB est prêt"
-}
-
 # Fonction pour attendre Redis
 wait_for_redis() {
     local host=${REDIS_HOST:-redis}
@@ -175,15 +153,6 @@ case $ENVIRONMENT in
         # Attendre les services externes
         wait_for_mysql_admin
 
-        # MongoDB n'est pas toujours utilisé sur Railway, vérifier d'abord
-        if [ -n "$MONGO_HOST" ] && [ "$MONGO_HOST" != "mongodb" ]; then
-            if command -v mongo >/dev/null 2>&1; then
-                wait_for_mongodb
-            else
-                echo "⚠️  MongoDB client non disponible, on continue sans vérification"
-            fi
-        fi
-
         # Redis optionnel
         if [ -n "$REDIS_HOST" ] && [ "$REDIS_HOST" != "redis" ]; then
             if command -v redis-cli >/dev/null 2>&1; then
@@ -199,10 +168,6 @@ case $ENVIRONMENT in
         # Bases de données externes mais pas Railway
         wait_for_mysql_admin
 
-        if [ -n "$MONGO_HOST" ]; then
-            wait_for_mongodb
-        fi
-
         if [ -n "$REDIS_HOST" ]; then
             wait_for_redis
         fi
@@ -215,7 +180,6 @@ case $ENVIRONMENT in
 
         # Attendre les services Docker avec netcat
         wait_for_service_nc "mysql" "3306" "MySQL"
-        wait_for_service_nc "mongodb" "27017" "MongoDB"
 
         # Redis optionnel
         if nc -z redis 6379 2>/dev/null; then

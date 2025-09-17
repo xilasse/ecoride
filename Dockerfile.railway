@@ -58,15 +58,6 @@ RUN set -ex; \
     echo "=== Final extension list ==="; \
     php -m
 
-# Installation MongoDB avec vérification
-RUN set -ex; \
-    if ! php -m | grep -q "^mongodb$"; then \
-        pecl install mongodb; \
-        docker-php-ext-enable mongodb; \
-    else \
-        echo "MongoDB extension already available"; \
-    fi
-
 # Installation Redis avec vérification
 RUN set -ex; \
     if ! php -m | grep -q "^redis$"; then \

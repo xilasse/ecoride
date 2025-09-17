@@ -39,13 +39,6 @@ return [
         'environment' => $_ENV['APP_ENV'] ?? 'development',
         'debug' => ($_ENV['APP_DEBUG'] ?? $_ENV['DEBUG'] ?? 'true') === 'true'
     ],
-    'mongodb' => [
-        'host' => $_ENV['MONGO_HOST'] ?? 'localhost',
-        'port' => $_ENV['MONGO_PORT'] ?? 27017,
-        'database' => $_ENV['MONGO_DB'] ?? 'ecoride_nosql',
-        'username' => $_ENV['MONGO_USER'] ?? null,
-        'password' => $_ENV['MONGO_PASSWORD'] ?? null
-    ],
     'redis' => [
         'host' => $_ENV['REDIS_HOST'] ?? 'localhost',
         'port' => $_ENV['REDIS_PORT'] ?? 6379,

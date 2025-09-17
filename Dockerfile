@@ -39,9 +39,12 @@ RUN set -ex; \
         echo "All core extensions already available"; \
     fi
 
-# Extensions optionnelles pour le développement local
-# MongoDB et Redis sont optionnels en local
-RUN echo "Skipping MongoDB and Redis for local development"
+# Installation de l'extension Redis (vérifier si déjà installée)
+RUN if ! php -m | grep -q "^redis$"; then \
+        pecl install redis && docker-php-ext-enable redis; \
+    else \
+        echo "Extension redis already installed"; \
+    fi
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -79,10 +82,4 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Exposition du port (80 par défaut, mais peut être modifié par Railway)
 EXPOSE 80
-# Railway utilisera la variable PORT pour le binding
-
-# Script de démarrage unifié
-COPY ./docker/scripts/start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+CMD ["apache2-foreground"]

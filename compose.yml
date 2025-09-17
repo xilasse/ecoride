@@ -24,23 +24,6 @@ services:
       timeout: 20s
       retries: 10
 
-  # Base de données MongoDB pour les préférences et logs
-  mongodb:
-    image: mongo:6.0
-    container_name: ecoride_mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
-    volumes:
-      - mongodb_data:/data/db
-      - ./mongo-init:/docker-entrypoint-initdb.d
-    ports:
-      - "27017:27017"
-    networks:
-      - ecoride_network
-
   # Application PHP avec Apache
   webapp:
     build:
@@ -51,8 +34,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     environment:
       # Configuration base de données MySQL
       DB_HOST: ${DB_HOST}
@@ -60,13 +41,6 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      
-      # Configuration MongoDB
-      MONGO_HOST: ${MONGO_HOST}
-      MONGO_PORT: ${MONGO_PORT}
-      MONGO_USER: ${MONGO_USER}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_DB: ${MONGO_DB}
       
       # Configuration application
       APP_ENV: development
@@ -109,24 +83,6 @@ services:
     networks:
       - ecoride_network
 
-  # Mongo Express pour la gestion MongoDB
-  mongo-express:
-    image: mongo-express:1.0
-    container_name: ecoride_mongo_express
-    restart: unless-stopped
-    depends_on:
-      - mongodb
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/
-      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
-    ports:
-      - "8082:8081"
-    networks:
-      - ecoride_network
-
   # Redis pour la gestion des sessions et cache
   redis:
     image: redis:7-alpine
@@ -148,16 +104,11 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      mongodb:
-        condition: service_started
     environment:
       MYSQL_HOST: ${DB_HOST}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
-      MONGO_HOST: ${MONGO_HOST}
-      MONGO_USER: ${MONGO_USER}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - ./backups:/backups
       - ./scripts/backup.sh:/backup.sh
@@ -165,7 +116,7 @@ services:
       - ecoride_network
     command: >
       sh -c "
-      apk add --no-cache mysql-client mongodb-tools &&
+      apk add --no-cache mysql-client &&
       chmod +x /backup.sh &&
       /backup.sh
       "
@@ -173,8 +124,6 @@ services:
 # Définition des volumes persistants
 volumes:
   mysql_data:
-    driver: local
-  mongodb_data:
     driver: local
   redis_data:
     driver: local
