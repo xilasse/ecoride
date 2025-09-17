@@ -56,7 +56,3 @@ railway.yml
 docker-compose.yml
 compose.yml
 Dockerfile.dev
-
-# Scripts non-utilisés
-docker/scripts/start.sh
-docker/scripts/start.railway.sh
