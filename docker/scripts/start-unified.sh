@@ -36,11 +36,34 @@ wait_for_mysql_admin() {
     local password=${DB_PASSWORD}
 
     echo "⏳ Attente de MySQL ($host:$port)..."
-    until mysqladmin ping -h"$host" -P"$port" -u"$user" -p"$password" --silent 2>/dev/null; do
-        echo "MySQL n'est pas encore prêt, attente..."
-        sleep 2
+
+    # Vérifier d'abord si les variables sont définies
+    if [ -z "$DB_HOST" ] || [ -z "$DB_PASSWORD" ]; then
+        echo "❌ Variables DB_HOST ou DB_PASSWORD non définies"
+        echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
+        echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
+        echo "DB_PASSWORD: ${DB_PASSWORD:+DÉFINI}"
+        return 1
+    fi
+
+    # Tentative de connexion avec timeout
+    local max_attempts=30
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if mysqladmin ping -h"$host" -P"$port" -u"$user" -p"$password" --silent 2>/dev/null; then
+            echo "✅ MySQL est prêt après $attempt tentative(s)"
+            return 0
+        fi
+
+        echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
+        sleep 3
+        attempt=$((attempt + 1))
     done
-    echo "✅ MySQL est prêt"
+
+    echo "❌ MySQL non accessible après $max_attempts tentatives"
+    echo "Vérifiez vos variables d'environnement DB_*"
+    return 1
 }
 
 # Fonction pour attendre MongoDB (méthode mongo)
