@@ -269,6 +269,17 @@ echo "  PORT: ${PORT:-'non défini'}"
 echo "  APACHE_PORT: ${APACHE_PORT:-'non défini'}"
 echo "  RAILWAY_ENVIRONMENT: ${RAILWAY_ENVIRONMENT:-'non défini'}"
 
+# Initialisation de la base de données
+echo "🗄️  Initialisation de la base de données..."
+php /var/www/html/scripts/init-database.php
+
+if [ $? -eq 0 ]; then
+    echo "✅ Base de données initialisée avec succès"
+else
+    echo "❌ Erreur lors de l'initialisation de la base de données"
+    echo "⚠️  L'application va quand même démarrer, mais la DB pourrait ne pas être configurée"
+fi
+
 # Démarrage d'Apache
 echo "🌐 Démarrage d'Apache..."
 exec apache2-foreground
