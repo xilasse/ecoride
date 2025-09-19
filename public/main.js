@@ -574,24 +574,68 @@ function generateStars(rating, small = false) {
 }
 
 function participateRide(rideId) {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    
-    if (!isLoggedIn) {
-        showNotification('Vous devez vous connecter pour participer à un covoiturage.', 'warning');
-        setTimeout(() => {
-            window.location.href = 'connexion.html';
-        }, 2000);
-        return;
+    console.log(`Tentative de participation au trajet ${rideId}`);
+
+    // Puisque auth.js vérifie déjà la session, on peut directement procéder
+    // Si l'utilisateur n'était pas connecté, auth.js aurait déjà redirigé
+
+    // Vérification simple et directe
+    fetch('/api/auth/session', {
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('🔍 Vérification session dans participateRide:', data);
+
+        if (data.isLoggedIn && data.user) {
+            console.log('✅ Session valide, procédure de réservation');
+
+            // Utilisateur connecté, procéder à la réservation
+            if (confirm(`Voulez-vous vraiment participer à ce covoiturage ?\n\nUtilisateur: ${data.user.pseudo}\nTrajet: #${rideId}`)) {
+                processReservation(rideId, data.user);
+            }
+        } else {
+            console.log('❌ Session invalide dans participateRide');
+            showNotification('Votre session a expiré. Veuillez vous reconnecter.', 'warning');
+            setTimeout(() => {
+                window.location.href = 'connexion.html';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erreur session dans participateRide:', error);
+        showNotification('Erreur de connexion. Veuillez réessayer.', 'danger');
+    });
+}
+
+function processReservation(rideId, user) {
+    console.log(`Traitement de la réservation pour ${user.pseudo} - Trajet ${rideId}`);
+
+    // Simulation d'une API de réservation
+    const reservationData = {
+        rideId: rideId,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+    };
+
+    // Ici on pourrait faire un appel API réel:
+    // fetch('/api/reservations/create', { ... })
+
+    showNotification(
+        `Demande de participation envoyée ! Le conducteur vous contactera bientôt.`,
+        'success'
+    );
+
+    // Fermer la modale
+    const modal = bootstrap.Modal.getInstance(document.getElementById('rideModal'));
+    if (modal) {
+        modal.hide();
     }
 
-    if (confirm('Voulez-vous vraiment participer à ce covoiturage ?')) {
-        showNotification('Demande de participation envoyée ! Le conducteur vous contactera bientôt.', 'success');
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('rideModal'));
-        if (modal) {
-            modal.hide();
-        }
-    }
+    // Optionnel: Rediriger vers le profil
+    setTimeout(() => {
+        showNotification('Vous pouvez suivre vos réservations dans votre profil.', 'info');
+    }, 3000);
 }
 
 // Export global pour compatibilité
