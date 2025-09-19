@@ -13,61 +13,6 @@
 
     <!-- Custom CSS -->
     <link href="./styles.css" rel="stylesheet">
-
-    <style>
-        .profile-menu .nav-link {
-            color: #000 !important;
-        }
-        .profile-menu .nav-link:hover {
-            color: #333 !important;
-        }
-        .profile-menu .nav-link.active {
-            background-color: var(--eco-primary, #28a745) !important;
-            color: #fff !important;
-        }
-        .profile-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 120px 0 40px;
-            margin-bottom: 40px;
-        }
-        .profile-avatar {
-            background: var(--eco-primary, #28a745);
-            color: white;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-        }
-        .profile-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .profile-stats .stat {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            font-weight: 500;
-        }
-        .profile-menu {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .profile-menu h5 {
-            color: var(--eco-primary, #28a745);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f8f9fa;
-        }
-    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -90,329 +35,207 @@
                         <a class="nav-link" href="covoiturages.html">Covoiturages</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="./connexion.html">Connexion</a>
+                        <a class="nav-link active" href="profil.html">Profil</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="./contact.html">Contact</a>
+                        <a class="nav-link" href="contact.html">Contact</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Profile Header -->
-    <section class="profile-header">
+    <!-- En-tête Profil Simple -->
+    <div class="profile-header-simple">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-3 text-center">
-                    <div class="profile-avatar">
-                        <i class="fas fa-user fa-4x"></i>
-                    </div>
+            <div class="profile-header-content">
+                <div class="profile-picture">
+                    <img src="/api/placeholder/100/100" alt="Photo de profil" id="profileAvatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="profile-placeholder">👤</div>
                 </div>
-                <div class="col-md-9">
-                    <h1 id="userName">Chargement...</h1>
-                    <p class="text-muted" id="userEmail">email@example.com</p>
+                <div class="profile-info">
+                    <h1 id="profileUserName">Chargement...</h1>
+                    <p id="profileUserEmail">email@example.com</p>
                     <div class="profile-stats">
-                        <div class="stat">
-                            <i class="fas fa-coins text-warning"></i>
-                            <span id="userCredits">0</span> crédits
-                        </div>
-                        <div class="stat">
-                            <i class="fas fa-star text-success"></i>
-                            <span id="userRating">0.0</span> / 5
-                        </div>
-                        <div class="stat">
-                            <i class="fas fa-car text-primary"></i>
-                            <span id="totalRidesDriver">0</span> trajets conduits
-                        </div>
-                        <div class="stat">
-                            <i class="fas fa-user-friends text-info"></i>
-                            <span id="totalRidesPassenger">0</span> trajets passager
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Profile Content -->
-    <div class="container py-4">
-        <div class="row">
-            <!-- Profile Menu -->
-            <div class="col-lg-3">
-                <div class="profile-menu">
-                    <h5><i class="fas fa-user-cog me-2"></i>Mon Compte</h5>
-                    <ul class="nav nav-pills flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#profile-info" data-bs-toggle="pill">
-                                <i class="fas fa-user me-2"></i>Informations personnelles
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#my-rides" data-bs-toggle="pill">
-                                <i class="fas fa-car me-2"></i>Mes trajets
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#my-reservations" data-bs-toggle="pill">
-                                <i class="fas fa-calendar-check me-2"></i>Mes réservations
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#my-vehicles" data-bs-toggle="pill">
-                                <i class="fas fa-car-side me-2"></i>Mes véhicules
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#settings" data-bs-toggle="pill">
-                                <i class="fas fa-cog me-2"></i>Paramètres
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Profile Content -->
-            <div class="col-lg-9">
-                <div class="tab-content">
-                    <!-- Informations personnelles -->
-                    <div class="tab-pane fade show active" id="profile-info">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-user me-2"></i>Informations personnelles</h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="profileForm">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Pseudo</label>
-                                                <input type="text" class="form-control" id="profilePseudo" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Email</label>
-                                                <input type="email" class="form-control" id="profileEmail" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Téléphone</label>
-                                                <input type="tel" class="form-control" id="profilePhone" placeholder="Non renseigné">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label">Date de naissance</label>
-                                                <input type="date" class="form-control" id="profileBirthdate">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Bio</label>
-                                        <textarea class="form-control" id="profileBio" rows="3" placeholder="Parlez-nous de vous..."></textarea>
-                                    </div>
-                                    <button type="button" class="btn btn-success">
-                                        <i class="fas fa-save me-2"></i>Enregistrer les modifications
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mes trajets -->
-                    <div class="tab-pane fade" id="my-rides">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-car me-2"></i>Mes trajets proposés</h5>
-                                <a href="covoiturages.html" class="btn btn-success btn-sm">
-                                    <i class="fas fa-plus me-2"></i>Nouveau trajet
-                                </a>
-                            </div>
-                            <div class="card-body">
-                                <div id="myRidesList">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-car fa-3x mb-3"></i>
-                                        <p>Vous n'avez pas encore proposé de trajet.</p>
-                                        <a href="covoiturages.html" class="btn btn-outline-success">
-                                            Proposer mon premier trajet
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mes réservations -->
-                    <div class="tab-pane fade" id="my-reservations">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-calendar-check me-2"></i>Mes réservations</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="myReservationsList">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-calendar-check fa-3x mb-3"></i>
-                                        <p>Vous n'avez pas encore de réservation.</p>
-                                        <a href="covoiturages.html" class="btn btn-outline-primary">
-                                            Rechercher un trajet
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mes véhicules -->
-                    <div class="tab-pane fade" id="my-vehicles">
-                        <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5><i class="fas fa-car-side me-2"></i>Mes véhicules</h5>
-                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
-                                    <i class="fas fa-plus me-2"></i>Ajouter un véhicule
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div id="myVehiclesList">
-                                    <div class="text-center text-muted py-4">
-                                        <i class="fas fa-car-side fa-3x mb-3"></i>
-                                        <p>Vous n'avez pas encore enregistré de véhicule.</p>
-                                        <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
-                                            Ajouter mon premier véhicule
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Paramètres -->
-                    <div class="tab-pane fade" id="settings">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-cog me-2"></i>Paramètres du compte</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Notifications</h6>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="notifEmail" checked>
-                                            <label class="form-check-label" for="notifEmail">
-                                                Notifications par email
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="notifSMS">
-                                            <label class="form-check-label" for="notifSMS">
-                                                Notifications par SMS
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-3">
-                                            <input class="form-check-input" type="checkbox" id="newsletter" checked>
-                                            <label class="form-check-label" for="newsletter">
-                                                Newsletter EcoRide
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Confidentialité</h6>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="profilePublic" checked>
-                                            <label class="form-check-label" for="profilePublic">
-                                                Profil public
-                                            </label>
-                                        </div>
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="showPhone">
-                                            <label class="form-check-label" for="showPhone">
-                                                Afficher mon téléphone
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <hr>
-                                <h6 class="text-danger">Zone dangereuse</h6>
-                                <button class="btn btn-outline-danger me-2">
-                                    <i class="fas fa-key me-2"></i>Changer le mot de passe
-                                </button>
-                                <button class="btn btn-danger">
-                                    <i class="fas fa-trash me-2"></i>Supprimer le compte
-                                </button>
-                            </div>
-                        </div>
+                        <span class="stat">💰 <span id="profileCredits">0</span> crédits</span>
+                        <span class="stat">⭐ <span id="profileRating">4.5</span></span>
+                        <span class="stat">🚗 <span id="profileTotalRides">0</span> trajets</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Ajouter un véhicule -->
-    <div class="modal fade" id="addVehicleModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-car me-2"></i>Ajouter un véhicule
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addVehicleForm">
-                        <div class="mb-3">
-                            <label class="form-label">Marque *</label>
-                            <input type="text" class="form-control" required placeholder="Ex: Tesla, Renault">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Modèle *</label>
-                            <input type="text" class="form-control" required placeholder="Ex: Model 3, ZOE">
+    <!-- Navigation Onglets -->
+    <div class="container">
+        <div class="profile-tabs">
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+                        📝 Informations
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rides-tab" data-bs-toggle="tab" data-bs-target="#rides" type="button" role="tab">
+                        🚗 Mes trajets
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations" type="button" role="tab">
+                        📅 Réservations
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles" type="button" role="tab">
+                        🚙 Véhicules
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
+                        ⚙️ Paramètres
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Contenu des Onglets -->
+        <div class="tab-content" id="profileTabContent">
+            <!-- Onglet Informations -->
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                <div class="profile-content-card">
+                    <h3>Informations personnelles</h3>
+                    <form id="profileForm" class="profile-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Pseudo</label>
+                                    <input type="text" class="form-control" id="profilePseudo" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" id="profileEmailDisplay" readonly>
+                                </div>
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Couleur</label>
-                                    <input type="text" class="form-control" placeholder="Ex: Blanc">
+                                <div class="form-group">
+                                    <label>Prénom</label>
+                                    <input type="text" class="form-control" id="profileFirstName">
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Nombre de places</label>
-                                    <select class="form-select">
-                                        <option value="2">2 places</option>
-                                        <option value="3">3 places</option>
-                                        <option value="4" selected>4 places</option>
-                                        <option value="5">5 places</option>
-                                        <option value="6">6 places</option>
-                                        <option value="7">7 places</option>
-                                    </select>
+                                <div class="form-group">
+                                    <label>Nom</label>
+                                    <input type="text" class="form-control" id="profileLastName">
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Type de carburant *</label>
-                            <select class="form-select" required>
-                                <option value="">Sélectionnez...</option>
-                                <option value="electrique">Électrique</option>
-                                <option value="hybride">Hybride</option>
-                                <option value="essence">Essence</option>
-                                <option value="diesel">Diesel</option>
-                                <option value="gpl">GPL</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Téléphone</label>
+                                    <input type="tel" class="form-control" id="profilePhone">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Ville</label>
+                                    <input type="text" class="form-control" id="profileCity">
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Immatriculation</label>
-                            <input type="text" class="form-control" placeholder="AA-123-BB">
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <textarea class="form-control" id="profileBio" rows="3" placeholder="Parlez-nous de vous..."></textarea>
                         </div>
+                        <button type="submit" class="btn btn-success">💾 Enregistrer</button>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" form="addVehicleForm" class="btn btn-success">
-                        <i class="fas fa-plus me-2"></i>Ajouter le véhicule
-                    </button>
+            </div>
+
+            <!-- Onglet Mes trajets -->
+            <div class="tab-pane fade" id="rides" role="tabpanel">
+                <div class="profile-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Mes trajets proposés</h3>
+                        <a href="covoiturages.html" class="btn btn-success">➕ Nouveau trajet</a>
+                    </div>
+                    <div id="myRidesList">
+                        <div class="empty-state">
+                            <h5>🚗 Aucun trajet proposé</h5>
+                            <p>Commencez à partager vos trajets !</p>
+                            <a href="covoiturages.html" class="btn btn-primary">Proposer mon premier trajet</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Réservations -->
+            <div class="tab-pane fade" id="reservations" role="tabpanel">
+                <div class="profile-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Mes réservations</h3>
+                        <a href="covoiturages.html" class="btn btn-success">🔍 Rechercher</a>
+                    </div>
+                    <div id="myReservationsList">
+                        <div class="empty-state">
+                            <h5>📅 Aucune réservation</h5>
+                            <p>Vous n'avez pas encore réservé de trajet.</p>
+                            <a href="covoiturages.html" class="btn btn-primary">Rechercher un trajet</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Véhicules -->
+            <div class="tab-pane fade" id="vehicles" role="tabpanel">
+                <div class="profile-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Mes véhicules</h3>
+                        <button class="btn btn-success" onclick="addVehicle()">➕ Ajouter</button>
+                    </div>
+                    <div id="myVehiclesList">
+                        <div class="empty-state">
+                            <h5>🚙 Aucun véhicule</h5>
+                            <p>Ajoutez vos véhicules pour proposer des trajets.</p>
+                            <button class="btn btn-primary" onclick="addVehicle()">Ajouter mon premier véhicule</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Paramètres -->
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="profile-content-card">
+                    <h3>Paramètres du compte</h3>
+
+                    <div class="settings-section">
+                        <h5>🔒 Sécurité</h5>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Mot de passe</strong>
+                                <p class="text-muted">Modifiez votre mot de passe</p>
+                            </div>
+                            <button class="btn btn-outline-primary" onclick="changePassword()">🔑 Changer</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h5>⚙️ Gestion du compte</h5>
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Zone sensible</strong> - Ces actions sont importantes.
+                        </div>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Désactiver le compte</strong>
+                                <p class="text-muted">Masquer temporairement votre profil</p>
+                            </div>
+                            <button class="btn btn-outline-warning" onclick="deactivateAccount()">⏸️ Désactiver</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -425,48 +248,77 @@
     <script src="./auth.js"></script>
 
     <script>
-        // Charger les données du profil
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisation de la page profil');
+
+            // Vérifier si l'utilisateur est connecté
+            updateNavigation();
+
+            // Charger les données du profil
             loadProfileData();
         });
 
-        function loadProfileData() {
-            fetch('/api/auth/profile', {
+        function updateNavigation() {
+            fetch('/api/auth/session', {
                 credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.user) {
-                    const user = data.user;
-
-                    // Mettre à jour les informations du profil
-                    document.getElementById('userName').textContent = user.pseudo || 'Utilisateur';
-                    document.getElementById('userEmail').textContent = user.email || '';
-                    document.getElementById('userCredits').textContent = user.credits || 0;
-                    document.getElementById('userRating').textContent = user.rating || '0.0';
-                    document.getElementById('totalRidesDriver').textContent = user.totalRidesAsDriver || 0;
-                    document.getElementById('totalRidesPassenger').textContent = user.totalRidesAsPassenger || 0;
-
-                    // Remplir le formulaire
-                    document.getElementById('profilePseudo').value = user.pseudo || '';
-                    document.getElementById('profileEmail').value = user.email || '';
-                } else {
-                    // Rediriger vers la connexion si pas connecté
+                if (!data.isLoggedIn) {
                     window.location.href = 'connexion.html';
                 }
             })
             .catch(error => {
-                console.error('Erreur:', error);
-                showAlert('Erreur lors du chargement du profil', 'danger');
+                console.error('Erreur lors de la vérification de session:', error);
                 window.location.href = 'connexion.html';
             });
         }
 
-        // Formulaire d'ajout de véhicule
-        document.getElementById('addVehicleForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            showAlert('Fonctionnalité en développement', 'info');
-        });
+        function loadProfileData() {
+            console.log('📋 Chargement des données du profil');
+
+            fetch('/api/user/profile', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    document.getElementById('profileUserName').textContent = user.pseudo || 'Utilisateur';
+                    document.getElementById('profileUserEmail').textContent = user.email || '';
+                    document.getElementById('profilePseudo').value = user.pseudo || '';
+                    document.getElementById('profileEmailDisplay').value = user.email || '';
+                    document.getElementById('profileFirstName').value = user.firstName || '';
+                    document.getElementById('profileLastName').value = user.lastName || '';
+                    document.getElementById('profilePhone').value = user.phone || '';
+                    document.getElementById('profileCity').value = user.city || '';
+                    document.getElementById('profileBio').value = user.bio || '';
+                    document.getElementById('profileCredits').textContent = user.credits || '0';
+                    document.getElementById('profileRating').textContent = user.rating || '0';
+                    document.getElementById('profileTotalRides').textContent = user.totalRides || '0';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement du profil:', error);
+            });
+        }
+
+        // Fonctions de gestion
+        function editProfile() {
+            console.log('Édition du profil');
+        }
+
+        function addVehicle() {
+            console.log('Ajout d\'un véhicule');
+        }
+
+        function changePassword() {
+            console.log('Changement de mot de passe');
+        }
+
+        function deactivateAccount() {
+            console.log('Désactivation du compte');
+        }
     </script>
 </body>
 </html>

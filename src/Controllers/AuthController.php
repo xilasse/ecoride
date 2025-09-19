@@ -167,7 +167,13 @@ class AuthController extends BaseController {
                     'user' => [
                         'id' => $user['id'],
                         'pseudo' => $user['pseudo'],
+                        'fullName' => $user['full_name'],
                         'email' => $user['email'],
+                        'phone' => $user['phone'],
+                        'address' => $user['address'],
+                        'birthdate' => $user['birthdate'],
+                        'gender' => $user['gender'],
+                        'bio' => $user['bio'],
                         'credits' => $user['credits'],
                         'rating' => $user['rating_average'],
                         'totalRidesAsDriver' => $user['total_rides_as_driver'],
@@ -242,8 +248,8 @@ class AuthController extends BaseController {
     }
 
     private function getUserById($userId) {
-        $sql = "SELECT id, email, pseudo, role_id, credits, rating_average,
-                       total_rides_as_driver, total_rides_as_passenger
+        $sql = "SELECT id, email, pseudo, full_name, phone, address, birthdate, gender, bio,
+                       role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger
                 FROM users
                 WHERE id = ? AND is_active = 1";
 

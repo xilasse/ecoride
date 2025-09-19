@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil - EcoRide</title>
+    <link href="./styles.css" rel="stylesheet">
+
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">🌱 EcoRide</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Contact</a>
+                    </li>
+                    <li class="nav-item" id="authNav">
+                        <a class="nav-link" href="connexion.html">Connexion</a>
+                    </li>
+                    <li class="nav-item" id="profileNav" style="display: none;">
+                        <a class="nav-link active" href="profil.html">Mon Profil</a>
+                    </li>
+                    <li class="nav-item" id="logoutNav" style="display: none;">
+                        <a class="nav-link" href="#" onclick="logout()">Déconnexion</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section Profil -->
+    <section class="profile-hero">
+        <div class="container">
+            <div class="profile-content">
+                <!-- Carte utilisateur -->
+                <div class="profile-user-card">
+                    <div class="profile-avatar">👤</div>
+                    <div class="profile-user-details">
+                        <h1 id="profileUserName">Chargement...</h1>
+                        <p id="profileUserEmail">email@example.com</p>
+                    </div>
+                </div>
+
+                <!-- Statistiques -->
+                <div class="profile-stats-container">
+                    <div class="profile-stat-card">
+                        <span class="stat-icon">💰</span>
+                        <span class="stat-value" id="profileCredits">0</span>
+                        <span class="stat-label">Crédits</span>
+                    </div>
+                    <div class="profile-stat-card">
+                        <span class="stat-icon">⭐</span>
+                        <span class="stat-value" id="profileRating">4.5</span>
+                        <span class="stat-label">Note moyenne</span>
+                    </div>
+                    <div class="profile-stat-card">
+                        <span class="stat-icon">🚗</span>
+                        <span class="stat-value" id="profileTotalRides">0</span>
+                        <span class="stat-label">Trajets effectués</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenu principal -->
+    <div class="container profile-main">
+        <div class="row">
+            <!-- Navigation des onglets -->
+            <div class="col-lg-3">
+                <div class="profile-navigation">
+                    <h5>Navigation</h5>
+                    <ul class="profile-nav-menu">
+                        <li class="profile-nav-item">
+                            <a href="#" class="profile-nav-link active" data-target="profile-info">
+                                <span class="emoji">📝</span>Informations personnelles
+                            </a>
+                        </li>
+                        <li class="profile-nav-item">
+                            <a href="#" class="profile-nav-link" data-target="my-rides">
+                                <span class="emoji">🚗</span>Mes trajets proposés
+                            </a>
+                        </li>
+                        <li class="profile-nav-item">
+                            <a href="#" class="profile-nav-link" data-target="my-reservations">
+                                <span class="emoji">📅</span>Mes réservations
+                            </a>
+                        </li>
+                        <li class="profile-nav-item">
+                            <a href="#" class="profile-nav-link" data-target="my-vehicles">
+                                <span class="emoji">🚙</span>Mes véhicules
+                            </a>
+                        </li>
+                        <li class="profile-nav-item">
+                            <a href="#" class="profile-nav-link" data-target="account-settings">
+                                <span class="emoji">⚙️</span>Paramètres du compte
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contenu des onglets -->
+            <div class="col-lg-9">
+                <div class="profile-tab-content">
+
+                        <!-- Informations personnelles -->
+                        <div class="tab-pane active" id="profile-info">
+
+                            <!-- Section Informations de base -->
+                            <div class="profile-section">
+                                <h5>
+                                    Informations de base
+                                    <div class="section-actions">
+                                        <button class="btn btn-success btn-sm" onclick="editProfile()">Modifier</button>
+                                    </div>
+                                </h5>
+
+                                <div class="profile-form-container">
+                                    <form id="profileForm">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Pseudo</label>
+                                                <input type="text" class="form-control" id="profilePseudo" readonly>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="profileEmail" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Nom complet</label>
+                                                <input type="text" class="form-control" id="profileFullName" placeholder="Votre nom complet">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Téléphone</label>
+                                                <input type="tel" class="form-control" id="profilePhone" placeholder="Votre numéro">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Adresse</label>
+                                            <input type="text" class="form-control" id="profileAddress" placeholder="Votre adresse">
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Date de naissance</label>
+                                                <input type="date" class="form-control" id="profileBirthdate">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Genre</label>
+                                                <select class="form-control" id="profileGender">
+                                                    <option value="">Choisir...</option>
+                                                    <option value="homme">Homme</option>
+                                                    <option value="femme">Femme</option>
+                                                    <option value="autre">Autre</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Bio</label>
+                                            <textarea class="form-control" id="profileBio" rows="3" placeholder="Parlez-nous de vous..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">
+                                            💾 Enregistrer les modifications
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Section Badges et Statuts -->
+                            <div class="profile-section">
+                                <h5>Badges et certifications</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="eco-badge">🌱 Éco-conducteur</span>
+                                    <span class="status-badge status-active">✅ Profil vérifié</span>
+                                    <span class="status-badge status-pending">⏳ En attente de validation</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mes trajets -->
+                        <div class="tab-pane" id="my-rides">
+                            <div class="profile-section">
+                                <h5>
+                                    🚗 Mes trajets proposés
+                                    <div class="section-actions">
+                                        <a href="covoiturages.html" class="btn btn-success btn-sm">
+                                            ➕ Nouveau trajet
+                                        </a>
+                                    </div>
+                                </h5>
+                                <div class="profile-form-container">
+                                    <div id="myRidesList">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">🚗</div>
+                                            <h6>Aucun trajet proposé</h6>
+                                            <p>Commencez à partager vos trajets et contribuez à une mobilité plus durable !</p>
+                                            <a href="covoiturages.html" class="btn btn-primary">
+                                                Proposer mon premier trajet
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mes réservations -->
+                        <div class="tab-pane" id="my-reservations">
+                            <div class="profile-section">
+                                <h5>
+                                    📅 Mes réservations
+                                    <div class="section-actions">
+                                        <a href="covoiturages.html" class="btn btn-success btn-sm">Rechercher un trajet</a>
+                                    </div>
+                                </h5>
+                                <div class="profile-form-container">
+                                    <div id="myReservationsList">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📅</div>
+                                            <h6>Aucune réservation</h6>
+                                            <p>Vous n'avez pas encore réservé de trajet. Explorez les covoiturages disponibles !</p>
+                                            <a href="covoiturages.html" class="btn btn-primary">
+                                                Rechercher un trajet
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mes véhicules -->
+                        <div class="tab-pane" id="my-vehicles">
+                            <div class="profile-section">
+                                <h5>
+                                    🚙 Mes véhicules
+                                    <div class="section-actions">
+                                        <button class="btn btn-success btn-sm" onclick="addVehicle()">
+                                            ➕ Ajouter un véhicule
+                                        </button>
+                                    </div>
+                                </h5>
+                                <div class="profile-form-container">
+                                    <div id="myVehiclesList">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">🚙</div>
+                                            <h6>Aucun véhicule enregistré</h6>
+                                            <p>Ajoutez vos véhicules pour proposer des trajets en covoiturage.</p>
+                                            <button class="btn btn-primary" onclick="addVehicle()">
+                                                Ajouter mon premier véhicule
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paramètres du compte -->
+                        <div class="tab-pane" id="account-settings">
+                            <!-- Section Sécurité -->
+                            <div class="profile-section">
+                                <h5>
+                                    🔒 Sécurité
+                                </h5>
+                                <div class="profile-form-container">
+                                    <div class="settings-row">
+                                        <div class="setting-info">
+                                            <h6>Mot de passe</h6>
+                                            <p class="text-muted">Modifiez votre mot de passe régulièrement pour sécuriser votre compte</p>
+                                        </div>
+                                        <button class="btn btn-outline-primary" onclick="changePassword()">
+                                            🔑 Changer le mot de passe
+                                        </button>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="setting-info">
+                                            <h6>Authentification à deux facteurs</h6>
+                                            <p class="text-muted">Ajoutez une couche de sécurité supplémentaire à votre compte</p>
+                                        </div>
+                                        <button class="btn btn-outline-primary" onclick="twoFactor()">
+                                            📱 Configurer 2FA
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section Gestion du compte -->
+                            <div class="profile-section">
+                                <h5>
+                                    ⚙️ Gestion du compte
+                                </h5>
+                                <div class="profile-form-container">
+                                    <div class="alert alert-warning" role="alert">
+                                        <strong>⚠️ Zone sensible</strong><br>
+                                        Ces actions ont des conséquences importantes sur votre compte.
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="setting-info">
+                                            <h6>Désactiver temporairement</h6>
+                                            <p class="text-muted">Votre profil sera masqué mais vos données seront conservées</p>
+                                        </div>
+                                        <button class="btn btn-outline-warning" onclick="deactivateAccount()">
+                                            ⏸️ Désactiver le compte
+                                        </button>
+                                    </div>
+                                    <div class="settings-row">
+                                        <div class="setting-info">
+                                            <h6 class="text-danger">Suppression définitive</h6>
+                                            <p class="text-muted">Cette action est irréversible. Toutes vos données seront perdues.</p>
+                                        </div>
+                                        <button class="btn btn-outline-danger" onclick="deleteAccount()">
+                                            🗑️ Supprimer définitivement
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth JS -->
+    <script src="./auth.js"></script>
+
+    <script>
+        // Gestion des onglets
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisation de la page profil');
+
+            // Initialiser la navigation
+            initNavigation();
+
+            // Initialiser les onglets
+            initTabs();
+
+            // Charger les données du profil
+            loadProfileData();
+            initProfileForms();
+        });
+
+        function initNavigation() {
+            console.log('🔗 Initialisation de la navigation');
+
+            // Gestion du menu burger
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarCollapse = document.querySelector('.navbar-collapse');
+
+            if (navbarToggler && navbarCollapse) {
+                navbarToggler.addEventListener('click', function() {
+                    navbarCollapse.classList.toggle('show');
+                });
+
+                // Fermer le menu quand on clique sur un lien
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        navbarCollapse.classList.remove('show');
+                    });
+                });
+            }
+
+            // Mettre à jour la navigation selon l'état de connexion
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            // Vérifier si l'utilisateur est connecté
+            fetch('/api/auth/session', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const authNav = document.getElementById('authNav');
+                const profileNav = document.getElementById('profileNav');
+                const logoutNav = document.getElementById('logoutNav');
+
+                if (data.isLoggedIn) {
+                    // Utilisateur connecté
+                    if (authNav) authNav.style.display = 'none';
+                    if (profileNav) profileNav.style.display = 'block';
+                    if (logoutNav) logoutNav.style.display = 'block';
+                } else {
+                    // Utilisateur non connecté - rediriger vers la page de connexion
+                    window.location.href = 'connexion.html';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la vérification de session:', error);
+                // En cas d'erreur, rediriger vers la connexion
+                window.location.href = 'connexion.html';
+            });
+        }
+
+        function initTabs() {
+            console.log('🔗 Initialisation des onglets');
+
+            const tabLinks = document.querySelectorAll('.profile-nav-link[data-target]');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            console.log('📄 Onglets trouvés:', tabLinks.length);
+            console.log('📄 Panneaux trouvés:', tabPanes.length);
+
+            // Log des éléments trouvés pour debug
+            tabLinks.forEach((link, index) => {
+                console.log(`Onglet ${index}:`, link.textContent, 'Target:', link.dataset.target);
+            });
+
+            tabPanes.forEach((pane, index) => {
+                console.log(`Panneau ${index}:`, pane.id, 'Visible:', pane.classList.contains('active'));
+            });
+
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const targetId = this.dataset.target;
+                    console.log('🖱️ Clic sur onglet:', targetId);
+
+                    // Retirer active de tous les liens
+                    tabLinks.forEach(l => l.classList.remove('active'));
+
+                    // Retirer active de tous les panneaux
+                    tabPanes.forEach(p => {
+                        p.classList.remove('active');
+                        console.log('❌ Panneau désactivé:', p.id);
+                    });
+
+                    // Activer le lien cliqué
+                    this.classList.add('active');
+
+                    // Activer le panneau correspondant
+                    const targetPane = document.getElementById(targetId);
+                    if (targetPane) {
+                        targetPane.classList.add('active');
+                        console.log('✅ Panneau activé:', targetId);
+                        console.log('✅ Classes du panneau:', targetPane.className);
+                    } else {
+                        console.error('❌ Panneau non trouvé:', targetId);
+                    }
+                });
+            });
+
+            console.log('🎉 Initialisation des onglets terminée');
+        }
+
+        function loadProfileData() {
+            console.log('🔄 Début du chargement des données profil...');
+
+            fetch('/api/auth/profile', {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('📡 Réponse API profile:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📋 Données reçues:', data);
+
+                if (data.success && data.user) {
+                    console.log('✅ Utilisateur trouvé:', data.user.pseudo);
+
+                    // Mise à jour du header
+                    const userNameHeader = document.getElementById('profileUserName');
+                    const userEmailHeader = document.getElementById('profileUserEmail');
+                    const creditsHeader = document.getElementById('profileCredits');
+                    const ratingHeader = document.getElementById('profileRating');
+                    const totalRidesHeader = document.getElementById('profileTotalRides');
+
+                    if (userNameHeader) userNameHeader.textContent = data.user.pseudo || 'Utilisateur';
+                    if (userEmailHeader) userEmailHeader.textContent = data.user.email || '';
+                    if (creditsHeader) creditsHeader.textContent = data.user.credits || '0';
+                    if (ratingHeader) ratingHeader.textContent = data.user.rating || '4.5';
+                    if (totalRidesHeader) {
+                        const totalRides = (data.user.totalRidesAsDriver || 0) + (data.user.totalRidesAsPassenger || 0);
+                        totalRidesHeader.textContent = totalRides;
+                    }
+
+                    // Remplir les champs du formulaire
+                    const fields = {
+                        'profilePseudo': data.user.pseudo,
+                        'profileEmail': data.user.email,
+                        'profileFullName': data.user.fullName,
+                        'profilePhone': data.user.phone,
+                        'profileAddress': data.user.address,
+                        'profileBirthdate': data.user.birthdate,
+                        'profileGender': data.user.gender,
+                        'profileBio': data.user.bio
+                    };
+
+                    Object.entries(fields).forEach(([fieldId, value]) => {
+                        const field = document.getElementById(fieldId);
+                        if (field && value) {
+                            field.value = value;
+                            console.log(`✅ ${fieldId} rempli:`, value);
+                        }
+                    });
+
+                    console.log('🎉 Tous les formulaires remplis avec succès !');
+                } else {
+                    console.error('❌ Erreur dans les données:', data);
+                }
+            })
+            .catch(error => {
+                console.error('💥 Erreur lors du chargement:', error);
+            });
+        }
+
+        function initProfileForms() {
+            // Gérer la soumission du formulaire profil
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('💾 Soumission du formulaire profil');
+                    // TODO: Implémenter la sauvegarde
+                    alert('Fonctionnalité de sauvegarde en développement');
+                });
+            }
+        }
+
+        // Fonctions utilitaires
+        function addVehicle() {
+            alert('Fonctionnalité d\'ajout de véhicule en développement');
+        }
+
+        function changePassword() {
+            alert('Fonctionnalité de changement de mot de passe en développement');
+        }
+
+        function twoFactor() {
+            alert('Fonctionnalité d\'authentification 2FA en développement');
+        }
+
+        function deactivateAccount() {
+            if (confirm('Êtes-vous sûr de vouloir désactiver votre compte ?')) {
+                alert('Fonctionnalité en développement');
+            }
+        }
+
+        function deleteAccount() {
+            if (confirm('ATTENTION : Cette action est irréversible !\n\nÊtes-vous absolument sûr de vouloir supprimer définitivement votre compte ?')) {
+                alert('Fonctionnalité en développement');
+            }
+        }
+
+        function logout() {
+            console.log('👋 Déconnexion en cours...');
+
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Déconnexion réussie');
+                // Rediriger vers la page d'accueil
+                window.location.href = 'index.html';
+            })
+            .catch(error => {
+                console.error('❌ Erreur lors de la déconnexion:', error);
+                // Même en cas d'erreur, on redirige
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>
