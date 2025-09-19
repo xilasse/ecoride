@@ -13,10 +13,10 @@ class BaseController {
     private function initDatabase() {
         try {
             $dsn = sprintf(
-                'mysql:host=%s;dbname=%s;charset=%s',
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
                 $this->config['database']['mysql']['host'],
-                $this->config['database']['mysql']['dbname'],
-                $this->config['database']['mysql']['charset']
+                $this->config['database']['mysql']['port'] ?? 3306,
+                $this->config['database']['mysql']['dbname']
             );
             
             $this->db = new \PDO(
