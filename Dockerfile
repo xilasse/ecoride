@@ -80,6 +80,10 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; \
     && find /var/www/html -type d -exec chmod 755 {} \;
 
+# Copie du script de démarrage Railway
+COPY ./docker/scripts/start-railway.sh /start.sh
+RUN chmod +x /start.sh
+
 # Exposition du port (80 par défaut, mais peut être modifié par Railway)
 EXPOSE 80
-CMD ["apache2-foreground"]
+CMD ["/start.sh"]
