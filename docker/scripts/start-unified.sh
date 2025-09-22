@@ -30,37 +30,25 @@ wait_for_service_nc() {
 
 # Fonction pour attendre MySQL (méthode mysqladmin)
 wait_for_mysql_admin() {
-    # Utiliser DATABASE_URL ou MYSQL_URL de Railway, sinon les variables .env
     local db_url="${DATABASE_URL:-${MYSQL_URL}}"
 
     if [ -n "$db_url" ]; then
         echo "🔧 Parsing Railway DATABASE_URL..."
-        # Parser l'URL Railway: mysql://user:pass@host:port/db
-        DB_HOST=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\3/')
-        DB_USER=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\1/')
-        DB_PASS=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\2/')
-        DB_NAME=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\5/')
-        DB_PORT=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\4/')
+        DB_HOST=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\3#')
+        DB_USER=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\1#')
+        DB_PASS=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\2#')
+        DB_PORT=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\4#')
+        DB_NAME=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\5#')
     else
         echo "🔧 Utilisation des variables .env..."
-        DB_PORT="test"
     fi
 
-        echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
-        echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
-        echo "DB_USER: ${DB_PASS:-'NON DÉFINI'}"
-        echo "DB_USER: ${DB_NAME:-'NON DÉFINI'}"
-        echo "DB_PASSWORD: ${DB_PORT:-'NON DÉFINI'}"
+    echo "DB_HOST=$DB_HOST"
+    echo "DB_PORT=$DB_PORT"
+    echo "DB_USER=$DB_USER"
+    echo "DB_NAME=$DB_NAME"
 
-
-
-
-
-    # Tentative de connexion avec timeout
-    local max_attempts=30
-    local attempt=1
-
-    while [ $attempt -le $max_attempts ]; do
+    # Créer un fichier de config sécurisé
     cat > /tmp/my.cnf <<EOF
 [client]
 host=$DB_HOST
@@ -69,8 +57,14 @@ password=$DB_PASS
 port=$DB_PORT
 EOF
 
+    # Tentative de connexion avec timeout
+    local max_attempts=30
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
         if mysqladmin --defaults-extra-file=/tmp/my.cnf ping --silent 2>/dev/null; then
             echo "✅ MySQL est prêt après $attempt tentative(s)"
+            rm -f /tmp/my.cnf
             return 0
         fi
 
@@ -81,6 +75,7 @@ EOF
 
     echo "❌ MySQL non accessible après $max_attempts tentatives"
     echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
+    rm -f /tmp/my.cnf
     return 1
 }
 
