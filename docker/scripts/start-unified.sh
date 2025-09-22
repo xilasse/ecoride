@@ -50,16 +50,12 @@ wait_for_mysql_admin() {
         DB_PORT="test"
     fi
 
-    echo "⏳ Attente de MySQL ($DB_HOST:$DB_PORT)..."
-
-    # Vérifier d'abord si les variables sont définies
-    if [ -z "$DB_HOST" ] || [ -z "$DB_PASS" ]; then
-        echo "❌ Variables DB_HOST ou DB_PASSWORD non définies"
         echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
         echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
-        echo "DB_PASSWORD: ${DB_PASS:+DÉFINI}"
-        return 1
-    fi
+        echo "DB_USER: ${DB_PASS:-'NON DÉFINI'}"
+        echo "DB_USER: ${DB_NAME:-'NON DÉFINI'}"
+        echo "DB_PASSWORD: ${DB_PORT:-'NON DÉFINI'}"
+
 
     # Tentative de connexion avec timeout
     local max_attempts=30
