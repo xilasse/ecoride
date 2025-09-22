@@ -30,19 +30,20 @@ wait_for_service_nc() {
 
 # Fonction pour attendre MySQL (méthode mysqladmin)
 wait_for_mysql_admin() {
-    local host=${DB_HOST:-localhost}
-    local port=${DB_PORT:-3306}
-    local user=${DB_USER:-root}
-    local password=${DB_PASSWORD}
-
+  echo "Parsing DATABASE_URL..."
+  DB_HOST=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\3/')
+  DB_USER=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\1/')
+  DB_PASS=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\2/')
+  DB_NAME=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\5/')
+  DB_PORT=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\4/')
     echo "⏳ Attente de MySQL ($host:$port)..."
 
     # Vérifier d'abord si les variables sont définies
-    if [ -z "$DB_HOST" ] || [ -z "$DB_PASSWORD" ]; then
+    if [ -z "$DB_HOST" ] || [ -z "$DB_PASS" ]; then
         echo "❌ Variables DB_HOST ou DB_PASSWORD non définies"
         echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
         echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
-        echo "DB_PASSWORD: ${DB_PASSWORD:+DÉFINI}"
+        echo "DB_PASSWORD: ${DB_PASS:+DÉFINI}"
         return 1
     fi
 
