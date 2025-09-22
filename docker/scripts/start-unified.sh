@@ -30,13 +30,27 @@ wait_for_service_nc() {
 
 # Fonction pour attendre MySQL (méthode mysqladmin)
 wait_for_mysql_admin() {
-  echo "Parsing DATABASE_URL..."
-  DB_HOST=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\3/')
-  DB_USER=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\1/')
-  DB_PASS=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\2/')
-  DB_NAME=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\5/')
-  DB_PORT=$(echo $DATABASE_URL | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\4/')
-    echo "⏳ Attente de MySQL ($host:$port)..."
+    # Utiliser DATABASE_URL ou MYSQL_URL de Railway, sinon les variables .env
+    local db_url="${DATABASE_URL:-${MYSQL_URL}}"
+
+    if [ -n "$db_url" ]; then
+        echo "🔧 Parsing Railway DATABASE_URL..."
+        # Parser l'URL Railway: mysql://user:pass@host:port/db
+        DB_HOST=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\3/')
+        DB_USER=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\1/')
+        DB_PASS=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\2/')
+        DB_NAME=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\5/')
+        DB_PORT=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\4/')
+    else
+        echo "🔧 Utilisation des variables .env..."
+        DB_HOST="test"
+        DB_USER="test"
+        DB_PASS="${DB_PASSWORD}"
+        DB_NAME="${DB_NAME:-ecoride_db}"
+        DB_PORT="${DB_PORT:-3306}"
+    fi
+
+    echo "⏳ Attente de MySQL ($DB_HOST:$DB_PORT)..."
 
     # Vérifier d'abord si les variables sont définies
     if [ -z "$DB_HOST" ] || [ -z "$DB_PASS" ]; then
@@ -44,6 +58,7 @@ wait_for_mysql_admin() {
         echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
         echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
         echo "DB_PASSWORD: ${DB_PASS:+DÉFINI}"
+        echo "DATABASE_URL: ${DATABASE_URL:+DÉFINI}"
         return 1
     fi
 
@@ -52,7 +67,7 @@ wait_for_mysql_admin() {
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
-        if mysqladmin ping -h"$host" -P"$port" -u"$user" -p"$password" --silent 2>/dev/null; then
+        if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
             echo "✅ MySQL est prêt après $attempt tentative(s)"
             return 0
         fi
@@ -63,17 +78,35 @@ wait_for_mysql_admin() {
     done
 
     echo "❌ MySQL non accessible après $max_attempts tentatives"
-    echo "Vérifiez vos variables d'environnement DB_*"
+    echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
     return 1
 }
 
 # Fonction pour attendre Redis
 wait_for_redis() {
-    local host=${REDIS_HOST:-redis}
-    local port=${REDIS_PORT:-6379}
-    local password=${REDIS_PASSWORD}
+    # Utiliser REDIS_URL de Railway si disponible, sinon variables individuelles
+    local redis_url="${REDIS_URL}"
+
+    if [ -n "$redis_url" ]; then
+        echo "🔧 Parsing Railway REDIS_URL..."
+        # Parser l'URL Railway: redis://user:pass@host:port ou redis://host:port
+        local host=$(echo "$redis_url" | sed -E 's/.*:\/\/(([^:@]+):([^@]+)@)?([^:]+):([0-9]+).*/\4/')
+        local port=$(echo "$redis_url" | sed -E 's/.*:\/\/(([^:@]+):([^@]+)@)?([^:]+):([0-9]+).*/\5/')
+        local password=$(echo "$redis_url" | sed -E 's/.*:\/\/(([^:@]+):([^@]+)@)?([^:]+):([0-9]+).*/\3/')
+
+        # Si pas de mot de passe dans l'URL, vérifier la variable REDIS_PASSWORD
+        if [ -z "$password" ] || [ "$password" = "$redis_url" ]; then
+            password=${REDIS_PASSWORD}
+        fi
+    else
+        echo "🔧 Utilisation des variables Redis individuelles..."
+        local host=${REDIS_HOST:-redis}
+        local port=${REDIS_PORT:-6379}
+        local password=${REDIS_PASSWORD}
+    fi
 
     echo "⏳ Attente de Redis ($host:$port)..."
+
     if [ -n "$password" ]; then
         until redis-cli -h "$host" -p "$port" -a "$password" ping > /dev/null 2>&1; do
             echo "Redis n'est pas encore prêt, attente..."
@@ -269,6 +302,10 @@ echo "🔍 Variables importantes:"
 echo "  PORT: ${PORT:-'non défini'}"
 echo "  APACHE_PORT: ${APACHE_PORT:-'non défini'}"
 echo "  RAILWAY_ENVIRONMENT: ${RAILWAY_ENVIRONMENT:-'non défini'}"
+echo "  DATABASE_URL: ${DATABASE_URL:+DÉFINI}"
+echo "  MYSQL_URL: ${MYSQL_URL:+DÉFINI}"
+echo "  REDIS_URL: ${REDIS_URL:+DÉFINI}"
+echo "  RAILWAY_STATIC_URL: ${RAILWAY_STATIC_URL:-'non défini'}"
 
 # Initialisation de la base de données
 echo "🗄️  Initialisation de la base de données..."
