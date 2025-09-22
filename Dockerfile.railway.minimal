@@ -1,0 +1,28 @@
+# Dockerfile minimal pour Railway - Apache standard
+FROM php:8.2-apache
+
+# Installation des extensions PHP essentielles
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Activer mod_rewrite
+RUN a2enmod rewrite
+
+# Copier l'application
+WORKDIR /var/www/html
+COPY . .
+
+# Configuration Apache basique
+RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf && \
+    echo '    DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
+
+# Permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Utiliser le démarrage Apache standard
+EXPOSE 80
+CMD ["apache2-foreground"]
