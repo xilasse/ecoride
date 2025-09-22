@@ -1,0 +1,72 @@
+# Dockerfile optimisé pour Railway
+FROM php:8.2-apache
+
+# Définir le répertoire de travail d'abord
+WORKDIR /var/www/html
+
+# Installation des dépendances système et outils nécessaires
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    unzip \
+    zip \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installation des extensions PHP
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli zip opcache
+
+# Vérification que zip et git sont disponibles
+RUN which zip && which git && which unzip
+
+# Installation de Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Configuration d'Apache
+RUN a2enmod rewrite headers
+
+# Copie et installation des dépendances PHP AVANT le code
+COPY composer.json ./
+COPY composer.lock* ./
+
+# Variables d'environnement pour Composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_NO_INTERACTION=1
+ENV COMPOSER_PREFER_DIST=1
+
+# Installation des dépendances avec fallback
+RUN composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist || \
+    (composer clear-cache && composer install --no-dev --optimize-autoloader --no-scripts --prefer-source)
+
+# Copie du code source
+COPY . .
+
+# Configuration des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# Configuration Apache pour Railway
+COPY <<EOF /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:80>
+    DocumentRoot /var/www/html/public
+
+    <Directory /var/www/html/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+
+# Health check simple
+RUN echo '<?php http_response_code(200); echo "OK"; ?>' > /var/www/html/public/health.php
+
+# Port et commande
+EXPOSE 80
+CMD ["apache2-foreground"]

@@ -1,8 +1,12 @@
 <?php
-// Load .env file for local/Docker deployment
-if (file_exists(__DIR__ . '/../.env') && class_exists('Dotenv\Dotenv')) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-    $dotenv->load();
+// Load .env file for local/Docker deployment - Version sans Composer
+if (file_exists(__DIR__ . '/../.env')) {
+    $lines = file(__DIR__ . '/../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($key, $value) = explode('=', $line, 2);
+        $_ENV[trim($key)] = trim($value);
+    }
 }
 
 // Configuration pour Railway (priorité si DATABASE_URL existe)
