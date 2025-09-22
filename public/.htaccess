@@ -1,0 +1,48 @@
+RewriteEngine On
+
+# Forcer les pages HTML avec sessions à passer par le routeur PHP
+RewriteRule ^covoiturages\.html$ index.php [QSA,L]
+RewriteRule ^connexion\.html$ index.php [QSA,L]
+RewriteRule ^contact\.html$ index.php [QSA,L]
+RewriteRule ^profil\.html$ index.php [QSA,L]
+RewriteRule ^index\.html$ index.php [QSA,L]
+
+# Rediriger toutes les autres requêtes vers index.php sauf pour les fichiers existants
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Forcer HTTPS en production (optionnel)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Sécurité : Empêcher l'accès à certains fichiers
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.md">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Headers de sécurité
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Cache pour les assets statiques
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>

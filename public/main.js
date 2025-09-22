@@ -15,74 +15,6 @@ let currentFilters = {
 
 let currentSort = 'datetime';
 
-// Données simulées pour les détails des covoiturages
-const ridesDetailsData = {
-    1: {
-        id: 1,
-        driver: "MarieDriveGreen",
-        avatar: "M",
-        rating: 4.8,
-        reviewCount: 24,
-        departure: { city: "Paris", time: "14:00" },
-        arrival: { city: "Lyon", time: "18:30" },
-        duration: "4h 30min",
-        car: { model: "Tesla Model 3", color: "Blanche", type: "electric" },
-        price: 35,
-        seatsAvailable: 3,
-        ecological: true,
-        preferences: { pets: true, smoking: false, music: true },
-        description: "Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !",
-        driverBio: "Passionnée d'écologie et de conduite responsable. 5 ans d'expérience en covoiturage.",
-        reviews: [
-            { author: "Pierre", rating: 5, comment: "Excellent trajet, très ponctuelle !" },
-            { author: "Sophie", rating: 5, comment: "Conductrice sympa, voyage agréable" },
-            { author: "Marc", rating: 4, comment: "Très bien, je recommande" }
-        ]
-    },
-    2: {
-        id: 2,
-        driver: "PaulEcoDriver",
-        avatar: "P",
-        rating: 4.6,
-        reviewCount: 18,
-        departure: { city: "Lyon", time: "09:00" },
-        arrival: { city: "Marseille", time: "12:15" },
-        duration: "3h 15min",
-        car: { model: "Renault ZOE", color: "Bleue", type: "electric" },
-        price: 28,
-        seatsAvailable: 2,
-        ecological: true,
-        preferences: { pets: false, smoking: false, music: true },
-        description: "Trajet matinal Lyon-Marseille. Véhicule 100% électrique !",
-        driverBio: "Adepte des voyages matinaux et des véhicules électriques.",
-        reviews: [
-            { author: "Julie", rating: 5, comment: "Parfait pour un trajet matinal" },
-            { author: "Thomas", rating: 4, comment: "Très professionnel" }
-        ]
-    },
-    3: {
-        id: 3,
-        driver: "JeanEcoDriver",
-        avatar: "J",
-        rating: 4.2,
-        reviewCount: 31,
-        departure: { city: "Paris", time: "08:00" },
-        arrival: { city: "Bordeaux", time: "13:45" },
-        duration: "5h 45min",
-        car: { model: "Toyota Prius", color: "Grise", type: "hybrid" },
-        price: 42,
-        seatsAvailable: 3,
-        ecological: false,
-        preferences: { pets: true, smoking: false, music: false },
-        description: "Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.",
-        driverBio: "Conducteur expérimenté, voyages longue distance.",
-        reviews: [
-            { author: "Marie", rating: 4, comment: "Trajet agréable et sécurisé" },
-            { author: "Luc", rating: 4, comment: "Ponctuel et sympathique" }
-        ]
-    }
-};
-
 // =====================================
 // INITIALISATION
 // =====================================
@@ -574,24 +506,68 @@ function generateStars(rating, small = false) {
 }
 
 function participateRide(rideId) {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    
-    if (!isLoggedIn) {
-        showNotification('Vous devez vous connecter pour participer à un covoiturage.', 'warning');
-        setTimeout(() => {
-            window.location.href = 'connexion.html';
-        }, 2000);
-        return;
+    console.log(`Tentative de participation au trajet ${rideId}`);
+
+    // Puisque auth.js vérifie déjà la session, on peut directement procéder
+    // Si l'utilisateur n'était pas connecté, auth.js aurait déjà redirigé
+
+    // Vérification simple et directe
+    fetch('/api/auth/session', {
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('🔍 Vérification session dans participateRide:', data);
+
+        if (data.isLoggedIn && data.user) {
+            console.log('✅ Session valide, procédure de réservation');
+
+            // Utilisateur connecté, procéder à la réservation
+            if (confirm(`Voulez-vous vraiment participer à ce covoiturage ?\n\nUtilisateur: ${data.user.pseudo}\nTrajet: #${rideId}`)) {
+                processReservation(rideId, data.user);
+            }
+        } else {
+            console.log('❌ Session invalide dans participateRide');
+            showNotification('Votre session a expiré. Veuillez vous reconnecter.', 'warning');
+            setTimeout(() => {
+                window.location.href = 'connexion.html';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erreur session dans participateRide:', error);
+        showNotification('Erreur de connexion. Veuillez réessayer.', 'danger');
+    });
+}
+
+function processReservation(rideId, user) {
+    console.log(`Traitement de la réservation pour ${user.pseudo} - Trajet ${rideId}`);
+
+    // Simulation d'une API de réservation
+    const reservationData = {
+        rideId: rideId,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+    };
+
+    // Ici on pourrait faire un appel API réel:
+    // fetch('/api/reservations/create', { ... })
+
+    showNotification(
+        `Demande de participation envoyée ! Le conducteur vous contactera bientôt.`,
+        'success'
+    );
+
+    // Fermer la modale
+    const modal = bootstrap.Modal.getInstance(document.getElementById('rideModal'));
+    if (modal) {
+        modal.hide();
     }
 
-    if (confirm('Voulez-vous vraiment participer à ce covoiturage ?')) {
-        showNotification('Demande de participation envoyée ! Le conducteur vous contactera bientôt.', 'success');
-        
-        const modal = bootstrap.Modal.getInstance(document.getElementById('rideModal'));
-        if (modal) {
-            modal.hide();
-        }
-    }
+    // Optionnel: Rediriger vers le profil
+    setTimeout(() => {
+        showNotification('Vous pouvez suivre vos réservations dans votre profil.', 'info');
+    }, 3000);
 }
 
 // Export global pour compatibilité

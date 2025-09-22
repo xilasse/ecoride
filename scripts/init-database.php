@@ -6,11 +6,19 @@
  * Utilisé lors du déploiement sur Railway ou premier lancement Docker
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+// Charger autoload si disponible
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
 
 // Charger la configuration
 $config = require __DIR__ . '/../config/config.php';
 $dbConfig = $config['database']['mysql'];
+
+// Vérifier la configuration
+if (empty($dbConfig['host']) || empty($dbConfig['username'])) {
+    throw new Exception("Configuration de base de données invalide. Vérifiez DATABASE_URL ou les variables DB_*");
+}
 
 echo "🚀 Initialisation de la base de données EcoRide...\n";
 

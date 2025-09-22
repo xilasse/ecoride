@@ -48,7 +48,12 @@
     <!-- Search Header -->
     <section class="search-header">
         <div class="container">
-            <h1 class="h3 mb-0">Trouvez votre covoiturage écologique</h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Trouvez votre covoiturage écologique</h1>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createRideModal">
+                    <i class="fas fa-plus me-2"></i>Proposer un trajet
+                </button>
+            </div>
         </div>
     </section>
 
@@ -515,6 +520,155 @@
         </div>
     </div>
 
+    <!-- Modal Créer un trajet -->
+    <div class="modal fade" id="createRideModal" tabindex="-1" aria-labelledby="createRideModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createRideModalLabel">
+                        <i class="fas fa-car me-2"></i>Proposer un nouveau trajet
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRideForm">
+                        <!-- Itinéraire -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="rideFrom" class="form-label">Ville de départ *</label>
+                                <input type="text" class="form-control" id="rideFrom" required placeholder="Ex: Paris">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="rideTo" class="form-label">Ville d'arrivée *</label>
+                                <input type="text" class="form-control" id="rideTo" required placeholder="Ex: Lyon">
+                            </div>
+                        </div>
+
+                        <!-- Date et heure -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="rideDate" class="form-label">Date du trajet *</label>
+                                <input type="date" class="form-control" id="rideDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="rideTime" class="form-label">Heure de départ *</label>
+                                <input type="time" class="form-control" id="rideTime" required>
+                            </div>
+                        </div>
+
+                        <!-- Places et prix -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="rideSeats" class="form-label">Nombre de places disponibles *</label>
+                                <select class="form-select" id="rideSeats" required>
+                                    <option value="">Choisir...</option>
+                                    <option value="1">1 place</option>
+                                    <option value="2">2 places</option>
+                                    <option value="3">3 places</option>
+                                    <option value="4">4 places</option>
+                                    <option value="5">5 places</option>
+                                    <option value="6">6 places</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ridePrice" class="form-label">Prix par passager (€) *</label>
+                                <input type="number" class="form-control" id="ridePrice" required min="1" max="200" placeholder="25">
+                            </div>
+                        </div>
+
+                        <!-- Informations véhicule -->
+                        <div class="mb-3">
+                            <label class="form-label">Type de véhicule *</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="vehicleType" id="electric" value="electric">
+                                        <label class="form-check-label" for="electric">
+                                            <i class="fas fa-leaf text-success"></i> Électrique
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="vehicleType" id="hybrid" value="hybrid">
+                                        <label class="form-check-label" for="hybrid">
+                                            <i class="fas fa-leaf text-warning"></i> Hybride
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="vehicleType" id="gasoline" value="gasoline">
+                                        <label class="form-check-label" for="gasoline">
+                                            <i class="fas fa-gas-pump text-secondary"></i> Essence
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="vehicleBrand" class="form-label">Marque du véhicule</label>
+                                <input type="text" class="form-control" id="vehicleBrand" placeholder="Ex: Tesla, Renault">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="vehicleModel" class="form-label">Modèle</label>
+                                <input type="text" class="form-control" id="vehicleModel" placeholder="Ex: Model 3, ZOE">
+                            </div>
+                        </div>
+
+                        <!-- Préférences -->
+                        <div class="mb-3">
+                            <label class="form-label">Préférences</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="petsOK" name="preferences" value="pets">
+                                        <label class="form-check-label" for="petsOK">
+                                            <i class="fas fa-paw"></i> Animaux acceptés
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="noSmoking" name="preferences" value="nosmoking" checked>
+                                        <label class="form-check-label" for="noSmoking">
+                                            <i class="fas fa-smoking-ban"></i> Non-fumeur
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="rideDescription" class="form-label">Description du trajet</label>
+                            <textarea class="form-control" id="rideDescription" rows="3" placeholder="Décrivez votre trajet, ambiance, arrêts prévus..."></textarea>
+                        </div>
+
+                        <!-- Point de rendez-vous -->
+                        <div class="mb-3">
+                            <label for="meetingPoint" class="form-label">Point de rendez-vous</label>
+                            <input type="text" class="form-control" id="meetingPoint" placeholder="Adresse précise ou point de repère">
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Information :</strong> Votre trajet sera visible par tous les utilisateurs une fois publié.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="createRideForm" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Publier le trajet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
@@ -523,9 +677,11 @@
                     </div>
                    
                     <!-- Custom JavaScript -->
-    <script src="./main.js"></script>
-    <script src="./search.js"></script>
+    <script src="./main.js?v=2"></script>
+    <script src="./search.js?v=2"></script>
     <script src="./reservation-system.js"></script>
+    <script src="./create-ride.js"></script>
+    <script src="./auth.js"></script>
 
 
 

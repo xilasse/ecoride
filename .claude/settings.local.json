@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/OneDrive/Bureau/img coloriage/php intall/php-8.4.12-src/**)",
+      "Bash(where:*)",
+      "Bash(docker run:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(curl:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

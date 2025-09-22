@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil - EcoRide</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="./styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-leaf me-2"></i>EcoRide
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="covoiturages.html">Covoiturages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="profil.html">Profil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- En-tête Profil Simple -->
+    <div class="profile-header-simple">
+        <div class="container">
+            <div class="profile-header-content">
+                <div class="profile-picture">
+                    <img src="/api/placeholder/100/100" alt="Photo de profil" id="profileAvatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="profile-placeholder">👤</div>
+                </div>
+                <div class="profile-info">
+                    <h1 id="profileUserName">Chargement...</h1>
+                    <p id="profileUserEmail">email@example.com</p>
+                    <div class="profile-stats">
+                        <span class="stat">💰 <span id="profileCredits">0</span> crédits</span>
+                        <span class="stat">⭐ <span id="profileRating">4.5</span></span>
+                        <span class="stat">🚗 <span id="profileTotalRides">0</span> trajets</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Onglets -->
+    <div class="container">
+        <div class="profile-tabs">
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+                        📝 Informations
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rides-tab" data-bs-toggle="tab" data-bs-target="#rides" type="button" role="tab">
+                        🚗 Mes trajets
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations" type="button" role="tab">
+                        📅 Réservations
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles" type="button" role="tab">
+                        🚙 Véhicules
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">
+                        ⚙️ Paramètres
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Contenu des Onglets -->
+        <div class="tab-content" id="profileTabContent">
+            <!-- Onglet Informations -->
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                <div class="profile-content-card">
+                    <h3>Informations personnelles</h3>
+                    <form id="profileForm" class="profile-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Pseudo</label>
+                                    <input type="text" class="form-control" id="profilePseudo" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" id="profileEmailDisplay" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Prénom</label>
+                                    <input type="text" class="form-control" id="profileFirstName">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Nom</label>
+                                    <input type="text" class="form-control" id="profileLastName">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Téléphone</label>
+                                    <input type="tel" class="form-control" id="profilePhone">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Ville</label>
+                                    <input type="text" class="form-control" id="profileCity">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <textarea class="form-control" id="profileBio" rows="3" placeholder="Parlez-nous de vous..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">💾 Enregistrer</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Onglet Mes trajets -->
+            <div class="tab-pane fade" id="rides" role="tabpanel">
+                <div class="profile-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Mes trajets proposés</h3>
+                        <a href="covoiturages.html" class="btn btn-success">➕ Nouveau trajet</a>
+                    </div>
+                    <div id="myRidesList">
+                        <div class="empty-state">
+                            <h5>🚗 Aucun trajet proposé</h5>
+                            <p>Commencez à partager vos trajets !</p>
+                            <a href="covoiturages.html" class="btn btn-primary">Proposer mon premier trajet</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Réservations -->
+            <div class="tab-pane fade" id="reservations" role="tabpanel">
+                <div class="profile-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Mes réservations</h3>
+                        <a href="covoiturages.html" class="btn btn-success">🔍 Rechercher</a>
+                    </div>
+                    <div id="myReservationsList">
+                        <div class="empty-state">
+                            <h5>📅 Aucune réservation</h5>
+                            <p>Vous n'avez pas encore réservé de trajet.</p>
+                            <a href="covoiturages.html" class="btn btn-primary">Rechercher un trajet</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Véhicules -->
+            <div class="tab-pane fade" id="vehicles" role="tabpanel">
+                <div class="profile-content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Mes véhicules</h3>
+                        <button class="btn btn-success" onclick="addVehicle()">➕ Ajouter</button>
+                    </div>
+                    <div id="myVehiclesList">
+                        <div class="empty-state">
+                            <h5>🚙 Aucun véhicule</h5>
+                            <p>Ajoutez vos véhicules pour proposer des trajets.</p>
+                            <button class="btn btn-primary" onclick="addVehicle()">Ajouter mon premier véhicule</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Paramètres -->
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="profile-content-card">
+                    <h3>Paramètres du compte</h3>
+
+                    <div class="settings-section">
+                        <h5>🔒 Sécurité</h5>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Mot de passe</strong>
+                                <p class="text-muted">Modifiez votre mot de passe</p>
+                            </div>
+                            <button class="btn btn-outline-primary" onclick="changePassword()">🔑 Changer</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h5>⚙️ Gestion du compte</h5>
+                        <div class="alert alert-warning">
+                            <strong>⚠️ Zone sensible</strong> - Ces actions sont importantes.
+                        </div>
+                        <div class="settings-item">
+                            <div>
+                                <strong>Désactiver le compte</strong>
+                                <p class="text-muted">Masquer temporairement votre profil</p>
+                            </div>
+                            <button class="btn btn-outline-warning" onclick="deactivateAccount()">⏸️ Désactiver</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auth JS -->
+    <script src="./auth.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisation de la page profil');
+
+            // Vérifier si l'utilisateur est connecté
+            updateNavigation();
+
+            // Charger les données du profil
+            loadProfileData();
+        });
+
+        function updateNavigation() {
+            fetch('/api/auth/session', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.isLoggedIn) {
+                    window.location.href = 'connexion.html';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la vérification de session:', error);
+                window.location.href = 'connexion.html';
+            });
+        }
+
+        function loadProfileData() {
+            console.log('📋 Chargement des données du profil');
+
+            fetch('/api/user/profile', {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    document.getElementById('profileUserName').textContent = user.pseudo || 'Utilisateur';
+                    document.getElementById('profileUserEmail').textContent = user.email || '';
+                    document.getElementById('profilePseudo').value = user.pseudo || '';
+                    document.getElementById('profileEmailDisplay').value = user.email || '';
+                    document.getElementById('profileFirstName').value = user.firstName || '';
+                    document.getElementById('profileLastName').value = user.lastName || '';
+                    document.getElementById('profilePhone').value = user.phone || '';
+                    document.getElementById('profileCity').value = user.city || '';
+                    document.getElementById('profileBio').value = user.bio || '';
+                    document.getElementById('profileCredits').textContent = user.credits || '0';
+                    document.getElementById('profileRating').textContent = user.rating || '0';
+                    document.getElementById('profileTotalRides').textContent = user.totalRides || '0';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement du profil:', error);
+            });
+        }
+
+        // Fonctions de gestion
+        function editProfile() {
+            console.log('Édition du profil');
+        }
+
+        function addVehicle() {
+            console.log('Ajout d\'un véhicule');
+        }
+
+        function changePassword() {
+            console.log('Changement de mot de passe');
+        }
+
+        function deactivateAccount() {
+            console.log('Désactivation du compte');
+        }
+    </script>
+</body>
+</html>

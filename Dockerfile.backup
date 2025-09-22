@@ -1,0 +1,16 @@
+FROM debian:bookworm-slim
+
+# Installer le vrai client MySQL
+RUN apt-get update && \
+    apt-get install -y default-mysql-client curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copier le script de sauvegarde
+COPY scripts/backup.sh /backup.sh
+
+# Rendre le script exécutable
+RUN chmod +x /backup.sh
+
+# Définir la commande par défaut
+CMD ["sh", "/backup.sh"]
