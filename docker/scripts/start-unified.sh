@@ -45,9 +45,9 @@ wait_for_mysql_admin() {
         echo "🔧 Utilisation des variables .env..."
         DB_HOST="test"
         DB_USER="test"
-        DB_PASS="${DB_PASSWORD}"
-        DB_NAME="${DB_NAME:-ecoride_db}"
-        DB_PORT="${DB_PORT:-3306}"
+        DB_PASS="test"
+        DB_NAME="test"
+        DB_PORT="test"
     fi
 
     echo "⏳ Attente de MySQL ($DB_HOST:$DB_PORT)..."
@@ -58,7 +58,6 @@ wait_for_mysql_admin() {
         echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
         echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
         echo "DB_PASSWORD: ${DB_PASS:+DÉFINI}"
-        echo "DATABASE_URL: ${DATABASE_URL:+DÉFINI}"
         return 1
     fi
 
