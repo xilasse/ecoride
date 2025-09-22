@@ -43,19 +43,28 @@ wait_for_mysql_admin() {
         DB_PORT=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\4/')
     else
         echo "🔧 Utilisation des variables .env..."
-        DB_HOST="test"
-        DB_USER="test"
-        DB_PASS="test"
-        DB_NAME="test"
-        DB_PORT="test"
+        DB_HOST="${DB_HOST:-mysql}"
+        DB_USER="${DB_USER:-root}"
+        DB_PASS="${DB_PASSWORD}"
+        DB_NAME="${DB_NAME:-ecoride_db}"
+        DB_PORT="${DB_PORT:-3306}"
     fi
 
-        echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
-        echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
-        echo "DB_USER: ${DB_PASS:-'NON DÉFINI'}"
-        echo "DB_USER: ${DB_NAME:-'NON DÉFINI'}"
-        echo "DB_PASSWORD: ${DB_PORT:-'NON DÉFINI'}"
+    echo "🔍 Variables de connexion parsées:"
+    echo "  DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
+    echo "  DB_USER: ${DB_USER:-'NON DÉFINI'}"
+    echo "  DB_PASS: ${DB_PASS:+DÉFINI}"
+    echo "  DB_NAME: ${DB_NAME:-'NON DÉFINI'}"
+    echo "  DB_PORT: ${DB_PORT:-'NON DÉFINI'}"
 
+    echo "⏳ Attente de MySQL ($DB_HOST:$DB_PORT)..."
+
+    # Vérifier d'abord si les variables sont définies
+    if [ -z "$DB_HOST" ] || [ -z "$DB_PASS" ]; then
+        echo "❌ Variables DB_HOST ou DB_PASSWORD non définies"
+        echo "DATABASE_URL: ${MYSQL_URL:+DÉFINI}"
+        return 1
+    fi
 
     # Tentative de connexion avec timeout
     local max_attempts=30
