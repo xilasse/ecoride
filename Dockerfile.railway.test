@@ -30,4 +30,7 @@ RUN if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloa
 RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
-CMD ["apache2-foreground"]
+COPY ./docker/scripts/start-unified.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
