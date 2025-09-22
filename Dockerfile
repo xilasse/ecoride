@@ -8,6 +8,7 @@ RUN docker-php-ext-install pdo pdo_mysql mysqli
 
 # Configuration Apache
 RUN a2enmod rewrite headers
+RUN echo 'ServerName ecoride.railway.app' >> /etc/apache2/apache2.conf
 RUN echo '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
@@ -23,8 +24,9 @@ COPY . .
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Health check simple
-RUN echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c")]); ?>' > /var/www/html/public/health.php
+# Health check simple - à la racine ET dans public
+RUN echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c")]); ?>' > /var/www/html/health.php && \
+    echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c")]); ?>' > /var/www/html/public/health.php
 
 EXPOSE 80
 CMD ["apache2-foreground"]
