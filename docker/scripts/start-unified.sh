@@ -43,85 +43,45 @@ wait_for_mysql_admin() {
         DB_PORT=$(echo "$db_url" | sed -E 's/.*:\/\/([^:]+):([^@]+)@([^:]+):([0-9]+)\/([^?]+).*/\4/')
     else
         echo "🔧 Utilisation des variables .env..."
-        DB_HOST="${DB_HOST:-mysql}"
-        DB_USER="${DB_USER:-root}"
-        DB_PASS="${DB_PASSWORD}"
-        DB_NAME="${DB_NAME:-ecoride_db}"
-        DB_PORT="${DB_PORT:-3306}"
+        DB_PORT="test"
     fi
 
-    echo "🔍 Variables de connexion parsées:"
-    echo "  DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
-    echo "  DB_USER: ${DB_USER:-'NON DÉFINI'}"
-    echo "  DB_PASS: ${DB_PASS:+DÉFINI}"
-    echo "  DB_NAME: ${DB_NAME:-'NON DÉFINI'}"
-    echo "  DB_PORT: ${DB_PORT:-'NON DÉFINI'}"
+        echo "DB_HOST: ${DB_HOST:-'NON DÉFINI'}"
+        echo "DB_USER: ${DB_USER:-'NON DÉFINI'}"
+        echo "DB_USER: ${DB_PASS:-'NON DÉFINI'}"
+        echo "DB_USER: ${DB_NAME:-'NON DÉFINI'}"
+        echo "DB_PASSWORD: ${DB_PORT:-'NON DÉFINI'}"
 
-    echo "⏳ Attente de MySQL ($DB_HOST:$DB_PORT)..."
 
-    # Vérifier d'abord si les variables sont définies
-    if [ -z "$DB_HOST" ] || [ -z "$DB_PASS" ]; then
-        echo "❌ Variables DB_HOST ou DB_PASSWORD non définies"
-        echo "DATABASE_URL: ${MYSQL_URL:+DÉFINI}"
-        return 1
-    fi
 
-    # Sur Railway, réduire les tentatives car le réseau interne se connecte rapidement
-    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
-        local max_attempts=10
-        local sleep_time=10
-        echo "🚂 Mode Railway détecté - timeouts réduits"
-    else
-        local max_attempts=30
-        local sleep_time=3
-    fi
 
+
+    # Tentative de connexion avec timeout
+    local max_attempts=30
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
-        # Test de connectivité réseau d'abord (plus rapide)
-        if command -v nc >/dev/null 2>&1; then
-            if nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
-                echo "✅ Port MySQL accessible (tentative $attempt)"
-                # Puis test mysqladmin pour vérifier que MySQL répond
-                if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
-                    echo "✅ MySQL est prêt après $attempt tentative(s)"
-                    return 0
-                else
-                    echo "⚠️  Port ouvert mais MySQL pas encore prêt (tentative $attempt/$max_attempts)..."
-                fi
-            else
-                echo "⚠️  Port MySQL non accessible (tentative $attempt/$max_attempts)..."
-            fi
-        else
-            # Fallback sans netcat
-            if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
-                echo "✅ MySQL est prêt après $attempt tentative(s)"
-                return 0
-            else
-                echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
-            fi
+    cat > /tmp/my.cnf <<EOF
+[client]
+host=$DB_HOST
+user=$DB_USER
+password=$DB_PASS
+port=$DB_PORT
+EOF
+
+        if mysqladmin --defaults-extra-file=/tmp/my.cnf ping --silent 2>/dev/null; then
+            echo "✅ MySQL est prêt après $attempt tentative(s)"
+            return 0
         fi
 
-        sleep $sleep_time
+        echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
+        sleep 3
         attempt=$((attempt + 1))
     done
 
     echo "❌ MySQL non accessible après $max_attempts tentatives"
-    echo "🔍 Informations de debug:"
-    echo "  Host: $DB_HOST"
-    echo "  Port: $DB_PORT"
-    echo "  User: $DB_USER"
-    echo "  Railway: ${RAILWAY_ENVIRONMENT:+OUI}"
-
-    # Sur Railway, on continue quand même le démarrage
-    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
-        echo "⚠️  Continuing startup on Railway despite DB connection issues..."
-        return 0
-    else
-        echo "❌ Arrêt du démarrage en environnement local"
-        return 1
-    fi
+    echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
+    return 1
 }
 
 # Fonction pour attendre Redis
