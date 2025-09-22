@@ -1,19 +1,33 @@
-# Dockerfile de test ultra-basique
+# Dockerfile Railway fonctionnel
 FROM php:8.2-apache
 
-# Copier seulement le health check
-WORKDIR /var/www/html
-RUN mkdir -p public
-COPY public/health.php public/
+# Installation des extensions PHP nécessaires
+RUN docker-php-ext-install pdo pdo_mysql mysqli
 
-# Configuration Apache minimal
+# Activer mod_rewrite pour les routes
+RUN a2enmod rewrite
+
+# Configuration Apache
 RUN echo 'Listen 80' > /etc/apache2/ports.conf && \
     echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf && \
     echo '  DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf && \
     echo '  <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    AllowOverride All' >> /etc/apache2/sites-available/000-default.conf && \
     echo '    Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    DirectoryIndex index.html index.php' >> /etc/apache2/sites-available/000-default.conf && \
     echo '  </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
     echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
+
+# Copier toute l'application
+WORKDIR /var/www/html
+COPY . .
+
+# Installer Composer et les dépendances si nécessaire
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
+
+# Permissions
+RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
 CMD ["apache2-foreground"]
