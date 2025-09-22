@@ -145,6 +145,7 @@ configure_apache_port() {
 
     # Exporter la variable pour les templates
     export APACHE_PORT
+    export SERVER_NAME=${SERVER_NAME:-localhost}
 
     # Configurer Apache avec le bon port
     echo "⚙️  Configuration d'Apache pour le port $APACHE_PORT..."
@@ -223,32 +224,8 @@ esac
 
 # Créer les dossiers de logs si nécessaires
 echo "📁 Création des dossiers nécessaires..."
-mkdir -p /var/log/php
-mkdir -p /var/www/html/logs
-mkdir -p /var/www/html/cache
-mkdir -p /var/www/html/uploads
-
-# Configurer les permissions
-echo "🔐 Configuration des permissions..."
-touch /var/log/php/error.log
-chown -R www-data:www-data /var/log/php
+mkdir -p /var/www/html/logs /var/www/html/cache /var/www/html/uploads
 chown -R www-data:www-data /var/www/html/logs /var/www/html/cache /var/www/html/uploads
-
-# Installation/mise à jour des dépendances Composer si nécessaire
-if [ -f "/var/www/html/composer.json" ]; then
-    echo "📦 Installation des dépendances PHP..."
-    cd /var/www/html
-    composer install --no-dev --optimize-autoloader --no-interaction
-elif [ -f "composer.json" ]; then
-    echo "📦 Installation des dépendances PHP..."
-    composer install --no-dev --optimize-autoloader --no-interaction
-fi
-
-# Configuration finale des permissions
-echo "🔐 Configuration finale des permissions..."
-chown -R www-data:www-data /var/www/html
-find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true
-find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
 # Configuration Apache pour supprimer le warning ServerName
 if [ -f "/etc/apache2/apache2.conf" ] && [ -f "/var/www/html/docker/apache/apache2.conf.append" ]; then

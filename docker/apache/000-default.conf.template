@@ -1,5 +1,5 @@
 <VirtualHost *:${APACHE_PORT}>
-    ServerName ecoride.railway.app
+    ServerName ${SERVER_NAME}
     ServerAdmin webmaster@ecoride.local
     DocumentRoot /var/www/html/public
 
