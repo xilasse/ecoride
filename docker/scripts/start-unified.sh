@@ -66,24 +66,62 @@ wait_for_mysql_admin() {
         return 1
     fi
 
-    # Tentative de connexion avec timeout
-    local max_attempts=30
+    # Sur Railway, réduire les tentatives car le réseau interne se connecte rapidement
+    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+        local max_attempts=10
+        local sleep_time=2
+        echo "🚂 Mode Railway détecté - timeouts réduits"
+    else
+        local max_attempts=30
+        local sleep_time=3
+    fi
+
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
-        if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
-            echo "✅ MySQL est prêt après $attempt tentative(s)"
-            return 0
+        # Test de connectivité réseau d'abord (plus rapide)
+        if command -v nc >/dev/null 2>&1; then
+            if nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
+                echo "✅ Port MySQL accessible (tentative $attempt)"
+                # Puis test mysqladmin pour vérifier que MySQL répond
+                if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
+                    echo "✅ MySQL est prêt après $attempt tentative(s)"
+                    return 0
+                else
+                    echo "⚠️  Port ouvert mais MySQL pas encore prêt (tentative $attempt/$max_attempts)..."
+                fi
+            else
+                echo "⚠️  Port MySQL non accessible (tentative $attempt/$max_attempts)..."
+            fi
+        else
+            # Fallback sans netcat
+            if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
+                echo "✅ MySQL est prêt après $attempt tentative(s)"
+                return 0
+            else
+                echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
+            fi
         fi
 
-        echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
-        sleep 3
+        sleep $sleep_time
         attempt=$((attempt + 1))
     done
 
     echo "❌ MySQL non accessible après $max_attempts tentatives"
-    echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
-    return 1
+    echo "🔍 Informations de debug:"
+    echo "  Host: $DB_HOST"
+    echo "  Port: $DB_PORT"
+    echo "  User: $DB_USER"
+    echo "  Railway: ${RAILWAY_ENVIRONMENT:+OUI}"
+
+    # Sur Railway, on continue quand même le démarrage
+    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+        echo "⚠️  Continuing startup on Railway despite DB connection issues..."
+        return 0
+    else
+        echo "❌ Arrêt du démarrage en environnement local"
+        return 1
+    fi
 }
 
 # Fonction pour attendre Redis
