@@ -99,23 +99,25 @@ services:
 
   # Service de sauvegarde automatique
   backup:
-    build:
-      context: .
-      dockerfile: Dockerfile.backup
+    image: alpine:latest
     container_name: ecoride_backup
     restart: "no"
     depends_on:
       mysql:
         condition: service_healthy
-    environment:
-      MYSQL_HOST: ${DB_HOST}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
+    env_file:
+      - .env
     volumes:
       - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh
     networks:
       - ecoride_network
+    command: >
+      sh -c "
+      apk add --no-cache mysql-client mongodb-tools &&
+      chmod +x /backup.sh &&
+      /backup.sh
+      "
 
 # Définition des volumes persistants
 volumes:
