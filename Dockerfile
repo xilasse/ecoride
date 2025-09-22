@@ -6,16 +6,28 @@ WORKDIR /var/www/html
 # Installation des extensions PHP essentielles seulement
 RUN docker-php-ext-install pdo pdo_mysql mysqli
 
-# Configuration Apache
+# Configuration Apache pour Railway
 RUN a2enmod rewrite headers
 RUN echo 'ServerName ecoride.railway.app' >> /etc/apache2/apache2.conf
-RUN echo '<VirtualHost *:80>\n\
+
+# VirtualHost qui répond sur tous les ports et tous les domaines
+RUN echo '<VirtualHost *:*>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
         AllowOverride All\n\
         Require all granted\n\
+        DirectoryIndex index.php index.html\n\
     </Directory>\n\
+    <Directory /var/www/html>\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    ErrorLog /var/log/apache2/error.log\n\
+    CustomLog /var/log/apache2/access.log combined\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# Configuration ports pour Railway (peut utiliser n'importe quel port)
+RUN echo 'Listen 80\nListen 8080\nListen 3000' > /etc/apache2/ports.conf
 
 # Copie du code source
 COPY . .

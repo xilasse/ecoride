@@ -1,0 +1,27 @@
+# Dockerfile avec serveur PHP intégré pour Railway
+FROM php:8.2-cli
+
+WORKDIR /var/www/html
+
+# Installation des extensions PHP essentielles
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Copie du code source
+COPY . .
+
+# Permissions
+RUN chmod -R 755 /var/www/html
+
+# Health check simple
+RUN echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c"), "server" => "php-built-in"]); ?>' > /var/www/html/health.php
+RUN echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c"), "server" => "php-built-in"]); ?>' > /var/www/html/public/health.php
+
+# Créer index.php à la racine qui redirige vers public
+RUN echo '<?php header("Location: /public/"); exit; ?>' > /var/www/html/index.php
+
+# Variables d'environnement pour Railway
+ENV PORT=8080
+
+# Utiliser le serveur PHP intégré avec router
+EXPOSE 8080
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public"]
