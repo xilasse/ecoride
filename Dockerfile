@@ -1,44 +1,85 @@
-# Dockerfile sans dépendances Composer pour Railway
+# Utilisation de l'image PHP officielle avec Apache
 FROM php:8.2-apache
 
-WORKDIR /var/www/html
+# Installation des dépendances système
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libssl-dev \
+    pkg-config \
+    unzip \
+    git \
+    curl \
+    gettext-base \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installation des extensions PHP essentielles seulement
-RUN docker-php-ext-install pdo pdo_mysql mysqli
+# Installation des extensions PHP nécessaires
+# Utiliser une approche plus robuste pour éviter les doublons
+RUN set -ex; \
+    # Configuration de GD
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    \
+    # Installer seulement les extensions non présentes
+    EXTENSIONS=""; \
+    for ext in gd pdo pdo_mysql mysqli zip opcache; do \
+        if ! php -m 2>/dev/null | grep -q "^$ext$"; then \
+            EXTENSIONS="$EXTENSIONS $ext"; \
+            echo "Will install: $ext"; \
+        else \
+            echo "Already installed: $ext"; \
+        fi; \
+    done; \
+    \
+    # Installer les extensions en une fois si nécessaire
+    if [ -n "$EXTENSIONS" ]; then \
+        docker-php-ext-install $EXTENSIONS; \
+    else \
+        echo "All core extensions already available"; \
+    fi
 
-# Configuration Apache pour Railway
+# Installation de l'extension Redis (vérifier si déjà installée)
+RUN if ! php -m | grep -q "^redis$"; then \
+        pecl install redis && docker-php-ext-enable redis; \
+    else \
+        echo "Extension redis already installed"; \
+    fi
+
+# Installation de Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configuration d'Apache
 RUN a2enmod rewrite headers
-RUN echo 'ServerName ecoride.railway.app' >> /etc/apache2/apache2.conf
+COPY ./docker/apache/000-default.conf.template /etc/apache2/sites-available/000-default.conf.template
+COPY ./docker/apache/ports.conf.template /etc/apache2/ports.conf.template
+# Copier aussi la config de base pour le développement local
+COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-# VirtualHost qui répond sur tous les ports et tous les domaines
-RUN echo '<VirtualHost *:*>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-        DirectoryIndex index.php index.html\n\
-    </Directory>\n\
-    <Directory /var/www/html>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-    </Directory>\n\
-    ErrorLog /var/log/apache2/error.log\n\
-    CustomLog /var/log/apache2/access.log combined\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+# Configuration PHP
+COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/ecoride.ini
 
-# Configuration ports pour Railway (peut utiliser n'importe quel port)
-RUN echo 'Listen 80\nListen 8080\nListen 3000' > /etc/apache2/ports.conf
-
-# Copie du code source
-COPY . .
-
-# Permissions
+# Configuration des permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Health check simple - à la racine ET dans public
-RUN echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c")]); ?>' > /var/www/html/health.php && \
-    echo '<?php http_response_code(200); echo json_encode(["status" => "ok", "time" => date("c")]); ?>' > /var/www/html/public/health.php
+# Copie des fichiers de l'application
+WORKDIR /var/www/html
 
+# Copie du composer.json en premier pour optimiser le cache Docker
+COPY composer.json composer.lock ./
+
+# Installation des dépendances PHP
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copie du reste de l'application
+COPY . .
+
+# Configuration finale des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && find /var/www/html -type f -exec chmod 644 {} \; \
+    && find /var/www/html -type d -exec chmod 755 {} \;
+
+# Exposition du port (80 par défaut, mais peut être modifié par Railway)
 EXPOSE 80
 CMD ["apache2-foreground"]
