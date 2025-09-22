@@ -69,7 +69,7 @@ wait_for_mysql_admin() {
     # Sur Railway, réduire les tentatives car le réseau interne se connecte rapidement
     if [ -n "$RAILWAY_ENVIRONMENT" ]; then
         local max_attempts=10
-        local sleep_time=2
+        local sleep_time=10
         echo "🚂 Mode Railway détecté - timeouts réduits"
     else
         local max_attempts=30
