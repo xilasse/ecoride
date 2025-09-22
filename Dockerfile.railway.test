@@ -1,0 +1,19 @@
+# Dockerfile de test ultra-basique
+FROM php:8.2-apache
+
+# Copier seulement le health check
+WORKDIR /var/www/html
+RUN mkdir -p public
+COPY public/health.php public/
+
+# Configuration Apache minimal
+RUN echo 'Listen 80' > /etc/apache2/ports.conf && \
+    echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf && \
+    echo '  DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '  <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '  </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
+
+EXPOSE 80
+CMD ["apache2-foreground"]
