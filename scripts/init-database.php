@@ -15,6 +15,8 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
 $config = require __DIR__ . '/../config/config.php';
 $dbConfig = $config['database']['mysql'];
 
+$dbNamess = $dbConfig['dbname'];
+echo "✅ Base de données '{$dbNamess}' iiiiiiiii\n";
 // Vérifier la configuration
 if (empty($dbConfig['host']) || empty($dbConfig['username'])) {
     throw new Exception("Configuration de base de données invalide. Vérifiez DATABASE_URL ou les variables DB_*");
