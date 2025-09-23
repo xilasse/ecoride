@@ -76,6 +76,7 @@ wait_for_mysql_admin() {
     fi
 
     # Créer un fichier de config sécurisé
+    echo "🔧 Création du fichier de configuration MySQL..."
     cat > /tmp/my.cnf <<EOF
 [client]
 host=$DB_HOST
@@ -87,6 +88,9 @@ connect_timeout=10
 EOF
 
     chmod 600 /tmp/my.cnf
+
+    echo "📄 Contenu du fichier /tmp/my.cnf créé :"
+    sed 's/password=.*/password=***MASQUÉ***/' /tmp/my.cnf
 
     # Timeout adapté
     if [ -n "$RAILWAY_ENVIRONMENT" ]; then
