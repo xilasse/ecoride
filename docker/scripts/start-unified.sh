@@ -9,7 +9,9 @@ wait_for_mysql_admin() {
     DB_PASS=${MYSQLPASSWORD:-""}
     DB_NAME=${MYSQLDATABASE:-"mysql"}
 
+#mysql://root:cYEqiKzLqxCMgQJcxtxUEDYXSPqYiJcF@shortline.proxy.rlwy.net:48314/railway
     echo $MYSQL_URL
+    echo $DB_HOST $DB_PORT $DB_USER $DB_PASS $DB_NAME
     echo $MYSQLHOST $MYSQLPORT $MYSQLUSER $MYSQLPASSWORD $MYSQLDATABASE
 
     echo "🧪 Test connexion immédiate..."
