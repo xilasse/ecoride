@@ -105,7 +105,7 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
 # Exposition du port dynamique
-EXPOSE 80
+EXPOSE $PORT
 
 # Script de démarrage unifié
 COPY ./docker/scripts/start-unified.sh /start.sh

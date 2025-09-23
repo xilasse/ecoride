@@ -145,7 +145,7 @@ configure_apache_port() {
 
     # Exporter la variable pour les templates
     export APACHE_PORT
-    export SERVER_NAME=${DB_NAME:-localhost}
+    export SERVER_NAME=${SERVER_NAME:-localhost}
 
     # Configurer Apache avec le bon port
     echo "⚙️  Configuration d'Apache pour le port $APACHE_PORT..."
