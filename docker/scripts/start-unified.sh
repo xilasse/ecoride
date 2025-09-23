@@ -3,8 +3,8 @@
 # Script de démarrage unifié pour EcoRide (Local Docker + Railway)
 echo "🚀 Démarrage d'EcoRide..."
 wait_for_mysql_admin() {
-    DB_HOST='mysql-production-300a.up.railway.app'
-    DB_PORT=${MYSQLPORT:-3306}
+    DB_HOST='shortline.proxy.rlwy.net'
+    DB_PORT='48314'
     DB_USER=${MYSQLUSER:-"root"}
     DB_PASS=${MYSQLPASSWORD:-""}
     DB_NAME=${MYSQLDATABASE:-"mysql"}
