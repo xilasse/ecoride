@@ -57,8 +57,17 @@ password=$DB_PASS
 port=$DB_PORT
 EOF
 
-    # Tentative de connexion avec timeout
-    local max_attempts=30
+    # Timeout différent selon l'environnement
+    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+        local max_attempts=5
+        local sleep_time=2
+        echo "🚂 Mode Railway: timeout réduit (10s max)"
+    else
+        local max_attempts=30
+        local sleep_time=3
+        echo "🐳 Mode local: timeout standard (90s max)"
+    fi
+
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
@@ -69,14 +78,21 @@ EOF
         fi
 
         echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
-        sleep 3
+        sleep $sleep_time
         attempt=$((attempt + 1))
     done
 
     echo "❌ MySQL non accessible après $max_attempts tentatives"
-    echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
     rm -f /tmp/my.cnf
-    return 1
+
+    # Sur Railway, ne pas faire échouer le démarrage
+    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+        echo "⚠️  Continuing Railway startup - MySQL will connect later"
+        return 0
+    else
+        echo "❌ Stopping local startup due to MySQL unavailability"
+        return 1
+    fi
 }
 
 # Fonction pour attendre Redis
@@ -182,8 +198,14 @@ case $ENVIRONMENT in
             apt-get update && apt-get install -y default-mysql-client
         fi
 
-        # Attendre les services externes
-        wait_for_mysql_admin
+        # Test rapide de MySQL mais ne pas bloquer
+        echo "🔍 Test rapide de connectivité MySQL..."
+        if wait_for_mysql_admin; then
+            echo "✅ MySQL accessible dès le démarrage"
+        else
+            echo "⚠️  MySQL pas encore accessible - l'app va démarrer quand même"
+            echo "ℹ️  La connectivité s'établira automatiquement via le réseau Railway"
+        fi
 
         # Redis optionnel
         if [ -n "$REDIS_HOST" ] && [ "$REDIS_HOST" != "redis" ]; then
