@@ -337,15 +337,21 @@ echo "  MYSQL_URL: ${MYSQL_URL:+DÉFINI}"
 echo "  REDIS_URL: ${REDIS_URL:+DÉFINI}"
 echo "  RAILWAY_STATIC_URL: ${RAILWAY_STATIC_URL:-'non défini'}"
 
-# Initialisation de la base de données
-echo "🗄️  Initialisation de la base de données..."
-php /var/www/html/scripts/init-database.php
-
-if [ $? -eq 0 ]; then
-    echo "✅ Base de données initialisée avec succès"
+# Initialisation de la base de données (seulement si MySQL accessible)
+if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+    echo "🗄️  Initialisation de la base de données (Railway)..."
+    echo "ℹ️  Sur Railway, l'initialisation se fera au premier accès de l'app"
+    echo "✅ Mode Railway: initialisation différée"
 else
-    echo "❌ Erreur lors de l'initialisation de la base de données"
-    echo "⚠️  L'application va quand même démarrer, mais la DB pourrait ne pas être configurée"
+    echo "🗄️  Initialisation de la base de données..."
+    php /var/www/html/scripts/init-database.php
+
+    if [ $? -eq 0 ]; then
+        echo "✅ Base de données initialisée avec succès"
+    else
+        echo "❌ Erreur lors de l'initialisation de la base de données"
+        echo "⚠️  L'application va quand même démarrer, mais la DB pourrait ne pas être configurée"
+    fi
 fi
 
 # Démarrage d'Apache

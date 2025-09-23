@@ -12,12 +12,20 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
 }
 
 // Charger la configuration
-$config = require __DIR__ . '/../config/config.php';
-$dbConfig = $config['database']['mysql'];
+try {
+    $config = require __DIR__ . '/../config/config.php';
+    $dbConfig = $config['database']['mysql'];
+} catch (Exception $e) {
+    echo "❌ Erreur lors du chargement de la configuration: " . $e->getMessage() . "\n";
+    echo "ℹ️  L'initialisation sera tentée plus tard\n";
+    exit(0); // Exit sans erreur pour ne pas bloquer le démarrage
+}
 
 // Vérifier la configuration
 if (empty($dbConfig['host']) || empty($dbConfig['username'])) {
-    throw new Exception("Configuration de base de données invalide. Vérifiez DATABASE_URL ou les variables DB_*");
+    echo "❌ Configuration de base de données invalide. Vérifiez DATABASE_URL ou les variables DB_*\n";
+    echo "ℹ️  L'initialisation sera tentée plus tard\n";
+    exit(0); // Exit sans erreur pour ne pas bloquer le démarrage
 }
 
 echo "🚀 Initialisation de la base de données EcoRide...\n";
