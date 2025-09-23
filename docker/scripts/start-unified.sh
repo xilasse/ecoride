@@ -39,7 +39,69 @@ wait_for_mysql_admin() {
         return 1
     fi
 }
-wait_for_mysql_admin
+# Test MySQL non-bloquant sur Railway
+if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+    echo "🚂 Mode Railway: test MySQL non-bloquant"
+    if wait_for_mysql_admin; then
+        echo "✅ MySQL accessible"
+    else
+        echo "⚠️  MySQL pas encore accessible - on continue quand même"
+    fi
+else
+    echo "🐳 Mode local: test MySQL bloquant"
+    wait_for_mysql_admin
+fi
+
+# Configuration Apache pour Railway
+if [ -n "$PORT" ]; then
+    echo "🔧 Configuration Apache pour Railway port $PORT"
+
+    # Vérifier que les dossiers Apache existent
+    if [ ! -d "/etc/apache2/sites-available" ]; then
+        echo "❌ Dossier /etc/apache2/sites-available introuvable!"
+        ls -la /etc/apache2/
+        exit 1
+    fi
+
+    echo "📁 Dossiers Apache disponibles:"
+    ls -la /etc/apache2/
+
+    # Configurer ports.conf
+    echo "🔧 Configuration de ports.conf..."
+    cat > /etc/apache2/ports.conf << EOF
+Listen $PORT
+<IfModule ssl_module>
+    Listen 443
+</IfModule>
+EOF
+    echo "✅ ports.conf configuré"
+
+    # Configurer VirtualHost
+    echo "🔧 Configuration de 000-default.conf..."
+    cat > /etc/apache2/sites-available/000-default.conf << EOF
+<VirtualHost *:$PORT>
+    DocumentRoot /var/www/html/public
+    <Directory /var/www/html/public>
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.php index.html
+    </Directory>
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+    echo "✅ 000-default.conf configuré"
+
+    # Vérifier que la configuration est correcte
+    echo "🧪 Test de la configuration Apache..."
+    if apache2ctl configtest; then
+        echo "✅ Configuration Apache valide"
+    else
+        echo "❌ Configuration Apache invalide:"
+        apache2ctl configtest
+    fi
+fi
+
 # Démarrage d'Apache
 echo "🌐 Démarrage d'Apache..."
 exec apache2-foreground
