@@ -3,17 +3,6 @@
 # Script de démarrage unifié pour EcoRide (Local Docker + Railway)
 echo "🚀 Démarrage d'EcoRide..."
 
-# Fonction pour détecter l'environnement
-detect_environment() {
-    if [ -n "$RAILWAY_ENVIRONMENT" ] || [ -n "$RAILWAY_PROJECT_ID" ]; then
-        echo "railway"
-    elif [ -n "$DB_HOST" ] && [ "$DB_HOST" != "mysql" ]; then
-        echo "external"
-    else
-        echo "local"
-    fi
-}
-
 # Fonction pour attendre qu'un service soit prêt (méthode netcat)
 wait_for_service_nc() {
     local host=$1
@@ -36,15 +25,15 @@ wait_for_mysql_admin() {
     DB_PASS=${MYSQLPASSWORD:-""}
     DB_NAME=${MYSQLDATABASE:-"mysql"}
 
-    echo $DATABASE_URL
+    echo $MYSQL_URL
     echo $MYSQLHOST $MYSQLPORT $MYSQLUSER $MYSQLPASSWORD $MYSQLDATABASE
 
+    echo "🧪 Test connexion immédiate..."
     local max_attempts=30
     local attempt=1
 
-    echo "🧪 Test connexion immédiate..."
     while [ $attempt -le $max_attempts ]; do
-        if mysqladmin ping -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" --silent 2>/dev/null; then
+        if mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "SELECT 1;" 2>/dev/null; then
             echo "✅ MySQL est prêt après $attempt tentative(s)"
             return 0
         fi
@@ -53,6 +42,9 @@ wait_for_mysql_admin() {
         sleep 3
         attempt=$((attempt + 1))
     done
+
+    echo "❌ Impossible de se connecter à MySQL"
+    return 1
 
     # Test réseau de base
     echo "🌐 Test port $DB_PORT sur $DB_HOST..."
@@ -157,57 +149,6 @@ configure_apache_port() {
 # Configurer Apache avant de continuer
 configure_apache_port
 
-# Logique basée sur l'environnement
-case $ENVIRONMENT in
-    "railway")
-        echo "🚂 Configuration Railway détectée"
-        # Sur Railway, on a des bases de données externes
-        # Installer les outils nécessaires si pas déjà présents
-        if ! command -v mysqladmin >/dev/null 2>&1; then
-            echo "📦 Installation des outils MySQL..."
-            apt-get update && apt-get install -y default-mysql-client
-        fi
-
-        # Attendre les services externes
-        wait_for_mysql_admin
-
-        # Redis optionnel
-        if [ -n "$REDIS_HOST" ] && [ "$REDIS_HOST" != "redis" ]; then
-            if command -v redis-cli >/dev/null 2>&1; then
-                wait_for_redis
-            else
-                echo "⚠️  Redis client non disponible, on continue sans vérification"
-            fi
-        fi
-        ;;
-
-    "external")
-        echo "🌐 Configuration avec bases de données externes détectée"
-        # Bases de données externes mais pas Railway
-        wait_for_mysql_admin
-
-        if [ -n "$REDIS_HOST" ]; then
-            wait_for_redis
-        fi
-        ;;
-
-    "local")
-        echo "🐳 Configuration Docker locale détectée"
-        # Installation de netcat pour les tests de connexion
-        install_netcat
-
-        # Attendre les services Docker avec netcat
-        wait_for_service_nc "mysql" "3306" "MySQL"
-
-        # Redis optionnel
-        if nc -z redis 6379 2>/dev/null; then
-            wait_for_service_nc "redis" "6379" "Redis"
-        else
-            echo "ℹ️  Redis non disponible, on continue sans"
-        fi
-        ;;
-esac
-
 # Créer les dossiers de logs si nécessaires
 echo "📁 Création des dossiers nécessaires..."
 mkdir -p /var/www/html/logs /var/www/html/cache /var/www/html/uploads
@@ -282,22 +223,6 @@ else
         echo "❌ Erreur lors de l'initialisation de la base de données"
         echo "⚠️  L'application va quand même démarrer, mais la DB pourrait ne pas être configurée"
     fi
-fi
-
-# Démarrage d'Apache
-echo "🌐 Démarrage d'Apache..."
-es initialisée avec succès"
-else
-    echo "❌ Erreur lors de l'initialisation de la base de données"
-    echo "⚠️  L'application va quand même démarrer, mais la DB pourrait ne pas être configurée"
-fi
-
-# Démarrage d'Apache
-echo "🌐 Démarrage d'Apache..."
-  echo "✅ Base de données initialisée avec succès"
-else
-    echo "❌ Erreur lors de l'initialisation de la base de données"
-    echo "⚠️  L'application va quand même démarrer, mais la DB pourrait ne pas être configurée"
 fi
 
 # Démarrage d'Apache
