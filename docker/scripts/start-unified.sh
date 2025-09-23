@@ -47,6 +47,9 @@ wait_for_mysql_admin() {
     echo "DB_PORT=$DB_PORT"
     echo "DB_USER=$DB_USER"
     echo "DB_NAME=$DB_NAME"
+# Debug parsing - à ajouter après vos echo
+echo "🔍 DEBUG - Test immédiat de connexion avec les valeurs parsées :"
+mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "SELECT 1" --connect-timeout=5 2>/dev/null && echo "✅ Connexion IMMÉDIATE OK !" || echo "❌ Connexion IMMÉDIATE ÉCHOUÉE"
 
     # Créer un fichier de config sécurisé
     cat > /tmp/my.cnf <<EOF
@@ -57,17 +60,8 @@ password=$DB_PASS
 port=$DB_PORT
 EOF
 
-    # Timeout différent selon l'environnement
-    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
-        local max_attempts=5
-        local sleep_time=2
-        echo "🚂 Mode Railway: timeout réduit (10s max)"
-    else
-        local max_attempts=30
-        local sleep_time=3
-        echo "🐳 Mode local: timeout standard (90s max)"
-    fi
-
+    # Tentative de connexion avec timeout
+    local max_attempts=30
     local attempt=1
 
     while [ $attempt -le $max_attempts ]; do
@@ -78,21 +72,14 @@ EOF
         fi
 
         echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
-        sleep $sleep_time
+        sleep 3
         attempt=$((attempt + 1))
     done
 
     echo "❌ MySQL non accessible après $max_attempts tentatives"
+    echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
     rm -f /tmp/my.cnf
-
-    # Sur Railway, ne pas faire échouer le démarrage
-    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
-        echo "⚠️  Continuing Railway startup - MySQL will connect later"
-        return 0
-    else
-        echo "❌ Stopping local startup due to MySQL unavailability"
-        return 1
-    fi
+    return 1
 }
 
 # Fonction pour attendre Redis
@@ -162,6 +149,7 @@ configure_apache_port() {
     # Exporter la variable pour les templates
     export APACHE_PORT
     export SERVER_NAME=${SERVER_NAME:-localhost}
+    echo "SERVER NAME === $SERVER_NAME"
 
     # Configurer Apache avec le bon port
     echo "⚙️  Configuration d'Apache pour le port $APACHE_PORT..."
@@ -198,14 +186,8 @@ case $ENVIRONMENT in
             apt-get update && apt-get install -y default-mysql-client
         fi
 
-        # Test rapide de MySQL mais ne pas bloquer
-        echo "🔍 Test rapide de connectivité MySQL..."
-        if wait_for_mysql_admin; then
-            echo "✅ MySQL accessible dès le démarrage"
-        else
-            echo "⚠️  MySQL pas encore accessible - l'app va démarrer quand même"
-            echo "ℹ️  La connectivité s'établira automatiquement via le réseau Railway"
-        fi
+        # Attendre les services externes
+        wait_for_mysql_admin
 
         # Redis optionnel
         if [ -n "$REDIS_HOST" ] && [ "$REDIS_HOST" != "redis" ]; then
