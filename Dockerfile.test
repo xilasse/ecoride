@@ -20,18 +20,11 @@ RUN a2enmod rewrite headers
 
 # Copier les fichiers essentiels
 WORKDIR /var/www/html
-COPY config/ config/
-COPY src/ src/
-COPY vendor/ vendor/
-COPY public/ public/
 
 # Créer les dossiers nécessaires
 RUN mkdir -p logs cache uploads \
     && chown -R www-data:www-data logs cache uploads \
     && chmod -R 755 logs cache uploads
-
-# Copie des fichiers de l'application
-WORKDIR /var/www/html
 
 # Copie du composer.json en premier pour optimiser le cache Docker
 COPY composer.json composer.lock ./
@@ -42,4 +35,9 @@ COPY . .
 # Script de démarrage simplifié pour test
 
 EXPOSE 80
-CMD ["apache2-foreground"]
+
+# Script de démarrage unifié
+COPY ./docker/scripts/start-unified.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
