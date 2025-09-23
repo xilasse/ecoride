@@ -1,9 +1,9 @@
 # 🌱 EcoRide - Plateforme de Covoiturage Écologique
 
 ![EcoRide Logo](https://img.shields.io/badge/EcoRide-Covoiturage%20Écologique-4CAF50?style=for-the-badge&logo=leaf)
-[![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php)](https://php.net)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql)](https://mysql.com)
-[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.0-7952B3?logo=bootstrap)](https://getbootstrap.com)
+[![Railway](https://img.shields.io/badge/Railway-Deployed-0B0D0E?logo=railway)](https://railway.app)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ## 📋 Description
@@ -39,31 +39,32 @@ EcoRide est une plateforme web moderne de covoiturage qui met l'accent sur l'éc
 - **Chart.js** pour les graphiques administrateur
 
 #### Back-end
-- **PHP 8.x** avec architecture MVC
+- **PHP 8.2+** avec architecture MVC simple
 - **PDO** pour l'accès sécurisé aux données
 - **Composer** pour la gestion des dépendances
+- **API REST** pour les interactions front-end
 
 #### Bases de Données
-- **MySQL 8.0+** (données relationnelles)
-- **MongoDB** (préférences utilisateur, logs)
+- **MySQL 8.0+** (données relationnelles complètes)
+- Structure optimisée avec 12 tables principales
+- **Views** et **procédures stockées** pour les performances
 
 #### Déploiement
+- **Docker** + **Docker Compose** pour le développement local
+- **Railway** pour l'hébergement cloud
 - **Git** + **GitHub** pour le versioning
-- **Heroku/Railway** pour l'hébergement
-- **CI/CD** avec GitHub Actions
 
 ## 🚀 Installation et Configuration
 
 ### Prérequis
 
-- PHP >= 8.0
-- MySQL >= 8.0
-- MongoDB >= 5.0
-- Composer
-- Git
-- Serveur web (Apache/Nginx)
+- **PHP >= 8.2**
+- **MySQL >= 8.0**
+- **Docker** + **Docker Compose** (recommandé)
+- **Composer**
+- **Git**
 
-### Installation Locale
+### Installation avec Docker (Recommandé)
 
 1. **Cloner le projet**
    ```bash
@@ -71,46 +72,47 @@ EcoRide est une plateforme web moderne de covoiturage qui met l'accent sur l'éc
    cd ecoride
    ```
 
-2. **Installer les dépendances**
+2. **Lancer avec Docker Compose**
    ```bash
-   composer install
+   # Lancer tous les services
+   docker-compose up -d
+
+   # Initialiser la base de données
+   docker-compose exec php php scripts/init-database.php
    ```
 
-3. **Configurer la base de données**
-   ```bash
-   # Créer la base MySQL
-   mysql -u root -p
-   CREATE DATABASE ecoride_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   
-   # Importer la structure
-   mysql -u root -p ecoride_db < sql/structure.sql
-   mysql -u root -p ecoride_db < sql/data.sql
-   ```
-
-4. **Configuration des variables d'environnement**
-   ```bash
-   cp config/config.example.php config/config.php
-   # Éditer config/config.php avec vos paramètres
-   ```
-
-5. **Démarrer le serveur de développement**
-   ```bash
-   php -S localhost:8000 -t public/
-   ```
-
-6. **Accéder à l'application**
+3. **Accéder à l'application**
    ```
    http://localhost:8000
    ```
 
-### Configuration MongoDB (Optionnel)
+### Installation Manuelle
 
-```bash
-# Démarrer MongoDB
-mongod
+1. **Cloner et installer**
+   ```bash
+   git clone https://github.com/username/ecoride.git
+   cd ecoride
+   composer install
+   ```
 
-# La base sera créée automatiquement à la première utilisation
-```
+2. **Configurer la base de données**
+   ```bash
+   # Importer la structure complète
+   mysql -u root -p < sql/deploy_railway.sql
+   ```
+
+3. **Configuration**
+   ```bash
+   # Éditer config/config.php avec vos paramètres
+   nano config/config.php
+   ```
+
+4. **Lancer le serveur**
+   ```bash
+   composer run dev
+   # ou
+   php -S localhost:8000 -t public/
+   ```
 
 ### Comptes de Test
 
@@ -127,22 +129,33 @@ L'application est livrée avec des comptes de démonstration :
 
 ```
 ecoride/
-├── 📁 public/                 # Point d'entrée web
-│   ├── index.php             # Page d'accueil
-│   ├── covoiturages.php      # Liste des trajets
-│   └── 📁 assets/            # CSS, JS, images
-├── 📁 src/                   # Code source PHP
-│   ├── 📁 Controllers/       # Contrôleurs MVC
-│   ├── 📁 Models/           # Modèles de données
-│   ├── 📁 Views/            # Templates
-│   └── 📁 Utils/            # Utilitaires
-├── 📁 sql/                  # Scripts de base de données
-│   ├── structure.sql        # Structure des tables
-│   └── data.sql             # Données de test
-├── 📁 docs/                 # Documentation
-├── 📁 tests/                # Tests unitaires et intégration
-├── composer.json            # Dépendances PHP
-└── README.md               # Ce fichier
+├── 📁 public/                 # Interface utilisateur (HTML/CSS/JS)
+│   ├── index.html            # Page d'accueil
+│   ├── covoiturages.html     # Liste des trajets
+│   ├── profil.html           # Espace utilisateur
+│   ├── styles.css            # Styles principaux
+│   ├── main.js               # Scripts principaux
+│   └── 📁 img/               # Images et assets
+├── 📁 src/                   # API et logique métier PHP
+│   └── 📁 Controllers/       # Contrôleurs API
+│       ├── AuthController.php
+│       ├── RideController.php
+│       └── BaseController.php
+├── 📁 config/                # Configuration
+│   └── config.php            # Paramètres de l'application
+├── 📁 sql/                   # Base de données
+│   ├── structure.sql         # Structure originale
+│   ├── deploy_railway.sql    # Script de déploiement complet
+│   └── add_profile_fields.sql # Migration profils
+├── 📁 scripts/               # Scripts utilitaires
+│   ├── init-database.php     # Initialisation DB
+│   └── backup.sh            # Sauvegardes
+├── 📁 docker/                # Configuration Docker
+├── 📁 .claude/               # Configuration Claude Code
+├── compose.yml               # Docker Compose
+├── Dockerfile.railway        # Build Railway
+├── railway.json             # Configuration Railway
+└── composer.json            # Dépendances PHP
 ```
 
 ## 🎮 Utilisation
@@ -201,53 +214,65 @@ ecoride/
    - Revenus de la plateforme
    - Métriques de performance
 
-## 🔧 API Endpoints
+## 🔧 API et Architecture
 
-### Authentification
-```http
-POST /api/auth/login          # Connexion
-POST /api/auth/register       # Inscription  
-POST /api/auth/logout         # Déconnexion
-GET  /api/auth/me            # Profil utilisateur
+### Structure de l'API
+```
+src/Controllers/
+├── AuthController.php       # Authentification utilisateur
+├── RideController.php       # Gestion des covoiturages
+└── BaseController.php       # Méthodes communes
 ```
 
-### Covoiturages
+### Endpoints Disponibles
 ```http
-GET    /api/rides            # Liste des trajets
-GET    /api/rides/{id}       # Détail d'un trajet
-POST   /api/rides            # Créer un trajet
-PUT    /api/rides/{id}       # Modifier un trajet
-DELETE /api/rides/{id}       # Supprimer un trajet
-GET    /api/rides/search     # Rechercher des trajets
+# Authentification
+POST /src/Controllers/AuthController.php?action=login
+POST /src/Controllers/AuthController.php?action=register
+POST /src/Controllers/AuthController.php?action=logout
+
+# Covoiturages
+GET  /src/Controllers/RideController.php?action=list
+GET  /src/Controllers/RideController.php?action=details&id={id}
+POST /src/Controllers/RideController.php?action=create
+POST /src/Controllers/RideController.php?action=book
 ```
 
-### Réservations
-```http
-GET    /api/bookings         # Mes réservations
-POST   /api/bookings         # Créer une réservation
-PUT    /api/bookings/{id}    # Modifier une réservation
-DELETE /api/bookings/{id}    # Annuler une réservation
-```
+### Base de Données - Tables Principales
+- **users** - Utilisateurs avec profils complets
+- **vehicles** - Véhicules des chauffeurs
+- **rides** - Covoiturages proposés
+- **bookings** - Réservations effectuées
+- **reviews** - Système d'avis
+- **user_roles, ride_statuses** - Tables de référence
 
-## 🧪 Tests
+## 🧪 Tests et Scripts
 
-### Exécuter les tests
-
+### Scripts Composer Disponibles
 ```bash
-# Tests unitaires
-./vendor/bin/phpunit tests/Unit/
+# Lancer le serveur de développement
+composer run dev
 
-# Tests d'intégration
-./vendor/bin/phpunit tests/Integration/
+# Lancer en production (0.0.0.0:8000)
+composer run start
 
-# Tests complets
-./vendor/bin/phpunit
+# Nettoyer et réinstaller les dépendances
+composer run clean
+
+# Tests (si configurés)
+composer run test
 ```
 
-### Coverage
-
+### Scripts d'Initialisation
 ```bash
-./vendor/bin/phpunit --coverage-html coverage/
+# Initialiser la base de données
+php scripts/init-database.php
+
+# Mettre à jour les mots de passe
+php scripts/update-passwords.php
+
+# Sauvegarde de la base
+./scripts/backup.sh
 ```
 
 ## 🛡️ Sécurité
@@ -288,47 +313,44 @@ DELETE /api/bookings/{id}    # Annuler une réservation
 
 ## 🌍 Déploiement
 
-### Environnements
+### Environnements Disponibles
 
-#### Développement
+#### Développement Local
 ```bash
-git checkout develop
-composer install
-php -S localhost:8000 -t public/
+# Avec Docker
+docker-compose up -d
+
+# Manuel
+composer run dev
 ```
 
-#### Staging
+#### Production Railway
 ```bash
-git checkout staging
-composer install --no-dev
-# Déploiement automatique via CI/CD
+# Le projet est configuré pour Railway
+# Fichiers : Dockerfile.railway, railway.json
+# Déploiement automatique via Git push
 ```
 
-#### Production
-```bash
-git checkout main
-# Déploiement via Heroku/Railway
-```
+### Configuration Railway
+
+Le projet inclut :
+- **Dockerfile.railway** - Build optimisé pour Railway
+- **railway.json** - Configuration de déploiement
+- **scripts/deploy-to-railway.ps1** - Script de déploiement PowerShell
+- **sql/deploy_railway.sql** - Script d'initialisation DB
 
 ### Variables d'Environnement
 
 ```env
-# Base de données
-DB_HOST=localhost
+# Configuration locale (.env)
+DB_HOST=mysql
 DB_NAME=ecoride_db
-DB_USER=root
-DB_PASS=password
+DB_USER=ecoride_user
+DB_PASSWORD=ecoride_secure_password_2024
 
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/ecoride_nosql
-
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# Application
-APP_ENV=production
-APP_SECRET=your-secret-key-here
-BASE_URL=https://ecoride.herokuapp.com
+# Railway (automatiquement configurées)
+MYSQL_URL=mysql://user:pass@host:port/db
+RAILWAY_PUBLIC_DOMAIN=votre-app.railway.app
 ```
 
 ## 🤝 Contribution
@@ -467,4 +489,4 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ---
 
-*Dernière mise à jour : 08 septembre 2025*
+*Dernière mise à jour : 23 septembre 2025*
