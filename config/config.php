@@ -10,7 +10,20 @@ if (file_exists(__DIR__ . '/../.env')) {
 }
 
 // Configuration pour Railway (priorité si DATABASE_URL existe)
-$databaseUrl = $_ENV['DATABASE_URL'] ?? $_ENV['MYSQL_URL'] ?? null;
+// Railway peut utiliser getenv() ou $_ENV
+$databaseUrl = $_ENV['DATABASE_URL'] ?? $_ENV['MYSQL_URL'] ??
+               getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: null;
+
+// Debug pour Railway
+if (getenv('RAILWAY_ENVIRONMENT')) {
+    error_log('=== CONFIG.PHP DEBUG RAILWAY ===');
+    error_log('DATABASE_URL via $_ENV: ' . ($_ENV['DATABASE_URL'] ?? 'NON DÉFINI'));
+    error_log('MYSQL_URL via $_ENV: ' . ($_ENV['MYSQL_URL'] ?? 'NON DÉFINI'));
+    error_log('DATABASE_URL via getenv(): ' . (getenv('DATABASE_URL') ?: 'NON DÉFINI'));
+    error_log('MYSQL_URL via getenv(): ' . (getenv('MYSQL_URL') ?: 'NON DÉFINI'));
+    error_log('Final databaseUrl: ' . ($databaseUrl ?? 'NON DÉFINI'));
+    error_log('================================');
+}
 
 if ($databaseUrl) {
     // Configuration Railway

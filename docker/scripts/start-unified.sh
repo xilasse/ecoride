@@ -3,16 +3,32 @@
 # Script de démarrage unifié pour EcoRide (Local Docker + Railway)
 echo "🚀 Démarrage d'EcoRide..."
 wait_for_mysql_admin() {
-    DB_HOST='shortline.proxy.rlwy.net'
-    DB_PORT='48314'
-    DB_USER=${MYSQLUSER:-"root"}
-    DB_PASS=${MYSQLPASSWORD:-""}
-    DB_NAME=${MYSQLDATABASE:-"mysql"}
+    # Parser MYSQL_URL de Railway automatiquement
+    if [ -n "$MYSQL_URL" ]; then
+        echo "🔧 Parsing Railway MYSQL_URL..."
+        # Format: mysql://user:pass@host:port/db
+        DB_HOST=$(echo "$MYSQL_URL" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\3#')
+        DB_PORT=$(echo "$MYSQL_URL" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\4#')
+        DB_USER=$(echo "$MYSQL_URL" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\1#')
+        DB_PASS=$(echo "$MYSQL_URL" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\2#')
+        DB_NAME=$(echo "$MYSQL_URL" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\5#')
+    else
+        # Fallback vers variables individuelles
+        DB_HOST=${MYSQLHOST:-"localhost"}
+        DB_PORT=${MYSQLPORT:-3306}
+        DB_USER=${MYSQLUSER:-"root"}
+        DB_PASS=${MYSQLPASSWORD:-""}
+        DB_NAME=${MYSQLDATABASE:-"mysql"}
+    fi
 
-#mysql://root:cYEqiKzLqxCMgQJcxtxUEDYXSPqYiJcF@shortline.proxy.rlwy.net:48314/railway
-    echo $MYSQL_URL
-    echo $DB_HOST $DB_PORT $DB_USER $DB_PASS $DB_NAME
-    echo $MYSQLHOST $MYSQLPORT $MYSQLUSER $MYSQLPASSWORD $MYSQLDATABASE
+    echo "=== VARIABLES MYSQL FINALES ==="
+    echo "MYSQL_URL: ${MYSQL_URL:+DÉFINI}"
+    echo "DB_HOST: $DB_HOST"
+    echo "DB_PORT: $DB_PORT"
+    echo "DB_USER: $DB_USER"
+    echo "DB_NAME: $DB_NAME"
+    echo "DB_PASS: ${DB_PASS:+DÉFINI}"
+    echo "==============================="
 
     echo "🧪 Test connexion immédiate..."
     local max_attempts=30
