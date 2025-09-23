@@ -68,7 +68,11 @@ class RideController extends BaseController {
                     ORDER BY r.departure_datetime ASC
                     LIMIT 20";
 
-            $stmt = $this->db->prepare($sql);
+            $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
             $stmt->execute();
             $rides = $stmt->fetchAll();
 
@@ -116,7 +120,11 @@ class RideController extends BaseController {
 
             $sql .= " AND r.date >= CURDATE() ORDER BY r.date ASC, r.time ASC LIMIT 20";
 
-            $stmt = $this->db->prepare($sql);
+            $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
             $stmt->execute($params);
             $rides = $stmt->fetchAll();
 
@@ -172,7 +180,11 @@ class RideController extends BaseController {
                         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                     )";
 
-            $stmt = $this->db->prepare($sql);
+            $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
 
             // Pour cette démo, on utilise un driver_id fictif
             $driverId = 4; // Marie
@@ -195,7 +207,7 @@ class RideController extends BaseController {
                 $smokingAllowed
             ]);
 
-            return $this->db->lastInsertId();
+            return $db->lastInsertId();
 
         } catch (Exception $e) {
             error_log('Erreur saveRide: ' . $e->getMessage());
@@ -212,7 +224,11 @@ class RideController extends BaseController {
                 WHERE user_id = ? AND fuel_type = ?
                 ORDER BY created_at DESC LIMIT 1";
 
-        $stmt = $this->db->prepare($sql);
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
         $stmt->execute([$driverId, $fuelType]);
         $existingVehicle = $stmt->fetch();
 
@@ -228,7 +244,11 @@ class RideController extends BaseController {
         $sql = "INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $this->db->prepare($sql);
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
         $licensePlate = $this->generateLicensePlate();
         $firstRegistration = date('Y-m-d', strtotime('-2 years'));
 
@@ -243,7 +263,7 @@ class RideController extends BaseController {
             $data['seats']
         ]);
 
-        return $this->db->lastInsertId();
+        return $db->lastInsertId();
     }
 
     private function mapVehicleType($type) {

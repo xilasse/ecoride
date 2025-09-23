@@ -80,6 +80,34 @@ switch ($path) {
         $controller->checkSession();
         break;
 
+    // Test DB endpoint
+    case '/api/test/db':
+        header('Content-Type: application/json');
+        try {
+            $controller = new AuthController($config);
+            $db = $controller->getDatabase();
+            if ($db) {
+                $stmt = $db->query("SELECT 1 as test");
+                $result = $stmt->fetch();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Base de données accessible',
+                    'test_result' => $result['test']
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Base de données non accessible'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erreur DB: ' . $e->getMessage()
+            ]);
+        }
+        break;
+
     default:
         http_response_code(404);
         echo '404 - Page non trouvée';
