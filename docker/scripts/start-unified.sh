@@ -34,22 +34,46 @@ wait_for_mysql_admin() {
 
     if [ -n "$db_url" ]; then
         echo "🔧 Parsing Railway DATABASE_URL..."
-        DB_HOST=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\3#')
-        DB_USER=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\1#')
-        DB_PASS=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\2#')
-        DB_PORT=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\4#')
-        DB_NAME=$(echo "$db_url" | sed -E 's#.*://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\5#')
+        # Regex corrigée pour mysql://
+        DB_HOST=$(echo "$db_url" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\3#')
+        DB_USER=$(echo "$db_url" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\1#')
+        DB_PASS=$(echo "$db_url" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\2#')
+        DB_PORT=$(echo "$db_url" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\4#')
+        DB_NAME=$(echo "$db_url" | sed -E 's#mysql://([^:]+):([^@]+)@([^:]+):([0-9]+)/([^?]+).*#\5#')
     else
         echo "🔧 Utilisation des variables .env..."
+        # Fallback vers variables directes Railway
+        DB_HOST="${MYSQLHOST:-localhost}"
+        DB_PORT="${MYSQLPORT:-3306}"
+        DB_USER="${MYSQLUSER:-root}"
+        DB_PASS="${MYSQLPASSWORD:-password}"
+        DB_NAME="${MYSQLDATABASE:-mysql}"
     fi
 
+    echo "=== VARIABLES FINALES ==="
     echo "DB_HOST=$DB_HOST"
     echo "DB_PORT=$DB_PORT"
     echo "DB_USER=$DB_USER"
     echo "DB_NAME=$DB_NAME"
-# Debug parsing - à ajouter après vos echo
-echo "🔍 DEBUG - Test immédiat de connexion avec les valeurs parsées :"
-mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "SELECT 1" --connect-timeout=5 2>/dev/null && echo "✅ Connexion IMMÉDIATE OK !" || echo "❌ Connexion IMMÉDIATE ÉCHOUÉE"
+    echo "========================="
+
+    # Test IMMÉDIAT de connexion
+    echo "🧪 Test connexion immédiate..."
+    if timeout 5 mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "SELECT 1" --connect-timeout=5 2>/dev/null; then
+        echo "🎉 MySQL DÉJÀ prêt !"
+        return 0
+    else
+        echo "🔍 MySQL pas encore prêt - début des tentatives..."
+    fi
+
+    # Test réseau de base
+    echo "🌐 Test port $DB_PORT sur $DB_HOST..."
+    if nc -z -w 5 "$DB_HOST" "$DB_PORT" 2>/dev/null; then
+        echo "✅ Port accessible"
+    else
+        echo "❌ Port $DB_PORT INaccessible - vérifiez la configuration DB"
+        return 1
+    fi
 
     # Créer un fichier de config sécurisé
     cat > /tmp/my.cnf <<EOF
@@ -58,28 +82,56 @@ host=$DB_HOST
 user=$DB_USER
 password=$DB_PASS
 port=$DB_PORT
+database=$DB_NAME
+connect_timeout=10
 EOF
 
-    # Tentative de connexion avec timeout
-    local max_attempts=30
+    chmod 600 /tmp/my.cnf
+
+    # Timeout adapté
+    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+        local max_attempts=30
+        local sleep_time=3
+        echo "🚂 Mode Railway: 90s max"
+    else
+        local max_attempts=30
+        local sleep_time=3
+        echo "🐳 Mode local: 90s max"
+    fi
+
     local attempt=1
+    local start_time=$(date +%s)
 
     while [ $attempt -le $max_attempts ]; do
-        if mysqladmin --defaults-extra-file=/tmp/my.cnf ping --silent 2>/dev/null; then
-            echo "✅ MySQL est prêt après $attempt tentative(s)"
+        echo "⏳ Tentative $attempt/$max_attempts..."
+        
+        # TEST CORRIGÉ : SELECT 1 au lieu de ping
+        if timeout 10 mysql --defaults-extra-file=/tmp/my.cnf -e "SELECT 1" --connect-timeout=5 2>/dev/null; then
+            local end_time=$(date +%s)
+            local duration=$((end_time - start_time))
+            echo "✅ MySQL prêt en ${duration}s ($attempt tentatives) !"
             rm -f /tmp/my.cnf
             return 0
         fi
 
-        echo "MySQL n'est pas encore prêt (tentative $attempt/$max_attempts)..."
-        sleep 3
+        echo "⏳ MySQL indisponible (attente ${sleep_time}s)..."
+        sleep $sleep_time
         attempt=$((attempt + 1))
     done
 
-    echo "❌ MySQL non accessible après $max_attempts tentatives"
-    echo "Vérifiez vos variables d'environnement DB_* ou DATABASE_URL"
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    echo "❌ MySQL non accessible après ${duration}s"
+    
     rm -f /tmp/my.cnf
-    return 1
+
+    if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+        echo "⚠️  Railway: poursuite du démarrage"
+        return 0
+    else
+        echo "❌ Local: arrêt"
+        return 1
+    fi
 }
 
 # Fonction pour attendre Redis
