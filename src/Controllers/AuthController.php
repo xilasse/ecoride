@@ -208,12 +208,17 @@ class AuthController extends BaseController {
     }
 
     private function authenticateUser($email, $password) {
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+
         $sql = "SELECT id, email, password_hash, pseudo, role_id, credits, rating_average,
                        total_rides_as_driver, total_rides_as_passenger, is_active
                 FROM users
                 WHERE email = ? AND is_active = 1";
 
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
@@ -225,17 +230,27 @@ class AuthController extends BaseController {
     }
 
     private function userExists($email, $pseudo) {
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+
         $sql = "SELECT id FROM users WHERE email = ? OR pseudo = ?";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$email, $pseudo]);
         return $stmt->fetch() !== false;
     }
 
     private function createUser($data) {
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+
         $sql = "INSERT INTO users (email, password_hash, pseudo, role_id, credits, is_active, is_verified)
                 VALUES (?, ?, ?, 3, 20, 1, 0)";
 
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
 
         $result = $stmt->execute([
@@ -244,23 +259,33 @@ class AuthController extends BaseController {
             $data['pseudo']
         ]);
 
-        return $result ? $this->db->lastInsertId() : false;
+        return $result ? $db->lastInsertId() : false;
     }
 
     private function getUserById($userId) {
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+
         $sql = "SELECT id, email, pseudo, full_name, phone, address, birthdate, gender, bio,
                        role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger
                 FROM users
                 WHERE id = ? AND is_active = 1";
 
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
         return $stmt->fetch();
     }
 
     private function updateLastLogin($userId) {
+        $db = $this->getDatabase();
+        if (!$db) {
+            return; // Ignore silencieusement si DB pas accessible
+        }
+
         $sql = "UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $db->prepare($sql);
         $stmt->execute([$userId]);
     }
 }
