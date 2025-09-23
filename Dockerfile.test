@@ -1,0 +1,79 @@
+# Dockerfile de test léger pour diagnostiquer les problèmes Railway
+FROM php:8.2-apache
+
+# Installation des outils de base seulement
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    netcat-openbsd \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Extensions PHP minimales
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Configuration Apache simple
+RUN a2enmod rewrite
+
+# Copier seulement les fichiers essentiels
+WORKDIR /var/www/html
+COPY config/ config/
+COPY public/health.php public/health.php
+COPY public/index.php public/index.php
+
+# Script de test simple
+RUN cat > /test-start.sh << 'EOF'
+#!/bin/bash
+echo "🧪 Test de démarrage EcoRide..."
+
+# Variables Railway
+echo "📊 Variables d'environnement:"
+echo "  PORT: ${PORT:-'non défini'}"
+echo "  RAILWAY_ENVIRONMENT: ${RAILWAY_ENVIRONMENT:-'non défini'}"
+echo "  MYSQL_URL: ${MYSQL_URL:+DÉFINI}"
+echo "  MYSQLHOST: ${MYSQLHOST:-'non défini'}"
+echo "  MYSQLPORT: ${MYSQLPORT:-'non défini'}"
+
+# Configuration Apache
+if [ -n "$PORT" ]; then
+    echo "🔧 Configuration Apache pour port $PORT"
+    echo "Listen $PORT" > /etc/apache2/ports.conf
+    echo "<VirtualHost *:$PORT>" > /etc/apache2/sites-available/000-default.conf
+    echo "    DocumentRoot /var/www/html/public" >> /etc/apache2/sites-available/000-default.conf
+    echo "    <Directory /var/www/html/public>" >> /etc/apache2/sites-available/000-default.conf
+    echo "        AllowOverride All" >> /etc/apache2/sites-available/000-default.conf
+    echo "        Require all granted" >> /etc/apache2/sites-available/000-default.conf
+    echo "    </Directory>" >> /etc/apache2/sites-available/000-default.conf
+    echo "</VirtualHost>" >> /etc/apache2/sites-available/000-default.conf
+fi
+
+# Test de la configuration
+echo "🧪 Test de la configuration Apache..."
+if apache2ctl configtest; then
+    echo "✅ Configuration Apache OK"
+else
+    echo "❌ Erreur de configuration Apache"
+    apache2ctl configtest
+    exit 1
+fi
+
+# Test MySQL si disponible
+if [ -n "$MYSQLHOST" ]; then
+    echo "🧪 Test MySQL..."
+    if nc -z -w 5 "$MYSQLHOST" "${MYSQLPORT:-3306}"; then
+        echo "✅ MySQL accessible"
+    else
+        echo "⚠️  MySQL non accessible (normal au démarrage)"
+    fi
+fi
+
+# Démarrage Apache
+echo "🚀 Démarrage Apache..."
+exec apache2-foreground
+EOF
+
+RUN chmod +x /test-start.sh
+
+# Exposition du port
+EXPOSE 80
+
+CMD ["/test-start.sh"]
