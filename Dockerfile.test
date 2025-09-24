@@ -20,16 +20,9 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 RUN echo "Listen \${PORT}" > /etc/apache2/ports.conf
 RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
 
-# Config Apache pour index.php
-RUN echo '<Directory /var/www/html> \
-  DirectoryIndex index.php \
-  AllowOverride All \
-  Require all granted \
-</Directory>' > /etc/apache2/conf-available/php.conf && \
-a2enconf php
 
 # Configuration du document root
-ENV APACHE_DOCUMENT_ROOT /var/www/html/src
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
