@@ -42,8 +42,25 @@ class BaseController {
     }
 
     protected function getDatabase() {
-        // Lazy loading de la DB sur Railway
+        // Lazy loading de la DB sur Railway avec retry
         if ($this->db === null && isset($_ENV['RAILWAY_ENVIRONMENT'])) {
+            // Retry sur Railway car le réseau interne peut prendre du temps
+            $maxAttempts = 3;
+            for ($i = 1; $i <= $maxAttempts; $i++) {
+                try {
+                    $this->initDatabase();
+                    if ($this->db !== null) {
+                        error_log("Railway: Connexion DB réussie à la tentative $i");
+                        break;
+                    }
+                } catch (Exception $e) {
+                    error_log("Railway: Tentative DB $i/$maxAttempts échouée: " . $e->getMessage());
+                    if ($i < $maxAttempts) {
+                        sleep(2); // Attendre 2s avant retry
+                    }
+                }
+            }
+        } elseif ($this->db === null) {
             $this->initDatabase();
         }
         return $this->db;

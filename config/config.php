@@ -35,6 +35,20 @@ if ($databaseUrl) {
         'password' => $parsedUrl['pass'],
         'port' => $parsedUrl['port'] ?? 3306
     ];
+
+    // Log des valeurs après parsing
+    if (getenv('RAILWAY_ENVIRONMENT')) {
+        error_log('=== PARSING RÉSULTATS ===');
+        error_log('DatabaseUrl original: ' . $databaseUrl);
+        error_log('Parsed host: ' . ($parsedUrl['host'] ?? 'NON DÉFINI'));
+        error_log('Parsed dbname: ' . (ltrim($parsedUrl['path'], '/') ?? 'NON DÉFINI'));
+        error_log('Parsed username: ' . ($parsedUrl['user'] ?? 'NON DÉFINI'));
+        error_log('Parsed password: ' . (isset($parsedUrl['pass']) ? 'DÉFINI' : 'NON DÉFINI'));
+        error_log('Parsed port: ' . ($parsedUrl['port'] ?? '3306 par défaut'));
+        error_log('Final dbConfig host: ' . $dbConfig['host']);
+        error_log('Final dbConfig port: ' . $dbConfig['port']);
+        error_log('========================');
+    }
 } else {
     // Configuration locale/Docker via .env
     $dbConfig = [
@@ -45,7 +59,6 @@ if ($databaseUrl) {
         'port' => $_ENV['DB_PORT'] ?? 3306
     ];
 }
-
 return [
     'database' => [
         'mysql' => $dbConfig
