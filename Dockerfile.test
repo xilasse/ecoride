@@ -1,43 +1,39 @@
-# Dockerfile de test optimisé pour Railway avec MySQL
 FROM php:8.2-apache
 
-# Installation des outils essentiels
+# Installer les extensions PHP nécessaires
 RUN apt-get update && apt-get install -y \
-    default-mysql-client \
-    netcat-openbsd \
-    curl \
-    gettext-base \
+    libzip-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo pdo_mysql \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Installation des extensions PHP nécessaires
-RUN docker-php-ext-install pdo pdo_mysql mysqli
-
-# Installation de Composer
+# Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configuration Apache
-RUN a2enmod rewrite headers
+# Activer mod_rewrite
+RUN a2enmod rewrite
 
-# Copier les fichiers essentiels
+# Configurer Apache pour Railway
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+RUN echo "Listen \${PORT}" > /etc/apache2/ports.conf
+RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
+
+# Configuration du document root
+ENV APACHE_DOCUMENT_ROOT /var/www/html/src
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Copier les fichiers
 WORKDIR /var/www/html
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --no-interaction --optimize-autoloader
 
-# Créer les dossiers nécessaires
-RUN mkdir -p logs cache uploads \
-    && chown -R www-data:www-data logs cache uploads \
-    && chmod -R 755 logs cache uploads
-
-# Copie du composer.json en premier pour optimiser le cache Docker
-COPY composer.json composer.lock ./
-# Installation des dépendances PHP
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-# Copie du reste de l'application
 COPY . .
-# Script de démarrage simplifié pour test
 
-EXPOSE 80
+# Permissions
+RUN chown -R www-data:www-data /var/www/html
 
-# Script de démarrage unifié
-COPY ./docker/scripts/start-unified.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+# Railway utilise la variable PORT
+CMD sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf && apache2-foreground
