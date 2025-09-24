@@ -1,6 +1,6 @@
 <?php
 require_once '../vendor/autoload.php';
-require_once '../config/Database.php'; // Assuming Database.php is in the config directory
+require_once './config/Database.php'; // Assuming Database.php is in the config directory
 
 // Charger les variables d'environnement
 if (file_exists(__DIR__ . '/../.env')) {
