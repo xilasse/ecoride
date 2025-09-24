@@ -25,6 +25,10 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/src
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
+# Configuration des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+    
 # Copier les fichiers
 WORKDIR /var/www/html
 COPY composer.json composer.lock* ./
@@ -32,8 +36,10 @@ RUN composer install --no-dev --no-interaction --optimize-autoloader --ignore-pl
 
 COPY . .
 
-# Permissions
-RUN chown -R www-data:www-data /var/www/html
+# Configuration finale des permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
+    && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
 # Railway utilise la variable PORT
 CMD sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf && apache2-foreground
