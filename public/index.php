@@ -2,37 +2,6 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Charger les variables d'environnement
-if (file_exists(__DIR__ . '/../.env')) {
-    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-    $dotenv->load();
-}
-
-// Test de connexion à la base de données
-try {
-    $db = Database::getInstance();
-    $conn = $db->getConnection();
-    
-    // Créer une table de test si elle n'existe pas
-    $sql = "CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
-    $conn->exec($sql);
-    
-    $message = "✅ Connexion à MySQL réussie!";
-    
-    // Récupérer les utilisateurs
-    $stmt = $conn->query("SELECT * FROM users");
-    $users = $stmt->fetchAll();
-    
-} catch (Exception $e) {
-    $message = "❌ Erreur: " . $e->getMessage();
-    $users = [];
-}
-
 use EcoRide\Controllers\RideController;
 use EcoRide\Controllers\AuthController;
 

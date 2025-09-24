@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
+    default-mysql-client\
     && docker-php-ext-install pdo pdo_mysql \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -42,5 +43,24 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
     && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
+    # Copier le fichier SQL
+COPY structure.sql /tmp/structure.sql
+
+# Script d'init DB (exécuté au démarrage)
+RUN echo '#!/bin/bash\n\
+set -e\n\
+# Attendre que MySQL soit prêt (retry)\n\
+for i in {1..30}; do\n\
+  if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} -e "SELECT 1" >/dev/null 2>&1; then\n\
+    echo "MySQL prêt, exécution du schéma..."\n\
+    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} ${MYSQLDATABASE} < /tmp/structure.sql\n\
+    echo "Schéma appliqué avec succès."\n\
+    break\n\
+  fi\n\
+  sleep 2\n\
+done\n\
+# Lancer Apache\n\
+exec apache2-foreground' > /entrypoint.sh && chmod +x /entrypoint.sh
+
 # Railway utilise la variable PORT
-CMD sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf && apache2-foreground
+CMD sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf && apache2-foreground && ["/entrypoint.sh"]
