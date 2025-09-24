@@ -14,6 +14,21 @@ if (file_exists(__DIR__ . '/../.env')) {
 $databaseUrl = $_ENV['DATABASE_URL'] ?? $_ENV['MYSQL_URL'] ??
                getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: null;
 
+// Fallback vers variables individuelles Railway si URL interne ne fonctionne pas
+if (!$databaseUrl && getenv('RAILWAY_ENVIRONMENT')) {
+    $mysqlHost = getenv('MYSQLHOST');
+    $mysqlPort = getenv('MYSQLPORT');
+    $mysqlUser = getenv('MYSQLUSER');
+    $mysqlPassword = getenv('MYSQLPASSWORD');
+    $mysqlDatabase = getenv('MYSQLDATABASE');
+
+    if ($mysqlHost && $mysqlUser && $mysqlPassword && $mysqlDatabase) {
+        $databaseUrl = "mysql://{$mysqlUser}:{$mysqlPassword}@{$mysqlHost}:{$mysqlPort}/{$mysqlDatabase}";
+        error_log('Railway: Utilisation des variables individuelles pour construire DATABASE_URL');
+        error_log('Railway: URL construite avec host externe: ' . $mysqlHost);
+    }
+}
+
 // Debug pour Railway
 if (getenv('RAILWAY_ENVIRONMENT')) {
     error_log('=== CONFIG.PHP DEBUG RAILWAY ===');
