@@ -80,6 +80,25 @@ switch ($path) {
         $controller->checkSession();
         break;
 
+    // Debug variables Railway
+    case '/api/debug/vars':
+        header('Content-Type: application/json');
+        echo json_encode([
+            'railway_env' => getenv('RAILWAY_ENVIRONMENT'),
+            'variables' => [
+                'DATABASE_URL_env' => $_ENV['DATABASE_URL'] ?? 'NON DÉFINI',
+                'MYSQL_URL_env' => $_ENV['MYSQL_URL'] ?? 'NON DÉFINI',
+                'DATABASE_URL_getenv' => getenv('DATABASE_URL') ?: 'NON DÉFINI',
+                'MYSQL_URL_getenv' => getenv('MYSQL_URL') ?: 'NON DÉFINI',
+                'MYSQLHOST' => getenv('MYSQLHOST') ?: 'NON DÉFINI',
+                'MYSQLPORT' => getenv('MYSQLPORT') ?: 'NON DÉFINI',
+                'MYSQLUSER' => getenv('MYSQLUSER') ?: 'NON DÉFINI',
+                'MYSQLDATABASE' => getenv('MYSQLDATABASE') ?: 'NON DÉFINI',
+                'PORT' => getenv('PORT') ?: 'NON DÉFINI'
+            ]
+        ], JSON_PRETTY_PRINT);
+        break;
+
     // Test DB endpoint
     case '/api/test/db':
         header('Content-Type: application/json');
