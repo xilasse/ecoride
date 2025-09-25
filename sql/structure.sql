@@ -4,20 +4,20 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
-DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS bookings;
-DROP TABLE IF EXISTS rides;
-DROP TABLE IF EXISTS vehicles;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS ride_statuses;
-DROP TABLE IF EXISTS user_roles;
+--DROP TABLE IF EXISTS reviews;
+--DROP TABLE IF EXISTS bookings;
+--DROP TABLE IF EXISTS rides;
+--DROP TABLE IF EXISTS vehicles;
+--DROP TABLE IF EXISTS users;
+--DROP TABLE IF EXISTS ride_statuses;
+--DROP TABLE IF EXISTS user_roles;
 
 -- ========================================
 -- CRÉATION DES TABLES DE RÉFÉRENCE
 -- ========================================
 
 -- Table des rôles utilisateur
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE user_roles (
 );
 
 -- Table des statuts de covoiturage
-CREATE TABLE ride_statuses (
+CREATE TABLE IF NOT EXISTS ride_statuses (
     id INT PRIMARY KEY AUTO_INCREMENT,
     status_name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE ride_statuses (
 -- ========================================
 
 -- Table des utilisateurs (visiteur, utilisateur, employé, admin)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE users (
 );
 
 -- Table des véhicules
-CREATE TABLE vehicles (
+CREATE TABLE IF NOT EXISTS vehicles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     brand VARCHAR(100) NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE vehicles (
 );
 
 -- Table des covoiturages
-CREATE TABLE rides (
+CREATE TABLE IF NOT EXISTS rides (
     id INT PRIMARY KEY AUTO_INCREMENT,
     driver_id INT NOT NULL,
     vehicle_id INT NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE rides (
 );
 
 -- Table des réservations
-CREATE TABLE bookings (
+CREATE TABLE IF NOT EXISTS bookings (
     id INT PRIMARY KEY AUTO_INCREMENT,
     ride_id INT NOT NULL,
     passenger_id INT NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE bookings (
 );
 
 -- Table des avis (système de modération)
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id INT PRIMARY KEY AUTO_INCREMENT,
     booking_id INT NOT NULL,
     reviewer_id INT NOT NULL,
@@ -193,7 +193,7 @@ CREATE TABLE reviews (
 );
 
 -- Table des préférences utilisateur (pour les chauffeurs)
-CREATE TABLE user_preferences (
+CREATE TABLE IF NOT EXISTS user_preferences (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     preference_key VARCHAR(100) NOT NULL,
@@ -209,7 +209,7 @@ CREATE TABLE user_preferences (
 );
 
 -- Table des logs d'activité (pour audit et statistiques)
-CREATE TABLE activity_logs (
+CREATE TABLE IF NOT EXISTS activity_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NULL,
     action_type VARCHAR(100) NOT NULL,
@@ -229,7 +229,7 @@ CREATE TABLE activity_logs (
 );
 
 -- Table des notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
