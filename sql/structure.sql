@@ -4,6 +4,11 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
+DROP TRIGGER IF EXISTS prevent_self_booking;
+DROP INDEX idx_ride_search ON rides;
+DROP INDEX idx_bookings_stats ON bookings;
+DROP INDEX idx_rides_stats ON rides;
+DROP PROCEDURE IF EXISTS BookRide;
 DROP VIEW IF EXISTS user_stats;
 DROP VIEW IF EXISTS ride_details;
 DROP TABLE IF EXISTS user_preferences;
