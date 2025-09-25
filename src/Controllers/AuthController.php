@@ -1,6 +1,8 @@
 <?php
 namespace EcoRide\Controllers;
 
+use Exception;
+
 class AuthController extends BaseController {
 
     public function login() {

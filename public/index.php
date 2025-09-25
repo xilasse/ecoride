@@ -5,6 +5,9 @@ require_once __DIR__ . '/../config/database.php';
 use EcoRide\Controllers\RideController;
 use EcoRide\Controllers\AuthController;
 
+// Créer l'instance de base de données
+$db = Database::getInstance();
+
 // Configuration des sessions
 ini_set('session.cookie_lifetime', 86400); // 24 heures
 ini_set('session.cookie_httponly', 0); // Permettre JavaScript en dev
