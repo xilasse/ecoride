@@ -4,8 +4,6 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
-ride_details
-
 DROP TABLE IF EXISTS user_preferences;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS activity_logs;
