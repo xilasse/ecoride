@@ -9,8 +9,9 @@ DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS rides;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS ride_statuses;
-DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS user_roles;
+
 
 -- ========================================
 -- CRÉATION DES TABLES DE RÉFÉRENCE
