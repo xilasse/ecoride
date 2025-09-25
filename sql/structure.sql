@@ -4,6 +4,7 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
+DROP VIEW IF EXISTS user_stats;
 DROP VIEW IF EXISTS ride_details;
 DROP TABLE IF EXISTS user_preferences;
 DROP TABLE IF EXISTS notifications;
