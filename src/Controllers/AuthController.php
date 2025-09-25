@@ -286,7 +286,7 @@ class AuthController extends BaseController {
             $bio = !empty($data['bio']) ? $data['bio'] : null;
 
             $sql = "INSERT INTO users (
-                        email, password_hash, pseudo, full_name, phone, address,
+                        email, password_hash, pseudo, phone, address,
                         birthdate, gender, bio, role_id, credits, is_active, is_verified
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 3, 20, 1, 0)";
 
