@@ -4,6 +4,9 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
+DROP TABLE IF EXISTS user_preferences;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS rides;
