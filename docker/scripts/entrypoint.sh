@@ -24,8 +24,8 @@ if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --skip-ssl -e "SELECT 
     echo "MySQL prêt, exécution du schéma..."
 
     # Compter le nombre de tables dans la base de données
-    TABLE_COUNT=$(mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --skip-ssl -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '${MYSQLDATABASE}'" | grep -v "COUNT" | awk '{print $1}')
-
+    #TABLE_COUNT=$(mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --skip-ssl -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '${MYSQLDATABASE}'" | grep -v "COUNT" | awk '{print $1}')
+    TABLE_COUNT=0
     if [ "$TABLE_COUNT" -eq 0 ]; then
       echo "Base de données vide, exécution du schéma..."
       mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --skip-ssl ${MYSQLDATABASE} < /sql/structure.sql
