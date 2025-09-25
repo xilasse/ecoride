@@ -22,8 +22,8 @@ ping -c 4 ${MYSQLHOST} || echo "Impossible de ping ${MYSQLHOST}"
 for i in {1..120}; do
   if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} -e "SELECT 1" >/dev/null 2>&1; then
     echo "MySQL prêt, exécution du schéma..."
-    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} ${MYSQLDATABASE} < /tmp/structure.sql
-    rm /tmp/structure.sql
+    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} ${MYSQLDATABASE} < /sql/structure.sql
+    rm /sql/structure.sql
     echo "Schéma appliqué avec succès."
     break
   else
