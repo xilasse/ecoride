@@ -287,7 +287,7 @@ class AuthController extends BaseController {
 
             $sql = "INSERT INTO users (
                         email, password_hash, pseudo, phone, address,
-                        birthdate, gender, bio, role_id, credits, is_active, is_verified
+                        birthdate, gender, bio, role_id
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 3, 20, 1, 0)";
 
             $stmt = $db->prepare($sql);
