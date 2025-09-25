@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     pseudo VARCHAR(100) NOT NULL UNIQUE,
-    full_name VARCHAR(255) NULL,
     role_id INT NOT NULL DEFAULT 3, -- 3 = utilisateur par défaut
     credits INT DEFAULT 20,
     is_driver BOOLEAN DEFAULT FALSE,
