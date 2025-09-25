@@ -38,29 +38,5 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
     && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
-# Script d'init DB
-RUN echo '#!/bin/bash\n\
-set -e\n\
-: ${PORT:=80}\n\
-: ${MYSQLHOST:?Erreur : MYSQLHOST non défini}\n\
-: ${MYSQLUSER:?Erreur : MYSQLUSER non défini}\n\
-: ${MYSQLPASSWORD:?Erreur : MYSQLPASSWORD non défini}\n\
-: ${MYSQLDATABASE:?Erreur : MYSQLDATABASE non défini}\n\
-for i in {1..60}; do\n\
-  if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} -e "SELECT 1" >/dev/null 2>&1; then\n\
-    echo "MySQL prêt, exécution du schéma..."\n\
-    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} ${MYSQLDATABASE} < /sql/structure.sql\n\
-    rm /sql/structure.sql\n\
-    echo "Schéma appliqué avec succès."\n\
-    break\n\
-  fi\n\
-  if [ $i -eq 60 ]; then\n\
-    echo "Erreur : Impossible de se connecter à MySQL après 60 tentatives."\n\
-    exit 1\n\
-  fi\n\
-  sleep 2\n\
-done\n\
-exec apache2-foreground' > /entrypoint.sh && chmod +x /entrypoint.sh
-
 # Lancer le conteneur
 CMD ["/entrypoint.sh"]
