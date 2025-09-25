@@ -4,12 +4,15 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
+ride_details
+
 DROP TABLE IF EXISTS user_preferences;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS rides;
+DROP TABLE IF EXISTS ride_details;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS ride_statuses;
 DROP TABLE IF EXISTS users;
