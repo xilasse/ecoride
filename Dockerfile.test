@@ -38,9 +38,6 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
     && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
-# Copier le fichier SQL
-COPY structure.sql /tmp/structure.sql
-
 # Script d'init DB
 RUN echo '#!/bin/bash\n\
 set -e\n\
@@ -52,8 +49,8 @@ set -e\n\
 for i in {1..60}; do\n\
   if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} -e "SELECT 1" >/dev/null 2>&1; then\n\
     echo "MySQL prêt, exécution du schéma..."\n\
-    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} ${MYSQLDATABASE} < /tmp/structure.sql\n\
-    rm /tmp/structure.sql\n\
+    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} ${MYSQLDATABASE} < /sql/structure.sql\n\
+    rm /sql/structure.sql\n\
     echo "Schéma appliqué avec succès."\n\
     break\n\
   fi\n\
