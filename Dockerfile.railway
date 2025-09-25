@@ -1,114 +1,46 @@
-# Dockerfile optimisé pour Railway
-# Évite les problèmes d'extensions déjà installées
 FROM php:8.2-apache
 
-# Installation des dépendances système uniquement
+# Installer les extensions PHP nécessaires et nettoyer
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
     libzip-dev \
-    libssl-dev \
-    pkg-config \
+    zip \
     unzip \
-    git \
-    curl \
-    gettext-base \
     default-mysql-client \
-    dnsutils \
-    iputils-ping \
-    netcat-openbsd \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install pdo pdo_mysql mysqli \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Installation SELECTIVE des extensions PHP
-# Vérifier d'abord ce qui est déjà disponible
-RUN set -ex; \
-    echo "=== Checking existing PHP extensions ==="; \
-    php -m; \
-    echo "=== Installing only missing extensions ==="; \
-    \
-    # Configuration GD si nécessaire
-    if ! php -m | grep -q "^gd$"; then \
-        docker-php-ext-configure gd --with-freetype --with-jpeg; \
-        docker-php-ext-install gd; \
-    fi; \
-    \
-    # PDO (généralement déjà présent)
-    if ! php -m | grep -q "^pdo$"; then \
-        docker-php-ext-install pdo; \
-    fi; \
-    \
-    # PDO MySQL
-    if ! php -m | grep -q "^pdo_mysql$"; then \
-        docker-php-ext-install pdo_mysql; \
-    fi; \
-    \
-    # MySQLi
-    if ! php -m | grep -q "^mysqli$"; then \
-        docker-php-ext-install mysqli; \
-    fi; \
-    \
-    # ZIP
-    if ! php -m | grep -q "^zip$"; then \
-        docker-php-ext-install zip; \
-    fi; \
-    \
-    # OPCache
-    if ! php -m | grep -q "^Zend OPcache$"; then \
-        docker-php-ext-install opcache; \
-    fi; \
-    \
-    echo "=== Final extension list ==="; \
-    php -m
-
-# Installation Redis avec vérification
-RUN set -ex; \
-    if ! php -m | grep -q "^redis$"; then \
-        pecl install redis; \
-        docker-php-ext-enable redis; \
-    else \
-        echo "Redis extension already available"; \
-    fi
-
-# Installation de Composer
+# Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer --version
 
-# Configuration d'Apache
-RUN a2enmod rewrite headers
+# Activer mod_rewrite
+RUN a2enmod rewrite
 
-# Copier les templates de configuration
-COPY ./docker/apache/000-default.conf.template /etc/apache2/sites-available/000-default.conf.template
-COPY ./docker/apache/ports.conf.template /etc/apache2/ports.conf.template
+# Configurer Apache pour Railway
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+RUN echo "Listen \${PORT}" > /etc/apache2/ports.conf
+RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
 
-# Configuration PHP
-COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/ecoride.ini
+# Configuration du document root
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Configuration des permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
-# Copie des fichiers de l'application
+# Copier les fichiers
 WORKDIR /var/www/html
+COPY composer.json composer.lock* ./
+RUN composer install --no-dev --no-interaction --optimize-autoloader
 
-# Copie du composer.json en premier pour optimiser le cache Docker
-COPY composer.json composer.lock ./
-
-# Installation des dépendances PHP
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copie du reste de l'application
 COPY . .
 
-# Configuration finale des permissions
+# Configuration des permissions
 RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
     && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
-# Exposition du port dynamique
-EXPOSE $PORT
+COPY sql/structure.sql /sql/structure.sql
 
-# Script de démarrage unifié
-COPY ./docker/scripts/start-unified.sh /start.sh
-RUN chmod +x /start.sh
+COPY ./docker/scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-CMD ["/start.sh"]
+CMD ["/entrypoint.sh"]

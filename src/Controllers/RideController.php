@@ -1,6 +1,8 @@
 <?php
 namespace EcoRide\Controllers;
 
+use DateTime;
+
 class RideController extends BaseController {
 
     public function createRide() {
@@ -16,6 +18,11 @@ class RideController extends BaseController {
 
             // Récupérer les données JSON
             $input = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données JSON invalides']);
+                return;
+            }
 
             // Validation des données requises
             $requiredFields = ['from', 'to', 'date', 'time', 'seats', 'price', 'vehicleType'];
@@ -46,7 +53,7 @@ class RideController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur']);
+            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]); // Include details for debugging
             error_log($e->getMessage());
         }
     }
@@ -69,10 +76,7 @@ class RideController extends BaseController {
                     LIMIT 20";
 
             $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-        $stmt = $db->prepare($sql);
+            $stmt = $db->prepare($sql);
             $stmt->execute();
             $rides = $stmt->fetchAll();
 
@@ -80,7 +84,7 @@ class RideController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur lors de la récupération des trajets']);
+            echo json_encode(['error' => 'Erreur lors de la récupération des trajets', 'details' => $e->getMessage()]);
             error_log($e->getMessage());
         }
     }
@@ -121,10 +125,7 @@ class RideController extends BaseController {
             $sql .= " AND r.date >= CURDATE() ORDER BY r.date ASC, r.time ASC LIMIT 20";
 
             $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-        $stmt = $db->prepare($sql);
+            $stmt = $db->prepare($sql);
             $stmt->execute($params);
             $rides = $stmt->fetchAll();
 
@@ -132,7 +133,7 @@ class RideController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur lors de la recherche']);
+            echo json_encode(['error' => 'Erreur lors de la recherche', 'details' => $e->getMessage()]);
             error_log($e->getMessage());
         }
     }
@@ -166,7 +167,7 @@ class RideController extends BaseController {
 
     private function saveRide($data) {
         try {
-            // D'abord, il faut créer/récupérer un véhicule pour le conducteur
+            // Récupérer ou créer un véhicule
             $vehicleId = $this->getOrCreateVehicle($data);
 
             $departureDateTime = $data['date'] . ' ' . $data['time'] . ':00';
@@ -181,13 +182,10 @@ class RideController extends BaseController {
                     )";
 
             $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-        $stmt = $db->prepare($sql);
+            $stmt = $db->prepare($sql);
 
-            // Pour cette démo, on utilise un driver_id fictif
-            $driverId = 4; // Marie
+            // TODO: Remplacer par l'ID du conducteur authentifié
+            $driverId = $_SESSION['user_id'] ?? 4; // Fallback à 4 pour les tests
 
             $petsAllowed = is_array($data['preferences']) ? in_array('pets', $data['preferences']) : false;
             $smokingAllowed = is_array($data['preferences']) ? !in_array('nosmoking', $data['preferences']) : true;
@@ -216,58 +214,58 @@ class RideController extends BaseController {
     }
 
     private function getOrCreateVehicle($data) {
-        // D'abord, essayons de trouver un véhicule existant du même type pour l'utilisateur
-        $fuelType = $this->mapVehicleType($data['vehicleType']);
-        $driverId = 4; // Marie pour cette démo
+        try {
+            // Récupérer ou créer un véhicule
+            $fuelType = $this->mapVehicleType($data['vehicleType']);
+            $driverId = $_SESSION['user_id'] ?? 4; // TODO: Remplacer par l'ID du conducteur authentifié
 
-        $sql = "SELECT id FROM vehicles
-                WHERE user_id = ? AND fuel_type = ?
-                ORDER BY created_at DESC LIMIT 1";
+            $sql = "SELECT id FROM vehicles
+                    WHERE user_id = ? AND fuel_type = ?
+                    ORDER BY created_at DESC LIMIT 1";
 
-        $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
+            $db = $this->getDatabase();
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$driverId, $fuelType]);
+            $existingVehicle = $stmt->fetch();
+
+            if ($existingVehicle) {
+                return $existingVehicle['id'];
+            }
+
+            // Créer un nouveau véhicule
+            $brand = $data['vehicleBrand'] ?: $this->getDefaultBrand($fuelType);
+            $model = $data['vehicleModel'] ?: $this->getDefaultModel($fuelType);
+            $color = 'Grise'; // Couleur par défaut
+
+            $sql = "INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $db = $this->getDatabase();
+            $stmt = $db->prepare($sql);
+            $licensePlate = $this->generateLicensePlate();
+            $firstRegistration = date('Y-m-d', strtotime('-2 years'));
+
+            $stmt->execute([
+                $driverId,
+                $brand,
+                $model,
+                $color,
+                $licensePlate,
+                $firstRegistration,
+                $fuelType,
+                $data['seats']
+            ]);
+
+            return $db->lastInsertId();
+
+        } catch (Exception $e) {
+            error_log('Erreur getOrCreateVehicle: ' . $e->getMessage());
+            throw $e;
         }
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$driverId, $fuelType]);
-        $existingVehicle = $stmt->fetch();
-
-        if ($existingVehicle) {
-            return $existingVehicle['id'];
-        }
-
-        // Créer un nouveau véhicule
-        $brand = $data['vehicleBrand'] ?: $this->getDefaultBrand($fuelType);
-        $model = $data['vehicleModel'] ?: $this->getDefaultModel($fuelType);
-        $color = 'Grise'; // Couleur par défaut
-
-        $sql = "INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-        $stmt = $db->prepare($sql);
-        $licensePlate = $this->generateLicensePlate();
-        $firstRegistration = date('Y-m-d', strtotime('-2 years'));
-
-        $stmt->execute([
-            $driverId,
-            $brand,
-            $model,
-            $color,
-            $licensePlate,
-            $firstRegistration,
-            $fuelType,
-            $data['seats']
-        ]);
-
-        return $db->lastInsertId();
     }
 
     private function mapVehicleType($type) {
-        switch($type) {
+        switch ($type) {
             case 'electric': return 'electrique';
             case 'hybrid': return 'hybride';
             case 'gasoline': return 'essence';
@@ -276,7 +274,7 @@ class RideController extends BaseController {
     }
 
     private function getDefaultBrand($fuelType) {
-        switch($fuelType) {
+        switch ($fuelType) {
             case 'electrique': return 'Tesla';
             case 'hybride': return 'Toyota';
             case 'essence': return 'Peugeot';
@@ -285,7 +283,7 @@ class RideController extends BaseController {
     }
 
     private function getDefaultModel($fuelType) {
-        switch($fuelType) {
+        switch ($fuelType) {
             case 'electrique': return 'Model 3';
             case 'hybride': return 'Prius';
             case 'essence': return '308';

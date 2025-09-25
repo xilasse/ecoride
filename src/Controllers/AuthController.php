@@ -1,6 +1,9 @@
 <?php
 namespace EcoRide\Controllers;
 
+use Exception;
+use DateTime;
+
 class AuthController extends BaseController {
 
     public function login() {
@@ -14,6 +17,11 @@ class AuthController extends BaseController {
             }
 
             $input = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données JSON invalides']);
+                return;
+            }
 
             if (empty($input['email']) || empty($input['password'])) {
                 http_response_code(400);
@@ -52,7 +60,7 @@ class AuthController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur']);
+            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]); // Include details for debugging
             error_log($e->getMessage());
         }
     }
@@ -68,10 +76,15 @@ class AuthController extends BaseController {
             }
 
             $input = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données JSON invalides']);
+                return;
+            }
 
             if (empty($input['email']) || empty($input['password']) || empty($input['pseudo'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Tous les champs sont requis']);
+                echo json_encode(['error' => 'Email, mot de passe et pseudo sont requis']);
                 return;
             }
 
@@ -85,6 +98,34 @@ class AuthController extends BaseController {
             if (strlen($input['password']) < 6) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Le mot de passe doit contenir au moins 6 caractères']);
+                return;
+            }
+
+            if (strlen($input['pseudo']) < 3) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Le pseudo doit contenir au moins 3 caractères']);
+                return;
+            }
+
+            // Validation optionnelle des champs supplémentaires
+            if (!empty($input['birthdate'])) {
+                $birthdate = DateTime::createFromFormat('Y-m-d', $input['birthdate']);
+                if (!$birthdate || $birthdate->format('Y-m-d') !== $input['birthdate']) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Format de date de naissance invalide (YYYY-MM-DD)']);
+                    return;
+                }
+            }
+
+            if (!empty($input['gender']) && !in_array($input['gender'], ['male', 'female', 'other', 'prefer_not_to_say'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Genre invalide']);
+                return;
+            }
+
+            if (!empty($input['phone']) && !preg_match('/^(\+33|0)[1-9](\d{8})$/', $input['phone'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Numéro de téléphone invalide']);
                 return;
             }
 
@@ -125,7 +166,7 @@ class AuthController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur']);
+            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
             error_log($e->getMessage());
         }
     }
@@ -134,7 +175,8 @@ class AuthController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            // Détruire la session
+            // Nettoyer les variables de session
+            $_SESSION = [];
             session_destroy();
 
             echo json_encode([
@@ -144,7 +186,7 @@ class AuthController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur lors de la déconnexion']);
+            echo json_encode(['error' => 'Erreur lors de la déconnexion', 'details' => $e->getMessage()]);
             error_log($e->getMessage());
         }
     }
@@ -187,7 +229,7 @@ class AuthController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur']);
+            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
             error_log($e->getMessage());
         }
     }
@@ -209,10 +251,6 @@ class AuthController extends BaseController {
 
     private function authenticateUser($email, $password) {
         $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-
         $sql = "SELECT id, email, password_hash, pseudo, role_id, credits, rating_average,
                        total_rides_as_driver, total_rides_as_passenger, is_active
                 FROM users
@@ -231,10 +269,6 @@ class AuthController extends BaseController {
 
     private function userExists($email, $pseudo) {
         $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-
         $sql = "SELECT id FROM users WHERE email = ? OR pseudo = ?";
         $stmt = $db->prepare($sql);
         $stmt->execute([$email, $pseudo]);
@@ -242,32 +276,47 @@ class AuthController extends BaseController {
     }
 
     private function createUser($data) {
-        $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
+        try {
+            $db = $this->getDatabase();
+
+            // Préparer les données optionnelles
+            $fullName = !empty($data['fullName']) ? $data['fullName'] : null;
+            $phone = !empty($data['phone']) ? $data['phone'] : null;
+            $address = !empty($data['address']) ? $data['address'] : null;
+            $birthdate = !empty($data['birthdate']) ? $data['birthdate'] : null;
+            $gender = !empty($data['gender']) ? $data['gender'] : null;
+            $bio = !empty($data['bio']) ? $data['bio'] : null;
+
+            $sql = "INSERT INTO users (
+                        email, password_hash, pseudo, full_name, phone, address,
+                        birthdate, gender, bio, role_id, credits, is_active, is_verified
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 3, 20, 1, 0)";
+
+            $stmt = $db->prepare($sql);
+            $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
+
+            $result = $stmt->execute([
+                $data['email'],
+                $passwordHash,
+                $data['pseudo'],
+                $fullName,
+                $phone,
+                $address,
+                $birthdate,
+                $gender,
+                $bio
+            ]);
+
+            return $result ? $db->lastInsertId() : false;
+
+        } catch (Exception $e) {
+            error_log('Erreur createUser: ' . $e->getMessage());
+            return false;
         }
-
-        $sql = "INSERT INTO users (email, password_hash, pseudo, role_id, credits, is_active, is_verified)
-                VALUES (?, ?, ?, 3, 20, 1, 0)";
-
-        $stmt = $db->prepare($sql);
-        $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
-
-        $result = $stmt->execute([
-            $data['email'],
-            $passwordHash,
-            $data['pseudo']
-        ]);
-
-        return $result ? $db->lastInsertId() : false;
     }
 
     private function getUserById($userId) {
         $db = $this->getDatabase();
-        if (!$db) {
-            throw new \Exception('Base de données non accessible');
-        }
-
         $sql = "SELECT id, email, pseudo, full_name, phone, address, birthdate, gender, bio,
                        role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger
                 FROM users
@@ -279,13 +328,14 @@ class AuthController extends BaseController {
     }
 
     private function updateLastLogin($userId) {
-        $db = $this->getDatabase();
-        if (!$db) {
-            return; // Ignore silencieusement si DB pas accessible
+        try {
+            $db = $this->getDatabase();
+            $sql = "UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$userId]);
+        } catch (Exception $e) {
+            error_log('Erreur updateLastLogin: ' . $e->getMessage());
+            // Ignore silencieusement, car non critique
         }
-
-        $sql = "UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$userId]);
     }
 }
