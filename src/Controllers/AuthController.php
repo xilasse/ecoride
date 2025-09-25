@@ -209,7 +209,6 @@ class AuthController extends BaseController {
                     'user' => [
                         'id' => $user['id'],
                         'pseudo' => $user['pseudo'],
-                        'fullName' => $user['full_name'],
                         'email' => $user['email'],
                         'phone' => $user['phone'],
                         'address' => $user['address'],
@@ -280,7 +279,6 @@ class AuthController extends BaseController {
             $db = $this->getDatabase();
 
             // Préparer les données optionnelles
-            $fullName = !empty($data['fullName']) ? $data['fullName'] : null;
             $phone = !empty($data['phone']) ? $data['phone'] : null;
             $address = !empty($data['address']) ? $data['address'] : null;
             $birthdate = !empty($data['birthdate']) ? $data['birthdate'] : null;
@@ -299,7 +297,6 @@ class AuthController extends BaseController {
                 $data['email'],
                 $passwordHash,
                 $data['pseudo'],
-                $fullName,
                 $phone,
                 $address,
                 $birthdate,
