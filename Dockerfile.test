@@ -38,7 +38,9 @@ RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; 2>/dev/null || true \
     && find /var/www/html -type d -exec chmod 755 {} \; 2>/dev/null || true
 
-COPY ./docker/entrypoint.sh /entrypoint.sh
+COPY sql/structure.sql /sql/structure.sql
+
+COPY ./docker/scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-CMD ["/start.sh"]
+CMD ["/entrypoint.sh"]
