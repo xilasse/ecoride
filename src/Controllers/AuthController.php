@@ -280,13 +280,13 @@ class AuthController extends BaseController {
 
             // Préparer les données optionnelles
             $phone = !empty($data['phone']) ? $data['phone'] : null;
-            $address = !empty($data['address']) ? $data['address'] : null;
+            $address_user = !empty($data['address_user']) ? $data['address_user'] : null;
             $birthdate = !empty($data['birthdate']) ? $data['birthdate'] : null;
             $gender = !empty($data['gender']) ? $data['gender'] : null;
             $bio = !empty($data['bio']) ? $data['bio'] : null;
 
             $sql = "INSERT INTO users (
-                        email, password_hash, pseudo, phone, address,
+                        email, password_hash, pseudo, phone, address_user,
                         birthdate, gender, bio, role_id, credits, is_active, is_verified
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 3, 20, 1, 0)";
 
@@ -298,7 +298,7 @@ class AuthController extends BaseController {
                 $passwordHash,
                 $data['pseudo'],
                 $phone,
-                $address,
+                $address_user,
                 $birthdate,
                 $gender,
                 $bio
@@ -314,7 +314,7 @@ class AuthController extends BaseController {
 
     private function getUserById($userId) {
         $db = $this->getDatabase();
-        $sql = "SELECT id, email, pseudo, phone, address, birthdate, gender, bio,
+        $sql = "SELECT id, email, pseudo, phone, address_user, birthdate, gender, bio,
                        role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger
                 FROM users
                 WHERE id = ? AND is_active = 1";

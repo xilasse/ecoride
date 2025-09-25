@@ -4,20 +4,20 @@
 -- ========================================
 -- SUPPRESSION DES TABLES EXISTANTES
 -- ========================================
---DROP TABLE IF EXISTS reviews;
---DROP TABLE IF EXISTS bookings;
---DROP TABLE IF EXISTS rides;
---DROP TABLE IF EXISTS vehicles;
---DROP TABLE IF EXISTS users;
---DROP TABLE IF EXISTS ride_statuses;
---DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS rides;
+DROP TABLE IF EXISTS vehicles;
+DROP TABLE IF EXISTS ride_statuses;
+DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS users;
 
 -- ========================================
 -- CRÉATION DES TABLES DE RÉFÉRENCE
 -- ========================================
 
 -- Table des rôles utilisateur
-CREATE TABLE IF NOT EXISTS user_roles (
+CREATE TABLE user_roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 -- Table des statuts de covoiturage
-CREATE TABLE IF NOT EXISTS ride_statuses (
+CREATE TABLE ride_statuses (
     id INT PRIMARY KEY AUTO_INCREMENT,
     status_name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS ride_statuses (
 -- ========================================
 
 -- Table des utilisateurs (visiteur, utilisateur, employé, admin)
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS users (
     is_passenger BOOLEAN DEFAULT TRUE,
     profile_picture VARCHAR(255) NULL,
     phone VARCHAR(20) NULL,
-    address TEXT NULL,
+    address_user TEXT NULL,
     birthdate DATE NULL,
     gender ENUM('male', 'female', 'other', 'prefer_not_to_say') NULL,
     bio TEXT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Table des véhicules
-CREATE TABLE IF NOT EXISTS vehicles (
+CREATE TABLE vehicles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     brand VARCHAR(100) NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
 );
 
 -- Table des covoiturages
-CREATE TABLE IF NOT EXISTS rides (
+CREATE TABLE rides (
     id INT PRIMARY KEY AUTO_INCREMENT,
     driver_id INT NOT NULL,
     vehicle_id INT NOT NULL,
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS rides (
 );
 
 -- Table des réservations
-CREATE TABLE IF NOT EXISTS bookings (
+CREATE TABLE bookings (
     id INT PRIMARY KEY AUTO_INCREMENT,
     ride_id INT NOT NULL,
     passenger_id INT NOT NULL,
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 
 -- Table des avis (système de modération)
-CREATE TABLE IF NOT EXISTS reviews (
+CREATE TABLE reviews (
     id INT PRIMARY KEY AUTO_INCREMENT,
     booking_id INT NOT NULL,
     reviewer_id INT NOT NULL,
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 
 -- Table des préférences utilisateur (pour les chauffeurs)
-CREATE TABLE IF NOT EXISTS user_preferences (
+CREATE TABLE user_preferences (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     preference_key VARCHAR(100) NOT NULL,
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 );
 
 -- Table des logs d'activité (pour audit et statistiques)
-CREATE TABLE IF NOT EXISTS activity_logs (
+CREATE TABLE activity_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NULL,
     action_type VARCHAR(100) NOT NULL,
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 );
 
 -- Table des notifications
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE notifications (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -258,14 +258,14 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- ========================================
 
 -- Rôles utilisateur
-INSERT IGNORE INTO user_roles (id, role_name, description) VALUES
+INSERT INTO user_roles (id, role_name, description) VALUES
 (1, 'admin', 'Administrateur système - accès complet'),
 (2, 'employee', 'Employé - modération et support'),
 (3, 'user', 'Utilisateur standard - passager/chauffeur'),
 (4, 'visitor', 'Visiteur - accès limité en lecture seule');
 
 -- Statuts des covoiturages
-INSERT IGNORE INTO ride_statuses (status_name, description) VALUES 
+INSERT INTO ride_statuses (status_name, description) VALUES 
 ('created', 'Covoiturage créé, en attente de participants'),
 ('confirmed', 'Covoiturage confirmé avec des participants'),
 ('started', 'Covoiturage en cours'),
@@ -278,7 +278,7 @@ INSERT IGNORE INTO ride_statuses (status_name, description) VALUES
 -- ========================================
 
 -- Utilisateurs de test
-INSERT IGNORE INTO users (email, password_hash, pseudo, role_id, credits, is_driver, is_passenger, phone, is_verified) VALUES 
+INSERT INTO users (email, password_hash, pseudo, role_id, credits, is_driver, is_passenger, phone, is_verified) VALUES 
 -- Administrateur
 ('admin@ecoride.fr', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'AdminEcoRide', 1, 1000, FALSE, FALSE, '+33123456789', TRUE),
 
@@ -296,7 +296,7 @@ INSERT IGNORE INTO users (email, password_hash, pseudo, role_id, credits, is_dri
 ('claire.moreau@email.com', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'ClaireEco', 3, 33, FALSE, TRUE, '+33643210987', TRUE);
 
 -- Véhicules
-INSERT IGNORE INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available) VALUES 
+INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available) VALUES 
 -- Véhicules de Marie (électriques)
 (4, 'Tesla', 'Model 3', 'Blanche', 'AB-123-CD', '2022-03-15', 'electrique', 4),
 (4, 'Renault', 'ZOE', 'Bleue', 'EF-456-GH', '2021-11-20', 'electrique', 3),
@@ -309,7 +309,7 @@ INSERT IGNORE INTO vehicles (user_id, brand, model, color, license_plate, first_
 (6, 'Nissan', 'Leaf', 'Verte', 'QR-345-ST', '2023-01-08', 'electrique', 4);
 
 -- Covoiturages de test
-INSERT IGNORE INTO rides (driver_id, vehicle_id, departure_city, departure_address, arrival_city, arrival_address, departure_datetime, estimated_arrival_datetime, price_per_seat, available_seats, total_seats, duration_minutes, distance_km, description, smoking_allowed, pets_allowed) VALUES 
+INSERT INTO rides (driver_id, vehicle_id, departure_city, departure_address, arrival_city, arrival_address, departure_datetime, estimated_arrival_datetime, price_per_seat, available_seats, total_seats, duration_minutes, distance_km, description, smoking_allowed, pets_allowed) VALUES 
 -- Trajets de Marie (électriques)
 (4, 1, 'Paris', '12 Rue de Rivoli, 75001 Paris', 'Lyon', 'Place Bellecour, 69002 Lyon', '2025-09-15 14:00:00', '2025-09-15 18:30:00', 35.00, 3, 4, 270, 465, "Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !", FALSE, TRUE),
 
@@ -324,14 +324,14 @@ INSERT IGNORE INTO rides (driver_id, vehicle_id, departure_city, departure_addre
 (6, 5, 'Lille', 'Gare Lille Europe, 59000 Lille', 'Bruxelles', 'Gare Centrale, 1000 Bruxelles', '2025-09-19 10:15:00', '2025-09-19 12:00:00', 18.00, 4, 4, 105, 115, 'Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !', FALSE, TRUE);
 
 -- Réservations
-INSERT IGNORE INTO bookings (ride_id, passenger_id, seats_booked, total_price, is_passenger_validated, is_driver_validated) VALUES 
+INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price, is_passenger_validated, is_driver_validated) VALUES 
 (1, 7, 1, 35.00, FALSE, FALSE), -- Pierre réserve le trajet Paris-Lyon de Marie
 (1, 8, 1, 35.00, FALSE, FALSE), -- Claire réserve aussi le trajet Paris-Lyon
 (2, 7, 1, 28.00, FALSE, FALSE), -- Pierre réserve Lyon-Marseille
 (3, 8, 2, 84.00, FALSE, FALSE); -- Claire réserve 2 places Paris-Bordeaux
 
 -- Préférences utilisateur pour les chauffeurs
-INSERT IGNORE INTO user_preferences (user_id, preference_key, preference_value, is_mandatory) VALUES 
+INSERT INTO user_preferences (user_id, preference_key, preference_value, is_mandatory) VALUES 
 -- Préférences de Marie
 (4, 'smoking_allowed', 'false', TRUE),
 (4, 'pets_allowed', 'true', FALSE),
@@ -459,7 +459,7 @@ BEGIN
     END IF;
     
     -- Effectuer la réservation
-    INSERT IGNORE INTO bookings (ride_id, passenger_id, seats_booked, total_price)
+    INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price)
     VALUES (p_ride_id, p_passenger_id, p_seats_count, v_total_price);
     
     -- Mettre à jour les places disponibles
