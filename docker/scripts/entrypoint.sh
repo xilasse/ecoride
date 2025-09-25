@@ -20,9 +20,9 @@ ping -c 4 ${MYSQLHOST} || echo "Impossible de ping ${MYSQLHOST}"
 
 # Attendre que MySQL soit prêt
 for i in {1..120}; do
-if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --ssl-mode=REQUIRED -e "SELECT 1" >/dev/null 2>&1; then
+if mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --ssl-mode=DISABLED -e "SELECT 1" >/dev/null 2>&1; then
     echo "MySQL prêt, exécution du schéma..."
-    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --ssl-mode=REQUIRED ${MYSQLDATABASE} < /sql/structure.sql
+    mysql -h${MYSQLHOST} -u${MYSQLUSER} -p${MYSQLPASSWORD} --ssl-mode=DISABLED ${MYSQLDATABASE} < /sql/structure.sql
     rm /sql/structure.sql
     echo "Schéma appliqué avec succès."
     break
