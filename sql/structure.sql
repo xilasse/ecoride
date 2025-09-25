@@ -42,12 +42,17 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     pseudo VARCHAR(100) NOT NULL UNIQUE,
-    role_id INT NOT NULL DEFAULT 2, -- 2 = utilisateur par défaut
+    full_name VARCHAR(255) NULL,
+    role_id INT NOT NULL DEFAULT 3, -- 3 = utilisateur par défaut
     credits INT DEFAULT 20,
     is_driver BOOLEAN DEFAULT FALSE,
     is_passenger BOOLEAN DEFAULT TRUE,
     profile_picture VARCHAR(255) NULL,
     phone VARCHAR(20) NULL,
+    address TEXT NULL,
+    birthdate DATE NULL,
+    gender ENUM('male', 'female', 'other', 'prefer_not_to_say') NULL,
+    bio TEXT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     is_verified BOOLEAN DEFAULT FALSE,
     rating_average DECIMAL(2,1) DEFAULT 0.0,
@@ -254,11 +259,11 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- ========================================
 
 -- Rôles utilisateur
-INSERT IGNORE INTO user_roles (role_name, description) VALUES 
-('admin', 'Administrateur système - accès complet'),
-('employee', 'Employé - modération et support'),
-('user', 'Utilisateur standard - passager/chauffeur'),
-('visitor', 'Visiteur - accès limité en lecture seule');
+INSERT IGNORE INTO user_roles (id, role_name, description) VALUES
+(1, 'admin', 'Administrateur système - accès complet'),
+(2, 'employee', 'Employé - modération et support'),
+(3, 'user', 'Utilisateur standard - passager/chauffeur'),
+(4, 'visitor', 'Visiteur - accès limité en lecture seule');
 
 -- Statuts des covoiturages
 INSERT IGNORE INTO ride_statuses (status_name, description) VALUES 

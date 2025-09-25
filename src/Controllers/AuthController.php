@@ -2,6 +2,7 @@
 namespace EcoRide\Controllers;
 
 use Exception;
+use DateTime;
 
 class AuthController extends BaseController {
 
@@ -83,7 +84,7 @@ class AuthController extends BaseController {
 
             if (empty($input['email']) || empty($input['password']) || empty($input['pseudo'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Tous les champs sont requis']);
+                echo json_encode(['error' => 'Email, mot de passe et pseudo sont requis']);
                 return;
             }
 
@@ -97,6 +98,34 @@ class AuthController extends BaseController {
             if (strlen($input['password']) < 6) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Le mot de passe doit contenir au moins 6 caractères']);
+                return;
+            }
+
+            if (strlen($input['pseudo']) < 3) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Le pseudo doit contenir au moins 3 caractères']);
+                return;
+            }
+
+            // Validation optionnelle des champs supplémentaires
+            if (!empty($input['birthdate'])) {
+                $birthdate = DateTime::createFromFormat('Y-m-d', $input['birthdate']);
+                if (!$birthdate || $birthdate->format('Y-m-d') !== $input['birthdate']) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Format de date de naissance invalide (YYYY-MM-DD)']);
+                    return;
+                }
+            }
+
+            if (!empty($input['gender']) && !in_array($input['gender'], ['male', 'female', 'other', 'prefer_not_to_say'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Genre invalide']);
+                return;
+            }
+
+            if (!empty($input['phone']) && !preg_match('/^(\+33|0)[1-9](\d{8})$/', $input['phone'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Numéro de téléphone invalide']);
                 return;
             }
 
@@ -247,20 +276,43 @@ class AuthController extends BaseController {
     }
 
     private function createUser($data) {
-        $db = $this->getDatabase();
-        $sql = "INSERT INTO users (email, password_hash, pseudo, role_id, credits, is_active, is_verified)
-                VALUES (?, ?, ?, 3, 20, 1, 0)";
+        try {
+            $db = $this->getDatabase();
 
-        $stmt = $db->prepare($sql);
-        $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
+            // Préparer les données optionnelles
+            $fullName = !empty($data['fullName']) ? $data['fullName'] : null;
+            $phone = !empty($data['phone']) ? $data['phone'] : null;
+            $address = !empty($data['address']) ? $data['address'] : null;
+            $birthdate = !empty($data['birthdate']) ? $data['birthdate'] : null;
+            $gender = !empty($data['gender']) ? $data['gender'] : null;
+            $bio = !empty($data['bio']) ? $data['bio'] : null;
 
-        $result = $stmt->execute([
-            $data['email'],
-            $passwordHash,
-            $data['pseudo']
-        ]);
+            $sql = "INSERT INTO users (
+                        email, password_hash, pseudo, full_name, phone, address,
+                        birthdate, gender, bio, role_id, credits, is_active, is_verified
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 3, 20, 1, 0)";
 
-        return $result ? $db->lastInsertId() : false;
+            $stmt = $db->prepare($sql);
+            $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
+
+            $result = $stmt->execute([
+                $data['email'],
+                $passwordHash,
+                $data['pseudo'],
+                $fullName,
+                $phone,
+                $address,
+                $birthdate,
+                $gender,
+                $bio
+            ]);
+
+            return $result ? $db->lastInsertId() : false;
+
+        } catch (Exception $e) {
+            error_log('Erreur createUser: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function getUserById($userId) {
