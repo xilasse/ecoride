@@ -314,7 +314,7 @@ class AuthController extends BaseController {
 
     private function getUserById($userId) {
         $db = $this->getDatabase();
-        $sql = "SELECT id, email, pseudo, full_name, phone, address, birthdate, gender, bio,
+        $sql = "SELECT id, email, pseudo, phone, address, birthdate, gender, bio,
                        role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger
                 FROM users
                 WHERE id = ? AND is_active = 1";
