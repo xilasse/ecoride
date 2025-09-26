@@ -30,42 +30,16 @@ class Database {
                     $dbname = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE');
                     $username = getenv('MYSQLUSER') ?: getenv('MYSQL_USER');
                     $password = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD');
-                    
-                    // IMPORTANT: Si le host contient "testsite", c'est incorrect
-                    // Il faut le nom du service MySQL, pas de l'app
-                    if ($host && strpos($host, 'testsite') !== false) {
-                        error_log("⚠️ ATTENTION: Le host '$host' semble incorrect.");
-                        error_log("Le host devrait être [nom-service-mysql].railway.internal");
-                        
-                        // Essayer avec des noms communs de service MySQL
-                        $possibleHosts = ['mysql.railway.internal', 'database.railway.internal', 'db.railway.internal'];
-                        foreach ($possibleHosts as $tryHost) {
-                            error_log("Tentative avec host alternatif: $tryHost");
-                            try {
-                                $testDsn = "mysql:host=$tryHost;port=$port;dbname=$dbname;charset=utf8mb4";
-                                $testPdo = new PDO($testDsn, $username, $password, [
-                                    PDO::ATTR_TIMEOUT => 2,
-                                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-                                ]);
-                                $testPdo->query('SELECT 1');
-                                $host = $tryHost;
-                                error_log("✅ Host trouvé: $tryHost");
-                                break;
-                            } catch (Exception $e) {
-                                continue;
-                            }
-                        }
-                    }
                 }
                 
-                // Si on n'a toujours pas de config valide, environnement local
+                // Si on n'a toujours pas de config valide, utiliser les variables Docker
                 if (!$host) {
-                    error_log("Utilisation de la configuration locale");
-                    $host = 'localhost';
-                    $port = '3306';
-                    $dbname = 'myapp';
-                    $username = 'root';
-                    $password = '';
+                    error_log("Utilisation de la configuration locale Docker");
+                    $host = getenv('DB_HOST') ?: 'ecoride_mysql';
+                    $port = getenv('DB_PORT') ?: '3306';
+                    $dbname = getenv('DB_NAME') ?: 'ecoride_db';
+                    $username = getenv('DB_USER') ?: 'root';
+                    $password = getenv('DB_PASSWORD') ?: '';
                 }
                 
                 $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";

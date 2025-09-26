@@ -15,46 +15,18 @@ RUN apt-get update && apt-get install -y \
     gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Installation des extensions PHP nécessaires
-# Utiliser une approche plus robuste pour éviter les doublons
-RUN set -ex; \
-    # Configuration de GD
-    docker-php-ext-configure gd --with-freetype --with-jpeg; \
-    \
-    # Installer seulement les extensions non présentes
-    EXTENSIONS=""; \
-    for ext in gd pdo pdo_mysql mysqli zip opcache; do \
-        if ! php -m 2>/dev/null | grep -q "^$ext$"; then \
-            EXTENSIONS="$EXTENSIONS $ext"; \
-            echo "Will install: $ext"; \
-        else \
-            echo "Already installed: $ext"; \
-        fi; \
-    done; \
-    \
-    # Installer les extensions en une fois si nécessaire
-    if [ -n "$EXTENSIONS" ]; then \
-        docker-php-ext-install $EXTENSIONS; \
-    else \
-        echo "All core extensions already available"; \
-    fi
+# Configuration et installation des extensions PHP nécessaires
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli zip opcache
 
-# Installation de l'extension Redis (vérifier si déjà installée)
-RUN if ! php -m | grep -q "^redis$"; then \
-        pecl install redis && docker-php-ext-enable redis; \
-    else \
-        echo "Extension redis already installed"; \
-    fi
+# Installation de l'extension Redis via PECL
+RUN pecl install redis && docker-php-ext-enable redis
 
 # Installation de Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Configuration d'Apache
 RUN a2enmod rewrite headers
-COPY ./docker/apache/000-default.conf.template /etc/apache2/sites-available/000-default.conf.template
-COPY ./docker/apache/ports.conf.template /etc/apache2/ports.conf.template
-# Copier aussi la config de base pour le développement local
-COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Configuration PHP
 COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/ecoride.ini
@@ -78,8 +50,20 @@ COPY . .
 # Configuration finale des permissions
 RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; \
-    && find /var/www/html -type d -exec chmod 755 {} \;
+    && find /var/www/html -type d -exec chmod 755 {} \; \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true
 
-# Exposition du port (80 par défaut, mais peut être modifié par Railway)
+COPY ./docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Set Apache document root to public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+
+# Set DirectoryIndex
+RUN echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
+
+# Debug Apache configuration
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 EXPOSE 80
+
 CMD ["apache2-foreground"]

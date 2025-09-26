@@ -40,7 +40,7 @@ RUN chown -R www-data:www-data /var/www/html \
 
 COPY sql/structure.sql /sql/structure.sql
 
-COPY ./docker/scripts/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY ./docker/scripts/dbinit-railway.sh /dbinit-railway.sh
+RUN chmod +x /dbinit-railway.sh
 
-CMD ["/entrypoint.sh"]
+CMD ["/dbinit-railway.sh"]
