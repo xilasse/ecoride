@@ -2,12 +2,6 @@
 set -e
 set -x # Activer le mode débogage
 
-# Vérifier les variables d'environnement
-echo "MYSQLHOST: ${MYSQLHOST}"
-echo "MYSQLUSER: ${MYSQLUSER}"
-echo "MYSQLPASSWORD: ${MYSQLPASSWORD}"
-echo "MYSQLDATABASE: ${MYSQLDATABASE}"
-
 # Valeurs par défaut et validation
 : ${PORT:=80}
 : ${MYSQLHOST:?Erreur : MYSQLHOST non défini}
