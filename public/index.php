@@ -74,7 +74,11 @@ switch ($path) {
         break;
     case '/api/auth/profile':
         $controller = new AuthController($db);
-        $controller->getProfile();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->updateProfile();
+        } else {
+            $controller->getProfile();
+        }
         break;
     case '/api/auth/session':
         $controller = new AuthController($db);

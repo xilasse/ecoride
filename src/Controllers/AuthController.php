@@ -324,6 +324,91 @@ class AuthController extends BaseController {
         return $stmt->fetch();
     }
 
+    public function updateProfile() {
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Méthode non autorisée']);
+                return;
+            }
+
+            if (!isset($_SESSION['is_logged_in']) || !$_SESSION['is_logged_in']) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Non connecté']);
+                return;
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données JSON invalides']);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $db = $this->getDatabase();
+
+            // Validation optionnelle des champs
+            if (!empty($input['phone']) && !preg_match('/^(\+33|0)[1-9](\d{8})$/', $input['phone'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Numéro de téléphone invalide']);
+                return;
+            }
+
+            if (!empty($input['birthdate'])) {
+                $birthdate = DateTime::createFromFormat('Y-m-d', $input['birthdate']);
+                if (!$birthdate || $birthdate->format('Y-m-d') !== $input['birthdate']) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Format de date de naissance invalide (YYYY-MM-DD)']);
+                    return;
+                }
+            }
+
+            if (!empty($input['gender']) && !in_array($input['gender'], ['male', 'female', 'other', 'prefer_not_to_say'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Genre invalide']);
+                return;
+            }
+
+            // Mise à jour du profil
+            $sql = "UPDATE users SET
+                        phone = ?,
+                        address_user = ?,
+                        birthdate = ?,
+                        gender = ?,
+                        bio = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?";
+
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([
+                $input['phone'] ?? null,
+                $input['address'] ?? null,
+                $input['birthdate'] ?? null,
+                $input['gender'] ?? null,
+                $input['bio'] ?? null,
+                $userId
+            ]);
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Profil mis à jour avec succès'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Erreur lors de la mise à jour']);
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
+            error_log($e->getMessage());
+        }
+    }
+
     private function updateLastLogin($userId) {
         try {
             $db = $this->getDatabase();
