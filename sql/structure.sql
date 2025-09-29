@@ -288,20 +288,20 @@ INSERT INTO ride_statuses (status_name, description) VALUES
 -- Utilisateurs de test
 INSERT INTO users (email, password_hash, pseudo, role_id, credits, is_driver, is_passenger, phone, is_verified) VALUES 
 -- Administrateur
-('admin@ecoride.fr', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'AdminEcoRide', 1, 1000, FALSE, FALSE, '+33123456789', TRUE),
+('admin@ecoride.fr', '$2y$12$RzXr57ArdEl2k2Re8E7etuehtVvKP4yqDhBvAYRXI0t3qf1KL1jPa', 'AdminEcoRide', 1, 1000, FALSE, FALSE, '+33123456789', TRUE),
 
 -- Employés
-('employe1@ecoride.fr', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'ModeratorJoe', 2, 100, FALSE, FALSE, '+33123456790', TRUE),
-('employe2@ecoride.fr', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'SupportSarah', 2, 100, FALSE, FALSE, '+33123456791', TRUE),
+('employe1@ecoride.fr', '$2y$12$uo9bdh..R5zeNUnBw9V0Q.sjNgeywvp3/8KvGiwgSutKHeNPJ2zWi', 'ModeratorJoe', 2, 100, FALSE, FALSE, '+33123456790', TRUE),
+('employe2@ecoride.fr', '$2y$12$uo9bdh..R5zeNUnBw9V0Q.sjNgeywvp3/8KvGiwgSutKHeNPJ2zWi', 'SupportSarah', 2, 100, FALSE, FALSE, '+33123456791', TRUE),
 
 -- Utilisateurs chauffeurs
-('marie.dupont@email.com', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'MarieDriveGreen', 3, 45, TRUE, TRUE, '+33612345678', TRUE),
-('jean.martin@email.com', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'JeanEcoDriver', 3, 62, TRUE, TRUE, '+33687654321', TRUE),
-('sophie.bernard@email.com', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'SophieVerte', 3, 38, TRUE, TRUE, '+33698765432', TRUE),
+('marie.dupont@email.com', '$2y$12$7LP.PE6exVodcpKvhNpTZ.k6C4h/4dJl6D2LbE2Iu4lVdDgwFmhmi', 'MarieDriveGreen', 3, 45, TRUE, TRUE, '+33612345678', TRUE),
+('jean.martin@email.com', '$2y$12$VOOx/4q0ygvNjATl4cmJuORSqcbyl0Q968/.sMmzNv/ijSB/6rM7u', 'JeanEcoDriver', 3, 62, TRUE, TRUE, '+33687654321', TRUE),
+('sophie.bernard@email.com', '$2y$12$JoBHI5sCEsCEdQOt/EwZ6e8lRwIgcTFMjq534KcPLveri3giSXJY6', 'SophieVerte', 3, 38, TRUE, TRUE, '+33698765432', TRUE),
 
 -- Utilisateurs passagers
-('pierre.durand@email.com', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'PierreVoyage', 3, 28, FALSE, TRUE, '+33654321098', TRUE),
-('claire.moreau@email.com', '$2y$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/0.MioPuHiuK', 'ClaireEco', 3, 33, FALSE, TRUE, '+33643210987', TRUE);
+('pierre.durand@email.com', '$2y$12$.v3WLsN63PB.BDbN//z92u91yeraY0j7EkC6uhAIiXSr05UjEA1MK', 'PierreVoyage', 3, 28, FALSE, TRUE, '+33654321098', TRUE),
+('claire.moreau@email.com', '$2y$12$ru7TaKi8QaAl/Whh.DMhtegxomjX0z23msaLGKaIorPiFbmvC60zW', 'ClaireEco', 3, 33, FALSE, TRUE, '+33643210987', TRUE);
 
 -- Véhicules
 INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available) VALUES 

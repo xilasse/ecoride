@@ -1,5 +1,8 @@
 /backups/
 /dev-docs/
+# Tools
+Hashage_MDP.php
+
 # Composer
 /vendor/
 composer.phar
