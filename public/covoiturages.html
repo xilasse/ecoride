@@ -65,10 +65,12 @@
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label class="form-label">Départ</label>
+                        <!-- NOTE: Valeur "Paris" pré-remplie - peut être supprimée -->
                         <input type="text" class="form-control" id="departure" placeholder="Ville de départ" value="Paris">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Arrivée</label>
+                        <!-- NOTE: Valeur "Lyon" pré-remplie - peut être supprimée -->
                         <input type="text" class="form-control" id="arrival" placeholder="Ville d'arrivée" value="Lyon">
                     </div>
                     <div class="col-md-3">
@@ -115,6 +117,8 @@
                     </div>
 
                     <!-- Duration Filter -->
+                    <!-- NOTE: Ce filtre n'est PAS encore implémenté côté serveur -->
+                    <!-- TODO: Ajouter le support du filtre durée dans l'API -->
                     <div class="filter-group">
                         <h6>Durée maximum</h6>
                         <select class="form-select" id="durationFilter">
@@ -127,6 +131,8 @@
                     </div>
 
                     <!-- Rating Filter -->
+                    <!-- NOTE: Ce filtre n'est PAS encore implémenté côté serveur -->
+                    <!-- TODO: Ajouter le support du filtre note dans l'API (nécessite une table ratings) -->
                     <div class="filter-group">
                         <h6>Note minimum du chauffeur</h6>
                         <select class="form-select" id="ratingFilter">
@@ -167,6 +173,7 @@
                     <div class="p-3 border-bottom bg-light">
                         <div class="row align-items-center">
                             <div class="col">
+                                <!-- NOTE: Texte par défaut "5 covoiturages trouvés" - sera remplacé dynamiquement -->
                                 <h6 class="mb-0" id="resultsCount">5 covoiturages trouvés</h6>
                             </div>
                             <div class="col-auto">
@@ -189,317 +196,7 @@
                     </div>
 
                     <!-- Results List -->
-                    <div id="ridesList">
-                        <!-- Ride Card 1 -->
-                        <div class="ride-card" data-price="35" data-rating="4.8" data-ecological="true" data-duration="270" data-ride-id="1">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="driver-info">
-                                        <div class="driver-avatar">M</div>
-                                        <div>
-                                            <h6 class="mb-1">MarieDriveGreen</h6>
-                                            <div class="rating">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <span class="text-muted ms-1">4.8 (24 avis)</span>
-                                            </div>
-                                        </div>
-                                        <span class="eco-badge ms-auto">
-                                            <i class="fas fa-leaf"></i> Écologique
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="route-info mb-2">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="me-3">
-                                                <i class="fas fa-circle text-success"></i>
-                                                <strong class="departure-time">14:00</strong> <span class="departure-city">Paris</span>
-                                            </div>
-                                            <div class="flex-fill">
-                                                <hr class="my-0">
-                                            </div>
-                                            <div class="ms-3">
-                                                <i class="fas fa-map-marker-alt text-danger"></i>
-                                                <strong>18:30</strong> <span class="arrival-city">Lyon</span>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>4h 30min
-                                            <i class="fas fa-car ms-3 me-1"></i>Tesla Model 3 - Blanche
-                                        </small>
-                                    </div>
-
-                                    <div class="ride-details">
-                                        <p class="mb-2 small">Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !</p>
-                                        <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">3</span> places restantes</span>
-                                            <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
-                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4 text-end">
-                                    <div class="price-highlight mb-2">35€</div>
-                                    <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ride Card 2 -->
-                        <div class="ride-card" data-price="28" data-rating="4.6" data-ecological="true" data-duration="195" data-ride-id="2">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="driver-info">
-                                        <div class="driver-avatar">M</div>
-                                        <div>
-                                            <h6 class="mb-1">MarieDriveGreen</h6>
-                                            <div class="rating">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star-half-alt"></i>
-                                                <span class="text-muted ms-1">4.6 (18 avis)</span>
-                                            </div>
-                                        </div>
-                                        <span class="eco-badge ms-auto">
-                                            <i class="fas fa-leaf"></i> Écologique
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="route-info mb-2">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="me-3">
-                                                <i class="fas fa-circle text-success"></i>
-                                                <strong class="departure-time">09:00</strong> <span class="departure-city">Lyon</span>
-                                            </div>
-                                            <div class="flex-fill">
-                                                <hr class="my-0">
-                                            </div>
-                                            <div class="ms-3">
-                                                <i class="fas fa-map-marker-alt text-danger"></i>
-                                                <strong>12:15</strong> <span class="arrival-city">Marseille</span>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>3h 15min
-                                            <i class="fas fa-car ms-3 me-1"></i>Renault ZOE - Bleue
-                                        </small>
-                                    </div>
-
-                                    <div class="ride-details">
-                                        <p class="mb-2 small">Trajet matinal Lyon-Marseille. Véhicule 100% électrique !</p>
-                                        <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">2</span> places restantes</span>
-                                            <span><i class="fas fa-ban me-1"></i>Pas d'animaux</span>
-                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4 text-end">
-                                    <div class="price-highlight mb-2">28€</div>
-                                    <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ride Card 3 -->
-                        <div class="ride-card" data-price="42" data-rating="4.2" data-ecological="false" data-duration="345" data-ride-id="3">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="driver-info">
-                                        <div class="driver-avatar">J</div>
-                                        <div>
-                                            <h6 class="mb-1">JeanEcoDriver</h6>
-                                            <div class="rating">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="far fa-star"></i>
-                                                <span class="text-muted ms-1">4.2 (31 avis)</span>
-                                            </div>
-                                        </div>
-                                        <span class="badge bg-warning text-dark ms-auto">
-                                            <i class="fas fa-leaf"></i> Hybride
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="route-info mb-2">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="me-3">
-                                                <i class="fas fa-circle text-success"></i>
-                                                <strong class="departure-time">08:00</strong> <span class="departure-city">Paris</span>
-                                            </div>
-                                            <div class="flex-fill">
-                                                <hr class="my-0">
-                                            </div>
-                                            <div class="ms-3">
-                                                <i class="fas fa-map-marker-alt text-danger"></i>
-                                                <strong>13:45</strong> <span class="arrival-city">Bordeaux</span>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>5h 45min
-                                            <i class="fas fa-car ms-3 me-1"></i>Toyota Prius - Grise
-                                        </small>
-                                    </div>
-
-                                    <div class="ride-details">
-                                        <p class="mb-2 small">Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.</p>
-                                        <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">3</span> places restantes</span>
-                                            <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
-                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4 text-end">
-                                    <div class="price-highlight mb-2">42€</div>
-                                    <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ride Card 4 -->
-                        <div class="ride-card" data-price="22" data-rating="4.5" data-ecological="false" data-duration="150" data-ride-id="4">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="driver-info">
-                                        <div class="driver-avatar">J</div>
-                                        <div>
-                                            <h6 class="mb-1">JeanEcoDriver</h6>
-                                            <div class="rating">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star-half-alt"></i>
-                                                <span class="text-muted ms-1">4.5 (12 avis)</span>
-                                            </div>
-                                        </div>
-                                        <span class="badge bg-secondary ms-auto">
-                                            <i class="fas fa-gas-pump"></i> Essence
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="route-info mb-2">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="me-3">
-                                                <i class="fas fa-circle text-success"></i>
-                                                <strong class="departure-time">16:30</strong> <span class="departure-city">Toulouse</span>
-                                            </div>
-                                            <div class="flex-fill">
-                                                <hr class="my-0">
-                                            </div>
-                                            <div class="ms-3">
-                                                <i class="fas fa-map-marker-alt text-danger"></i>
-                                                <strong>19:00</strong> <span class="arrival-city">Montpellier</span>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>2h 30min
-                                            <i class="fas fa-car ms-3 me-1"></i>Peugeot 308 - Noire
-                                        </small>
-                                    </div>
-
-                                    <div class="ride-details">
-                                        <p class="mb-2 small">Trajet Toulouse-Montpellier en fin de journée.</p>
-                                        <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">4</span> places restantes</span>
-                                            <span><i class="fas fa-ban me-1"></i>Pas d'animaux</span>
-                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4 text-end">
-                                    <div class="price-highlight mb-2">22€</div>
-                                    <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ride Card 5 -->
-                        <div class="ride-card" data-price="18" data-rating="4.9" data-ecological="true" data-duration="105" data-ride-id="5">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="driver-info">
-                                        <div class="driver-avatar">S</div>
-                                        <div>
-                                            <h6 class="mb-1">SophieVerte</h6>
-                                            <div class="rating">
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <i class="fas fa-star"></i>
-                                                <span class="text-muted ms-1">4.9 (15 avis)</span>
-                                            </div>
-                                        </div>
-                                        <span class="eco-badge ms-auto">
-                                            <i class="fas fa-leaf"></i> Écologique
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="route-info mb-2">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="me-3">
-                                                <i class="fas fa-circle text-success"></i>
-                                                <strong class="departure-time">10:15</strong> <span class="departure-city">Lille</span>
-                                            </div>
-                                            <div class="flex-fill">
-                                                <hr class="my-0">
-                                            </div>
-                                            <div class="ms-3">
-                                                <i class="fas fa-map-marker-alt text-danger"></i>
-                                                <strong>12:00</strong> <span class="arrival-city">Bruxelles</span>
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock me-1"></i>1h 45min
-                                            <i class="fas fa-car ms-3 me-1"></i>Nissan Leaf - Verte
-                                        </small>
-                                    </div>
-
-                                    <div class="ride-details">
-                                        <p class="mb-2 small">Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !</p>
-                                        <div class="d-flex gap-3 small text-muted">
-                                            <span><i class="fas fa-users me-1"></i><span class="seats-available">4</span> places restantes</span>
-                                            <span><i class="fas fa-paw me-1"></i>Animaux OK</span>
-                                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-4 text-end">
-                                    <div class="price-highlight mb-2">18€</div>
-                                    <small class="text-muted d-block mb-3">par personne</small>
-                                    <button class="btn btn-detail">
-                                        <i class="fas fa-eye me-2"></i>Détails
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="ridesList"></div>
 
                     <!-- No Results -->
                     <div class="no-results" id="noResults" style="display: none;">
@@ -514,6 +211,11 @@
                                 <li><i class="fas fa-map me-2"></i>Vérifiez l'orthographe des villes</li>
                             </ul>
                         </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="pagination" class="mt-4">
+                        <!-- La pagination sera générée dynamiquement -->
                     </div>
                 </div>
             </div>
@@ -673,29 +375,55 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JavaScript -->
     
-    <script src="./search.js?v=2"></script>
+    <script src="./search.js?v=3"></script>
     <script src="./main.js?v=2"></script>
     <script src="./reservation-system.js"></script>
     <script src="./create-ride.js"></script>
     <script src="./auth.js"></script>
+
+    <!-- Script d'initialisation avec API réelle -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisation de la page covoiturages avec API réelle');
+
+            // Mettre à jour la navigation
+            if (typeof updateNavigationUI === 'function') {
+                fetch('/api/auth/session', { credentials: 'include' })
+                    .then(response => response.json())
+                    .then(data => {
+                        updateNavigationUI(data.isLoggedIn, data.user);
+                    })
+                    .catch(error => {
+                        console.log('Utilisateur non connecté');
+                    });
+            }
+
+            // Initialiser avec l'API au lieu des données statiques
+            if (typeof initializeWithAPI === 'function') {
+                initializeWithAPI();
+            } else {
+                console.warn('⚠️ Fonction initializeWithAPI non trouvée, fallback vers chargement direct');
+                // Fallback : charger directement les trajets
+                if (typeof loadRidesFromAPI === 'function') {
+                    loadRidesFromAPI();
+                }
+            }
+
+            // Initialiser les autres composants
+            // NOTE: Ces initialisations sont maintenant faites par initializeWithAPI()
+            // et pourraient être supprimées si redondantes
+            if (typeof initFilters === 'function') {
+                initFilters();
+            }
+            if (typeof initSorting === 'function') {
+                initSorting();
+            }
+            if (typeof initDetailButtons === 'function') {
+                initDetailButtons();
+            }
+
+            console.log('✅ Initialisation terminée');
+        });
+    </script>
 </body>
 </html>
-                    
-                   
-                   
-
-
-
-
-                    
-                   
-
-
-
-
-
-
-
-
-
-

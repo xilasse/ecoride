@@ -319,17 +319,46 @@ INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registr
 -- Covoiturages de test
 INSERT INTO rides (driver_id, vehicle_id, departure_city, departure_address, arrival_city, arrival_address, departure_datetime, estimated_arrival_datetime, price_per_seat, available_seats, total_seats, duration_minutes, distance_km, description, smoking_allowed, pets_allowed) VALUES 
 -- Trajets de Marie (électriques)
-(4, 1, 'Paris', '12 Rue de Rivoli, 75001 Paris', 'Lyon', 'Place Bellecour, 69002 Lyon', '2025-09-15 14:00:00', '2025-09-15 18:30:00', 35.00, 3, 4, 270, 465, "Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !", FALSE, TRUE),
-
-(4, 2, 'Lyon', 'Gare Part-Dieu, 69003 Lyon', 'Marseille', 'Gare Saint-Charles, 13001 Marseille', '2025-09-16 09:00:00', '2025-09-16 12:15:00', 28.00, 2, 3, 195, 315, 'Trajet matinal Lyon-Marseille. Véhicule 100% électrique !', FALSE, FALSE),
-
+(4, 1, 'Paris', '12 Rue de Rivoli, 75001 Paris', 'Lyon', 'Place Bellecour, 69002 Lyon', '2025-10-05 14:00:00', '2025-10-05 18:30:00', 35.00, 3, 4, 270, 465, "Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !", FALSE, TRUE),
+(4, 2, 'Lyon', 'Gare Part-Dieu, 69003 Lyon', 'Marseille', 'Gare Saint-Charles, 13001 Marseille', '2025-10-06 09:00:00', '2025-10-06 12:15:00', 28.00, 2, 3, 195, 315, 'Trajet matinal Lyon-Marseille. Véhicule 100% électrique !', FALSE, FALSE),
+(4, 1, 'Paris', 'Gare du Nord', 'Lille', 'Gare de Lille', '2025-10-18 06:30:00', '2025-10-18 07:45:00', 20.00, 3, 4, 75, 220, 'Paris-Lille matinal en Tesla', FALSE, TRUE),
+(4, 2, 'Nantes', 'Château', 'La Rochelle', 'Vieux Port', '2025-10-19 13:00:00', '2025-10-19 14:30:00', 22.00, 2, 3, 90, 140, 'Nantes-La Rochelle littoral', FALSE, FALSE),
+(4, 3, 'Lyon', 'Confluence', 'Grenoble', 'Gare de Grenoble', '2025-10-21 07:00:00', '2025-10-21 08:45:00', 24.00, 3, 4, 105, 105, 'Lyon-Grenoble Alpes', FALSE, FALSE),
+(4, 4, 'Amiens', 'Cathédrale', 'Reims', 'Cathédrale Notre-Dame', '2025-10-22 14:20:00', '2025-10-22 15:45:00', 21.00, 3, 4, 85, 120, 'Amiens-Reims historique', FALSE, TRUE),
+(4, 5, 'Perpignan', 'Castillet', 'Béziers', 'Arènes', '2025-11-02 08:30:00', '2025-11-02 10:00:00', 19.00, 4, 4, 90, 85, 'Perpignan-Béziers Languedoc', FALSE, TRUE),
+(4, 1, 'Brest', 'Château', 'Quimper', 'Cathédrale', '2025-11-03 16:45:00', '2025-11-03 18:15:00', 24.00, 3, 4, 90, 75, 'Brest-Quimper Finistère', FALSE, TRUE),
+(4, 2, 'Dijon', 'Palais des Ducs', 'Chalon-sur-Saône', 'Gare', '2025-11-05 07:45:00', '2025-11-05 08:45:00', 18.00, 2, 3, 60, 70, 'Dijon-Chalon Bourgogne', FALSE, FALSE),
+(4, 3, 'Bayonne', 'Cathédrale', 'Pau', 'Château', '2025-11-06 15:00:00', '2025-11-06 16:15:00', 19.00, 4, 4, 75, 110, 'Bayonne-Pau Pyrénées', FALSE, FALSE),
+(4, 4, 'Calais', 'Beffroi', 'Dunkerque', 'Port', '2025-11-08 11:20:00', '2025-11-08 12:05:00', 14.00, 3, 4, 45, 45, 'Calais-Dunkerque côte', FALSE, TRUE),
+(4, 5, 'Gap', 'Centre-ville', 'Digne-les-Bains', 'Thermes', '2025-12-02 10:45:00', '2025-12-02 12:30:00', 26.00, 4, 4, 105, 120, 'Gap-Digne Alpes du Sud', FALSE, TRUE),
+(4, 1, 'Agen', 'Canal', 'Cahors', 'Pont Valentré', '2025-12-03 13:30:00', '2025-12-03 14:45:00', 20.00, 3, 4, 75, 90, 'Agen-Cahors Lot-et-Garonne', FALSE, TRUE),
 -- Trajets de Jean
-(5, 3, 'Paris', 'Porte de Versailles, 75015 Paris', 'Bordeaux', 'Place des Quinconces, 33000 Bordeaux', '2025-09-17 08:00:00', '2025-09-17 13:45:00', 42.00, 3, 4, 345, 580, 'Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.', FALSE, TRUE),
-
-(5, 4, 'Toulouse', 'Place du Capitole, 31000 Toulouse', 'Montpellier', 'Place de la Comédie, 34000 Montpellier', '2025-09-18 16:30:00', '2025-09-18 19:00:00', 22.00, 4, 4, 150, 245, 'Trajet Toulouse-Montpellier en fin de journée.', FALSE, FALSE),
-
+(5, 3, 'Paris', 'Porte de Versailles, 75015 Paris', 'Bordeaux', 'Place des Quinconces, 33000 Bordeaux', '2025-10-07 08:00:00', '2025-10-07 13:45:00', 42.00, 3, 4, 345, 580, 'Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.', FALSE, TRUE),
+(5, 4, 'Toulouse', 'Place du Capitole, 31000 Toulouse', 'Montpellier', 'Place de la Comédie, 34000 Montpellier', '2025-10-08 16:30:00', '2025-10-08 19:00:00', 22.00, 4, 4, 150, 245, 'Trajet Toulouse-Montpellier en fin de journée.', FALSE, FALSE),
+(5, 3, 'Marseille', 'Aéroport', 'Cannes', 'Palais des Festivals', '2025-10-18 14:00:00', '2025-10-18 16:30:00', 35.00, 2, 4, 150, 160, "Marseille-Cannes côte d'azur", FALSE, FALSE),
+(5, 4, 'Strasbourg', 'Petite France', 'Nancy', 'Place Stanislas', '2025-10-20 09:45:00', '2025-10-20 11:15:00', 25.00, 3, 4, 90, 150, 'Strasbourg-Nancy Grand Est', FALSE, TRUE),
+(5, 5, 'Rennes', 'Parlement de Bretagne', 'Caen', 'Mémorial', '2025-10-21 11:30:00', '2025-10-21 13:45:00', 27.00, 4, 4, 135, 185, 'Rennes-Caen Normandie', FALSE, TRUE),
+(5, 1, 'Nice', 'Promenade des Anglais', 'Monaco', 'Casino', '2025-11-01 09:00:00', '2025-11-01 09:45:00', 18.00, 3, 4, 45, 30, 'Nice-Monaco Riviera', FALSE, TRUE),
+(5, 2, 'Mulhouse', 'Musée Auto', 'Belfort', 'Lion de Belfort', '2025-11-02 13:15:00', '2025-11-02 14:00:00', 15.00, 2, 3, 45, 45, 'Mulhouse-Belfort Territoire', FALSE, FALSE),
+(5, 3, 'Metz', 'Centre Pompidou', 'Verdun', 'Mémorial', '2025-11-04 09:30:00', '2025-11-04 10:45:00', 20.00, 4, 4, 75, 65, 'Metz-Verdun mémoire', FALSE, FALSE),
+(5, 4, 'Avignon', 'Palais des Papes', 'Arles', 'Amphithéâtre', '2025-11-05 12:30:00', '2025-11-05 13:30:00', 16.00, 3, 4, 60, 40, 'Avignon-Arles Provence', FALSE, TRUE),
+(5, 5, 'Chambéry', 'Château', 'Annecy', 'Lac', '2025-11-07 08:00:00', '2025-11-07 09:00:00', 17.00, 4, 4, 60, 50, 'Chambéry-Annecy Savoie', FALSE, TRUE),
+(5, 1, 'Vannes', 'Golfe du Morbihan', 'Lorient', 'Port', '2025-12-01 09:30:00', '2025-12-01 10:30:00', 18.00, 3, 4, 60, 65, 'Vannes-Lorient Bretagne Sud', FALSE, TRUE),
+(5, 2, 'Périgueux', 'Cathédrale', 'Bergerac', 'Vieille ville', '2025-12-02 16:00:00', '2025-12-02 17:15:00', 19.00, 2, 3, 75, 85, 'Périgueux-Bergerac Dordogne', FALSE, FALSE),
+(5, 3, 'Châlons-en-Champagne', 'Notre-Dame', 'Épernay', 'Avenue de Champagne', '2025-12-04 11:00:00', '2025-12-04 11:45:00', 16.00, 4, 4, 45, 35, 'Châlons-Épernay Champagne', FALSE, FALSE),
 -- Trajets de Sophie (électrique)
-(6, 5, 'Lille', 'Gare Lille Europe, 59000 Lille', 'Bruxelles', 'Gare Centrale, 1000 Bruxelles', '2025-09-19 10:15:00', '2025-09-19 12:00:00', 18.00, 4, 4, 105, 115, 'Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !', FALSE, TRUE);
+(6, 5, 'Lille', 'Gare Lille Europe, 59000 Lille', 'Bruxelles', 'Gare Centrale, 1000 Bruxelles', '2025-10-09 10:15:00', '2025-10-09 12:00:00', 18.00, 4, 4, 105, 115, 'Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !', FALSE, TRUE),
+(6, 5, 'Toulouse', 'Capitole', 'Montpellier', 'Place de la Comédie', '2025-10-19 08:15:00', '2025-10-19 10:45:00', 28.00, 4, 4, 150, 240, 'Toulouse-Montpellier express', FALSE, TRUE),
+(6, 1, 'Bordeaux', 'Place Pey Berland', 'Poitiers', 'Gare de Poitiers', '2025-10-20 16:00:00', '2025-10-20 18:30:00', 30.00, 4, 4, 150, 230, 'Bordeaux-Poitiers électrique', FALSE, TRUE),
+(6, 2, 'Clermont-Ferrand', 'Place de Jaude', 'Limoges', 'Gare des Bénédictins', '2025-10-22 10:00:00', '2025-10-22 12:15:00', 26.00, 2, 3, 135, 180, 'Clermont-Limoges centre France', FALSE, FALSE),
+(6, 3, 'Angers', 'Château', 'Le Mans', 'Circuit des 24h', '2025-11-01 15:30:00', '2025-11-01 17:00:00', 23.00, 4, 4, 90, 95, 'Angers-Le Mans Pays de Loire', FALSE, FALSE),
+(6, 4, 'Troyes', 'Cathédrale', 'Auxerre', 'Cathédrale St-Étienne', '2025-11-03 11:00:00', '2025-11-03 12:30:00', 22.00, 3, 4, 90, 100, 'Troyes-Auxerre Champagne', FALSE, TRUE),
+(6, 5, 'Tours', 'Château', 'Orléans', 'Cathédrale', '2025-11-04 14:00:00', '2025-11-04 15:30:00', 25.00, 4, 4, 90, 120, 'Tours-Orléans Val de Loire', FALSE, TRUE),
+(6, 1, 'Le Havre', 'Port', 'Rouen', 'Cathédrale', '2025-11-06 10:15:00', '2025-11-06 11:30:00', 21.00, 3, 4, 75, 90, 'Le Havre-Rouen Seine', FALSE, TRUE),
+(6, 2, 'Bourges', 'Cathédrale', 'Nevers', 'Cathédrale', '2025-11-07 13:45:00', '2025-11-07 15:00:00', 20.00, 2, 3, 75, 85, 'Bourges-Nevers Berry', FALSE, FALSE),
+(6, 3, 'Rodez', 'Cathédrale', 'Albi', 'Cathédrale Sainte-Cécile', '2025-12-01 14:15:00', '2025-12-01 15:45:00', 22.00, 4, 4, 90, 75, 'Rodez-Albi Aveyron-Tarn', FALSE, FALSE),
+(6, 4, 'Laval', 'Château', 'Alençon', 'Dentelle', '2025-12-03 08:45:00', '2025-12-03 10:00:00', 21.00, 3, 4, 75, 95, 'Laval-Alençon Mayenne-Orne', FALSE, TRUE),
+(6, 5, 'Montauban', 'Place Nationale', 'Auch', 'Cathédrale', '2025-12-04 15:30:00', '2025-12-04 17:00:00', 23.00, 4, 4, 90, 110, 'Montauban-Auch Gers', FALSE, TRUE);
 
 -- Réservations
 INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price, is_passenger_validated, is_driver_validated) VALUES 

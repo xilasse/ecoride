@@ -2,6 +2,7 @@
 namespace EcoRide\Controllers;
 
 use DateTime;
+use PDO;
 
 class RideController extends BaseController {
 
@@ -62,6 +63,59 @@ class RideController extends BaseController {
         header('Content-Type: application/json');
 
         try {
+            // Paramètres de pagination
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $limit = isset($_GET['limit']) ? max(1, min(50, intval($_GET['limit']))) : 10; // Max 50, défaut 10
+            $offset = ($page - 1) * $limit;
+
+            // Paramètres de filtrage
+            $ecoOnly = isset($_GET['eco_only']) && $_GET['eco_only'] === 'true';
+            $maxPrice = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+            $petsAllowed = isset($_GET['pets_allowed']) && $_GET['pets_allowed'] === 'true';
+            $nonSmoking = isset($_GET['non_smoking']) && $_GET['non_smoking'] === 'true';
+
+            // Paramètre de tri
+            $sortBy = isset($_GET['sort_by']) ? $_GET['sort_by'] : 'datetime';
+
+            // Construction de la clause WHERE avec filtres
+            $whereConditions = ["r.departure_datetime >= NOW()", "r.status_id IN (1, 2)"];
+            $params = [];
+
+            if ($ecoOnly) {
+                $whereConditions[] = "(v.is_ecological = 1 OR v.fuel_type = 'electrique')";
+            }
+
+            if ($maxPrice !== null && $maxPrice > 0) {
+                $whereConditions[] = "r.price_per_seat <= ?";
+                $params[] = $maxPrice;
+            }
+
+            if ($petsAllowed) {
+                $whereConditions[] = "r.pets_allowed = 1";
+            }
+
+            if ($nonSmoking) {
+                $whereConditions[] = "r.smoking_allowed = 0";
+            }
+
+            $whereClause = implode(' AND ', $whereConditions);
+
+            // Construction de la clause ORDER BY
+            $orderClause = $this->buildOrderClause($sortBy);
+
+            // Requête pour compter le total avec filtres
+            $countSql = "SELECT COUNT(*) as total
+                        FROM rides r
+                        JOIN users u ON r.driver_id = u.id
+                        JOIN vehicles v ON r.vehicle_id = v.id
+                        WHERE $whereClause";
+
+            $db = $this->getDatabase();
+            $countStmt = $db->prepare($countSql);
+            $countStmt->execute($params);
+            $totalCount = $countStmt->fetch()['total'];
+
+            // Requête pour les données paginées avec les mêmes filtres
             $sql = "SELECT
                         r.*,
                         u.pseudo as driver_name,
@@ -70,17 +124,40 @@ class RideController extends BaseController {
                     FROM rides r
                     JOIN users u ON r.driver_id = u.id
                     JOIN vehicles v ON r.vehicle_id = v.id
-                    WHERE r.departure_datetime >= NOW()
-                    AND r.status_id IN (1, 2)
-                    ORDER BY r.departure_datetime ASC
-                    LIMIT 20";
+                    WHERE $whereClause
+                    $orderClause
+                    LIMIT ? OFFSET ?";
 
-            $db = $this->getDatabase();
             $stmt = $db->prepare($sql);
+
+            // Bind all the filter parameters first
+            for ($i = 0; $i < count($params); $i++) {
+                $stmt->bindValue($i + 1, $params[$i]);
+            }
+
+            // Then bind the pagination parameters as integers
+            $stmt->bindValue(count($params) + 1, $limit, PDO::PARAM_INT);
+            $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
+
             $stmt->execute();
             $rides = $stmt->fetchAll();
 
-            echo json_encode(['rides' => $rides]);
+            // Calculs de pagination
+            $totalPages = ceil($totalCount / $limit);
+            $hasNextPage = $page < $totalPages;
+            $hasPreviousPage = $page > 1;
+
+            echo json_encode([
+                'rides' => $rides,
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => $totalPages,
+                    'total_count' => $totalCount,
+                    'limit' => $limit,
+                    'has_next' => $hasNextPage,
+                    'has_previous' => $hasPreviousPage
+                ]
+            ]);
 
         } catch (Exception $e) {
             http_response_code(500);
@@ -97,39 +174,92 @@ class RideController extends BaseController {
             $to = $_GET['to'] ?? '';
             $date = $_GET['date'] ?? '';
 
-            $sql = "SELECT
-                        r.*,
-                        u.name as driver_name,
-                        u.avatar as driver_avatar
-                    FROM rides r
-                    JOIN users u ON r.driver_id = u.id
-                    WHERE 1=1";
+            // Paramètres de pagination
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $limit = isset($_GET['limit']) ? max(1, min(50, intval($_GET['limit']))) : 10;
+            $offset = ($page - 1) * $limit;
 
+            // Construction de la clause WHERE
+            $whereConditions = ["r.status_id IN (1, 2)", "r.departure_datetime >= NOW()"];
             $params = [];
 
             if (!empty($from)) {
-                $sql .= " AND LOWER(r.departure_city) LIKE LOWER(?)";
+                $whereConditions[] = "LOWER(r.departure_city) LIKE LOWER(?)";
                 $params[] = "%$from%";
             }
 
             if (!empty($to)) {
-                $sql .= " AND LOWER(r.arrival_city) LIKE LOWER(?)";
+                $whereConditions[] = "LOWER(r.arrival_city) LIKE LOWER(?)";
                 $params[] = "%$to%";
             }
 
             if (!empty($date)) {
-                $sql .= " AND r.date = ?";
+                $whereConditions[] = "DATE(r.departure_datetime) = ?";
                 $params[] = $date;
             }
 
-            $sql .= " AND r.date >= CURDATE() ORDER BY r.date ASC, r.time ASC LIMIT 20";
+            $whereClause = implode(' AND ', $whereConditions);
+
+            // Requête pour compter le total
+            $countSql = "SELECT COUNT(*) as total
+                        FROM rides r
+                        JOIN users u ON r.driver_id = u.id
+                        JOIN vehicles v ON r.vehicle_id = v.id
+                        WHERE $whereClause";
 
             $db = $this->getDatabase();
+            $countStmt = $db->prepare($countSql);
+            $countStmt->execute($params);
+            $totalCount = $countStmt->fetch()['total'];
+
+            // Requête pour les données paginées
+            $sql = "SELECT
+                        r.*,
+                        u.pseudo as driver_name,
+                        u.profile_picture as driver_avatar,
+                        v.brand, v.model, v.color, v.fuel_type, v.is_ecological
+                    FROM rides r
+                    JOIN users u ON r.driver_id = u.id
+                    JOIN vehicles v ON r.vehicle_id = v.id
+                    WHERE $whereClause
+                    ORDER BY r.departure_datetime ASC
+                    LIMIT ? OFFSET ?";
+
             $stmt = $db->prepare($sql);
-            $stmt->execute($params);
+
+            // Bind all the search parameters first
+            for ($i = 0; $i < count($params); $i++) {
+                $stmt->bindValue($i + 1, $params[$i]);
+            }
+
+            // Then bind the pagination parameters as integers
+            $stmt->bindValue(count($params) + 1, $limit, PDO::PARAM_INT);
+            $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
+
+            $stmt->execute();
             $rides = $stmt->fetchAll();
 
-            echo json_encode(['rides' => $rides]);
+            // Calculs de pagination
+            $totalPages = ceil($totalCount / $limit);
+            $hasNextPage = $page < $totalPages;
+            $hasPreviousPage = $page > 1;
+
+            echo json_encode([
+                'rides' => $rides,
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => $totalPages,
+                    'total_count' => $totalCount,
+                    'limit' => $limit,
+                    'has_next' => $hasNextPage,
+                    'has_previous' => $hasPreviousPage
+                ],
+                'search' => [
+                    'from' => $from,
+                    'to' => $to,
+                    'date' => $date
+                ]
+            ]);
 
         } catch (Exception $e) {
             http_response_code(500);
@@ -296,5 +426,20 @@ class RideController extends BaseController {
         $numbers = sprintf('%03d', rand(100, 999));
         $letters2 = chr(rand(65, 90)) . chr(rand(65, 90));
         return $letters1 . '-' . $numbers . '-' . $letters2;
+    }
+
+    private function buildOrderClause($sortBy) {
+        switch ($sortBy) {
+            case 'price':
+                return 'ORDER BY r.price_per_seat ASC';
+            case 'rating':
+                // Pour l'instant, on trie par nombre d'avis (à améliorer plus tard avec une vraie table de ratings)
+                return 'ORDER BY r.departure_datetime ASC'; // Fallback temporaire
+            case 'ecological':
+                return 'ORDER BY v.is_ecological DESC, v.fuel_type = "electrique" DESC, r.price_per_seat ASC';
+            case 'datetime':
+            default:
+                return 'ORDER BY r.departure_datetime ASC';
+        }
     }
 }
