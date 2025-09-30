@@ -35,7 +35,7 @@
                         <a class="nav-link" href="covoiturages.html">Covoiturages</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="connexion.html">Connexion</a>
+                        <a class="nav-link active" href="profil.html">Profil</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="contact.html">Contact</a>
@@ -54,13 +54,12 @@
                     <div class="profile-placeholder">👤</div>
                 </div>
                 <div class="profile-info">
-                    <h1 id="profileUserName"></h1>
+                    <h1 id="profileUserName">Chargement...</h1>
                     <p id="profileUserEmail">email@example.com</p>
                     <div class="profile-stats">
                         <span class="stat">💰 <span id="profileCredits">0</span> crédits</span>
-                        <span class="stat">⭐ <span id="profileRating">0.0</span>/5</span>
+                        <span class="stat">⭐ <span id="profileRating">4.5</span></span>
                         <span class="stat">🚗 <span id="profileTotalRides">0</span> trajets</span>
-                        <span class="stat">👤 <span id="profileRoleDisplay">Utilisateur</span></span>
                     </div>
                 </div>
             </div>
@@ -123,40 +122,30 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Téléphone</label>
-                                    <input type="tel" class="form-control" id="profilePhone" placeholder="+33 6 12 34 56 78">
+                                    <label>Prénom</label>
+                                    <input type="text" class="form-control" id="profileFirstName">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Ville</label>
-                                    <input type="text" class="form-control" id="profileCity" placeholder="Paris, Lyon, Marseille...">
+                                    <label>Nom</label>
+                                    <input type="text" class="form-control" id="profileLastName">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Date de naissance</label>
-                                    <input type="date" class="form-control" id="profileBirthdate">
+                                    <label>Téléphone</label>
+                                    <input type="tel" class="form-control" id="profilePhone">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label>Genre</label>
-                                    <select class="form-control" id="profileGender">
-                                        <option value="">Non spécifié</option>
-                                        <option value="male">Homme</option>
-                                        <option value="female">Femme</option>
-                                        <option value="other">Autre</option>
-                                        <option value="prefer_not_to_say">Préfère ne pas répondre</option>
-                                    </select>
+                                    <label>Ville</label>
+                                    <input type="text" class="form-control" id="profileCity">
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Adresse complète</label>
-                            <input type="text" class="form-control" id="profileAddress" placeholder="Adresse complète (optionnel)">
                         </div>
                         <div class="form-group">
                             <label>Bio</label>
@@ -262,181 +251,56 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Initialisation de la page profil');
 
-            // Vérifier la session et mettre à jour la navigation
-            fetch('/api/auth/session', { credentials: 'include' })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.isLoggedIn) {
-                        window.location.href = 'connexion.html';
-                        return;
-                    }
-
-                    // Mettre à jour la navigation avec les données utilisateur
-                    if (typeof updateNavigationUI === 'function') {
-                        updateNavigationUI(true, data.user);
-                        console.log('✅ Navigation mise à jour via auth.js');
-                    } else {
-                        console.warn('⚠️ Fonction updateNavigationUI non trouvée');
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Erreur session:', error);
-                    window.location.href = 'connexion.html';
-                });
+            // Vérifier si l'utilisateur est connecté
+            updateNavigation();
 
             // Charger les données du profil
             loadProfileData();
-
-            // Initialiser les dropdowns Bootstrap après mise à jour de la navigation
-            setTimeout(() => {
-                const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-                dropdownElements.forEach(el => {
-                    if (!el.hasAttribute('data-dropdown-initialized')) {
-                        new bootstrap.Dropdown(el);
-                        el.setAttribute('data-dropdown-initialized', 'true');
-                    }
-                });
-                console.log('✅ Dropdowns Bootstrap initialisés');
-            }, 1000);
         });
 
-        function loadProfileData() {
-            console.log('📋 Chargement des données du profil');
-
-            fetch('/api/auth/profile', {
+        function updateNavigation() {
+            fetch('/api/auth/session', {
                 credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.user) {
-                    const user = data.user;
-
-                    // Informations de base
-                    document.getElementById('profileUserName').textContent = user.pseudo || 'Utilisateur';
-                    document.getElementById('profileUserEmail').textContent = user.email || '';
-                    document.getElementById('profilePseudo').value = user.pseudo || '';
-                    document.getElementById('profileEmailDisplay').value = user.email || '';
-
-                    // Informations personnelles depuis la base de données
-                    document.getElementById('profilePhone').value = user.phone || '';
-                    document.getElementById('profileBio').value = user.bio || '';
-
-                    // Gestion de l'adresse (extraction ville depuis address_user)
-                    if (user.address) {
-                        document.getElementById('profileAddress').value = user.address;
-                        // Extraire la ville de l'adresse complète
-                        const addressParts = user.address.split(',');
-                        const city = addressParts.length > 1 ? addressParts[addressParts.length - 1].trim() : user.address;
-                        document.getElementById('profileCity').value = city;
-                    }
-
-                    // Statistiques
-                    document.getElementById('profileCredits').textContent = user.credits || '0';
-                    document.getElementById('profileRating').textContent = user.rating || '0.0';
-
-                    // Calcul du total des trajets (chauffeur + passager)
-                    const totalRidesDriver = user.totalRidesAsDriver || 0;
-                    const totalRidesPassenger = user.totalRidesAsPassenger || 0;
-                    const totalRides = totalRidesDriver + totalRidesPassenger;
-                    document.getElementById('profileTotalRides').textContent = totalRides;
-
-                    // Affichage du rôle
-                    const roleNames = {1: 'Administrateur', 2: 'Employé', 3: 'Utilisateur', 4: 'Visiteur'};
-                    const roleName = roleNames[user.role_id] || 'Utilisateur';
-                    document.getElementById('profileRoleDisplay').textContent = roleName;
-
-                    // Mise à jour des informations de genre et date de naissance si disponibles
-                    if (user.birthdate) {
-                        const birthdateInput = document.getElementById('profileBirthdate');
-                        if (birthdateInput) {
-                            birthdateInput.value = user.birthdate;
-                        }
-                    }
-
-                    if (user.gender) {
-                        const genderSelect = document.getElementById('profileGender');
-                        if (genderSelect) {
-                            genderSelect.value = user.gender;
-                        }
-                    }
-
-                    console.log('✅ Données du profil chargées:', user);
-                } else {
-                    console.error('❌ Erreur dans la réponse:', data);
-                    if (!data.success) {
-                        // Si pas connecté, rediriger
-                        window.location.href = 'connexion.html';
-                    }
+                if (!data.isLoggedIn) {
+                    window.location.href = 'connexion.html';
                 }
             })
             .catch(error => {
-                console.error('❌ Erreur lors du chargement du profil:', error);
-                // En cas d'erreur réseau, rediriger vers la connexion
+                console.error('Erreur lors de la vérification de session:', error);
                 window.location.href = 'connexion.html';
             });
         }
 
-        // Gestion du formulaire de profil
-        document.getElementById('profileForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            saveProfile();
-        });
+        function loadProfileData() {
+            console.log('📋 Chargement des données du profil');
 
-        function saveProfile() {
-            console.log('💾 Sauvegarde du profil...');
-
-            const profileData = {
-                phone: document.getElementById('profilePhone').value,
-                address: document.getElementById('profileAddress').value,
-                birthdate: document.getElementById('profileBirthdate').value,
-                gender: document.getElementById('profileGender').value,
-                bio: document.getElementById('profileBio').value
-            };
-
-            fetch('/api/auth/profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(profileData)
+            fetch('/api/user/profile', {
+                credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Afficher un message de succès
-                    showMessage('✅ Profil mis à jour avec succès !', 'success');
-                    // Recharger les données du profil
-                    loadProfileData();
-                } else {
-                    showMessage('❌ Erreur: ' + (data.error || 'Erreur inconnue'), 'error');
+                    const user = data.user;
+                    document.getElementById('profileUserName').textContent = user.pseudo || 'Utilisateur';
+                    document.getElementById('profileUserEmail').textContent = user.email || '';
+                    document.getElementById('profilePseudo').value = user.pseudo || '';
+                    document.getElementById('profileEmailDisplay').value = user.email || '';
+                    document.getElementById('profileFirstName').value = user.firstName || '';
+                    document.getElementById('profileLastName').value = user.lastName || '';
+                    document.getElementById('profilePhone').value = user.phone || '';
+                    document.getElementById('profileCity').value = user.city || '';
+                    document.getElementById('profileBio').value = user.bio || '';
+                    document.getElementById('profileCredits').textContent = user.credits || '0';
+                    document.getElementById('profileRating').textContent = user.rating || '0';
+                    document.getElementById('profileTotalRides').textContent = user.totalRides || '0';
                 }
             })
             .catch(error => {
-                console.error('❌ Erreur lors de la sauvegarde:', error);
-                showMessage('❌ Erreur de réseau lors de la sauvegarde', 'error');
+                console.error('Erreur lors du chargement du profil:', error);
             });
-        }
-
-        function showMessage(message, type) {
-            // Créer un élément de notification
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-            alert.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-
-            // Insérer au début du contenu du profil
-            const profileContent = document.querySelector('.profile-content-card');
-            profileContent.insertBefore(alert, profileContent.firstChild);
-
-            // Supprimer automatiquement après 5 secondes
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
-                }
-            }, 5000);
         }
 
         // Fonctions de gestion

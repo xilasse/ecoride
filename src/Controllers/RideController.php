@@ -1,9 +1,6 @@
 <?php
 namespace EcoRide\Controllers;
 
-use DateTime;
-use PDO;
-
 class RideController extends BaseController {
 
     public function createRide() {
@@ -19,11 +16,6 @@ class RideController extends BaseController {
 
             // Récupérer les données JSON
             $input = json_decode(file_get_contents('php://input'), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Données JSON invalides']);
-                return;
-            }
 
             // Validation des données requises
             $requiredFields = ['from', 'to', 'date', 'time', 'seats', 'price', 'vehicleType'];
@@ -54,7 +46,7 @@ class RideController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]); // Include details for debugging
+            echo json_encode(['error' => 'Erreur interne du serveur']);
             error_log($e->getMessage());
         }
     }
@@ -63,59 +55,6 @@ class RideController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            // Paramètres de pagination
-            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-            $limit = isset($_GET['limit']) ? max(1, min(50, intval($_GET['limit']))) : 10; // Max 50, défaut 10
-            $offset = ($page - 1) * $limit;
-
-            // Paramètres de filtrage
-            $ecoOnly = isset($_GET['eco_only']) && $_GET['eco_only'] === 'true';
-            $maxPrice = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
-            $petsAllowed = isset($_GET['pets_allowed']) && $_GET['pets_allowed'] === 'true';
-            $nonSmoking = isset($_GET['non_smoking']) && $_GET['non_smoking'] === 'true';
-
-            // Paramètre de tri
-            $sortBy = isset($_GET['sort_by']) ? $_GET['sort_by'] : 'datetime';
-
-            // Construction de la clause WHERE avec filtres
-            $whereConditions = ["r.departure_datetime >= NOW()", "r.status_id IN (1, 2)"];
-            $params = [];
-
-            if ($ecoOnly) {
-                $whereConditions[] = "(v.is_ecological = 1 OR v.fuel_type = 'electrique')";
-            }
-
-            if ($maxPrice !== null && $maxPrice > 0) {
-                $whereConditions[] = "r.price_per_seat <= ?";
-                $params[] = $maxPrice;
-            }
-
-            if ($petsAllowed) {
-                $whereConditions[] = "r.pets_allowed = 1";
-            }
-
-            if ($nonSmoking) {
-                $whereConditions[] = "r.smoking_allowed = 0";
-            }
-
-            $whereClause = implode(' AND ', $whereConditions);
-
-            // Construction de la clause ORDER BY
-            $orderClause = $this->buildOrderClause($sortBy);
-
-            // Requête pour compter le total avec filtres
-            $countSql = "SELECT COUNT(*) as total
-                        FROM rides r
-                        JOIN users u ON r.driver_id = u.id
-                        JOIN vehicles v ON r.vehicle_id = v.id
-                        WHERE $whereClause";
-
-            $db = $this->getDatabase();
-            $countStmt = $db->prepare($countSql);
-            $countStmt->execute($params);
-            $totalCount = $countStmt->fetch()['total'];
-
-            // Requête pour les données paginées avec les mêmes filtres
             $sql = "SELECT
                         r.*,
                         u.pseudo as driver_name,
@@ -124,44 +63,24 @@ class RideController extends BaseController {
                     FROM rides r
                     JOIN users u ON r.driver_id = u.id
                     JOIN vehicles v ON r.vehicle_id = v.id
-                    WHERE $whereClause
-                    $orderClause
-                    LIMIT ? OFFSET ?";
+                    WHERE r.departure_datetime >= NOW()
+                    AND r.status_id IN (1, 2)
+                    ORDER BY r.departure_datetime ASC
+                    LIMIT 20";
 
-            $stmt = $db->prepare($sql);
-
-            // Bind all the filter parameters first
-            for ($i = 0; $i < count($params); $i++) {
-                $stmt->bindValue($i + 1, $params[$i]);
-            }
-
-            // Then bind the pagination parameters as integers
-            $stmt->bindValue(count($params) + 1, $limit, PDO::PARAM_INT);
-            $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
-
+            $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
             $stmt->execute();
             $rides = $stmt->fetchAll();
 
-            // Calculs de pagination
-            $totalPages = ceil($totalCount / $limit);
-            $hasNextPage = $page < $totalPages;
-            $hasPreviousPage = $page > 1;
-
-            echo json_encode([
-                'rides' => $rides,
-                'pagination' => [
-                    'current_page' => $page,
-                    'total_pages' => $totalPages,
-                    'total_count' => $totalCount,
-                    'limit' => $limit,
-                    'has_next' => $hasNextPage,
-                    'has_previous' => $hasPreviousPage
-                ]
-            ]);
+            echo json_encode(['rides' => $rides]);
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur lors de la récupération des trajets', 'details' => $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur lors de la récupération des trajets']);
             error_log($e->getMessage());
         }
     }
@@ -174,98 +93,149 @@ class RideController extends BaseController {
             $to = $_GET['to'] ?? '';
             $date = $_GET['date'] ?? '';
 
-            // Paramètres de pagination
-            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
-            $limit = isset($_GET['limit']) ? max(1, min(50, intval($_GET['limit']))) : 10;
-            $offset = ($page - 1) * $limit;
+            $sql = "SELECT
+                        r.*,
+                        u.name as driver_name,
+                        u.avatar as driver_avatar
+                    FROM rides r
+                    JOIN users u ON r.driver_id = u.id
+                    WHERE 1=1";
 
-            // Construction de la clause WHERE
-            $whereConditions = ["r.status_id IN (1, 2)", "r.departure_datetime >= NOW()"];
             $params = [];
 
             if (!empty($from)) {
-                $whereConditions[] = "LOWER(r.departure_city) LIKE LOWER(?)";
+                $sql .= " AND LOWER(r.departure_city) LIKE LOWER(?)";
                 $params[] = "%$from%";
             }
 
             if (!empty($to)) {
-                $whereConditions[] = "LOWER(r.arrival_city) LIKE LOWER(?)";
+                $sql .= " AND LOWER(r.arrival_city) LIKE LOWER(?)";
                 $params[] = "%$to%";
             }
 
             if (!empty($date)) {
-                $whereConditions[] = "DATE(r.departure_datetime) = ?";
+                $sql .= " AND r.date = ?";
                 $params[] = $date;
             }
 
-            $whereClause = implode(' AND ', $whereConditions);
-
-            // Requête pour compter le total
-            $countSql = "SELECT COUNT(*) as total
-                        FROM rides r
-                        JOIN users u ON r.driver_id = u.id
-                        JOIN vehicles v ON r.vehicle_id = v.id
-                        WHERE $whereClause";
+            $sql .= " AND r.date >= CURDATE() ORDER BY r.date ASC, r.time ASC LIMIT 20";
 
             $db = $this->getDatabase();
-            $countStmt = $db->prepare($countSql);
-            $countStmt->execute($params);
-            $totalCount = $countStmt->fetch()['total'];
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            $rides = $stmt->fetchAll();
 
-            // Requête pour les données paginées
+            echo json_encode(['rides' => $rides]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors de la recherche']);
+            error_log($e->getMessage());
+        }
+    }
+
+    public function getRideDetails() {
+        header('Content-Type: application/json');
+
+        try {
+            $rideId = $_GET['id'] ?? null;
+
+            if (!$rideId) {
+                http_response_code(400);
+                echo json_encode(['error' => 'ID du trajet requis']);
+                return;
+            }
+
             $sql = "SELECT
-                        r.*,
-                        u.pseudo as driver_name,
+                        r.id, r.departure_city, r.arrival_city, r.departure_datetime,
+                        r.price_per_seat, r.available_seats, r.total_seats,
+                        r.description, r.departure_address, r.pets_allowed, r.smoking_allowed,
+                        u.pseudo as driver_name, u.email as driver_email, u.rating as driver_rating,
                         u.profile_picture as driver_avatar,
                         v.brand, v.model, v.color, v.fuel_type, v.is_ecological
                     FROM rides r
                     JOIN users u ON r.driver_id = u.id
                     JOIN vehicles v ON r.vehicle_id = v.id
-                    WHERE $whereClause
-                    ORDER BY r.departure_datetime ASC
-                    LIMIT ? OFFSET ?";
+                    WHERE r.id = ?";
 
-            $stmt = $db->prepare($sql);
-
-            // Bind all the search parameters first
-            for ($i = 0; $i < count($params); $i++) {
-                $stmt->bindValue($i + 1, $params[$i]);
+            $db = $this->getDatabase();
+            if (!$db) {
+                throw new \Exception('Base de données non accessible');
             }
 
-            // Then bind the pagination parameters as integers
-            $stmt->bindValue(count($params) + 1, $limit, PDO::PARAM_INT);
-            $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+            $ride = $stmt->fetch();
 
-            $stmt->execute();
-            $rides = $stmt->fetchAll();
+            if (!$ride) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Trajet non trouvé']);
+                return;
+            }
 
-            // Calculs de pagination
-            $totalPages = ceil($totalCount / $limit);
-            $hasNextPage = $page < $totalPages;
-            $hasPreviousPage = $page > 1;
-
-            echo json_encode([
-                'rides' => $rides,
-                'pagination' => [
-                    'current_page' => $page,
-                    'total_pages' => $totalPages,
-                    'total_count' => $totalCount,
-                    'limit' => $limit,
-                    'has_next' => $hasNextPage,
-                    'has_previous' => $hasPreviousPage
+            // Formatage des données pour l'affichage
+            $rideDetails = [
+                'id' => $ride['id'],
+                'driver' => $ride['driver_name'],
+                'avatar' => strtoupper(substr($ride['driver_name'], 0, 1)),
+                'rating' => $ride['driver_rating'] ?: 4.5,
+                'reviewCount' => 15, // Valeur par défaut, à récupérer depuis une table reviews plus tard
+                'departure' => [
+                    'city' => $ride['departure_city'],
+                    'time' => date('H:i', strtotime($ride['departure_datetime']))
                 ],
-                'search' => [
-                    'from' => $from,
-                    'to' => $to,
-                    'date' => $date
+                'arrival' => [
+                    'city' => $ride['arrival_city'],
+                    'time' => date('H:i', strtotime($ride['departure_datetime'] . ' +4 hours')) // Calcul approximatif
+                ],
+                'duration' => $this->calculateDuration($ride['departure_city'], $ride['arrival_city']),
+                'car' => [
+                    'model' => $ride['brand'] . ' ' . $ride['model'],
+                    'color' => $ride['color'],
+                    'type' => $ride['fuel_type']
+                ],
+                'price' => $ride['price_per_seat'],
+                'seatsAvailable' => $ride['available_seats'],
+                'ecological' => $ride['is_ecological'] || $ride['fuel_type'] === 'electrique',
+                'preferences' => [
+                    'pets' => $ride['pets_allowed'],
+                    'smoking' => !$ride['smoking_allowed'], // Non fumeur si smoking_allowed = false
+                    'music' => true // Valeur par défaut
+                ],
+                'description' => $ride['description'] ?: 'Trajet confortable et écologique.',
+                'driverBio' => 'Conducteur expérimenté et responsable.',
+                'reviews' => [
+                    ['author' => 'Marie', 'rating' => 5, 'comment' => 'Excellent trajet, très ponctuelle !'],
+                    ['author' => 'Pierre', 'rating' => 4, 'comment' => 'Conducteur sympa, voyage agréable']
                 ]
-            ]);
+            ];
+
+            echo json_encode(['ride' => $rideDetails]);
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur lors de la recherche', 'details' => $e->getMessage()]);
+            echo json_encode(['error' => 'Erreur lors de la récupération des détails']);
             error_log($e->getMessage());
         }
+    }
+
+    private function calculateDuration($departure, $arrival) {
+        // Durées approximatives entre villes principales
+        $durations = [
+            'Paris_Lyon' => '4h 30min',
+            'Lyon_Marseille' => '3h 15min',
+            'Paris_Bordeaux' => '5h 45min',
+            'Toulouse_Montpellier' => '2h 30min',
+            'Lille_Bruxelles' => '1h 45min'
+        ];
+
+        $key = $departure . '_' . $arrival;
+        $reverseKey = $arrival . '_' . $departure;
+
+        return $durations[$key] ?? $durations[$reverseKey] ?? '3h 00min';
     }
 
     private function validateRideData($data) {
@@ -297,7 +267,7 @@ class RideController extends BaseController {
 
     private function saveRide($data) {
         try {
-            // Récupérer ou créer un véhicule
+            // D'abord, il faut créer/récupérer un véhicule pour le conducteur
             $vehicleId = $this->getOrCreateVehicle($data);
 
             $departureDateTime = $data['date'] . ' ' . $data['time'] . ':00';
@@ -312,10 +282,13 @@ class RideController extends BaseController {
                     )";
 
             $db = $this->getDatabase();
-            $stmt = $db->prepare($sql);
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
 
-            // TODO: Remplacer par l'ID du conducteur authentifié
-            $driverId = $_SESSION['user_id'] ?? 4; // Fallback à 4 pour les tests
+            // Pour cette démo, on utilise un driver_id fictif
+            $driverId = 4; // Marie
 
             $petsAllowed = is_array($data['preferences']) ? in_array('pets', $data['preferences']) : false;
             $smokingAllowed = is_array($data['preferences']) ? !in_array('nosmoking', $data['preferences']) : true;
@@ -344,58 +317,58 @@ class RideController extends BaseController {
     }
 
     private function getOrCreateVehicle($data) {
-        try {
-            // Récupérer ou créer un véhicule
-            $fuelType = $this->mapVehicleType($data['vehicleType']);
-            $driverId = $_SESSION['user_id'] ?? 4; // TODO: Remplacer par l'ID du conducteur authentifié
+        // D'abord, essayons de trouver un véhicule existant du même type pour l'utilisateur
+        $fuelType = $this->mapVehicleType($data['vehicleType']);
+        $driverId = 4; // Marie pour cette démo
 
-            $sql = "SELECT id FROM vehicles
-                    WHERE user_id = ? AND fuel_type = ?
-                    ORDER BY created_at DESC LIMIT 1";
+        $sql = "SELECT id FROM vehicles
+                WHERE user_id = ? AND fuel_type = ?
+                ORDER BY created_at DESC LIMIT 1";
 
-            $db = $this->getDatabase();
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$driverId, $fuelType]);
-            $existingVehicle = $stmt->fetch();
-
-            if ($existingVehicle) {
-                return $existingVehicle['id'];
-            }
-
-            // Créer un nouveau véhicule
-            $brand = $data['vehicleBrand'] ?: $this->getDefaultBrand($fuelType);
-            $model = $data['vehicleModel'] ?: $this->getDefaultModel($fuelType);
-            $color = 'Grise'; // Couleur par défaut
-
-            $sql = "INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-            $db = $this->getDatabase();
-            $stmt = $db->prepare($sql);
-            $licensePlate = $this->generateLicensePlate();
-            $firstRegistration = date('Y-m-d', strtotime('-2 years'));
-
-            $stmt->execute([
-                $driverId,
-                $brand,
-                $model,
-                $color,
-                $licensePlate,
-                $firstRegistration,
-                $fuelType,
-                $data['seats']
-            ]);
-
-            return $db->lastInsertId();
-
-        } catch (Exception $e) {
-            error_log('Erreur getOrCreateVehicle: ' . $e->getMessage());
-            throw $e;
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
         }
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$driverId, $fuelType]);
+        $existingVehicle = $stmt->fetch();
+
+        if ($existingVehicle) {
+            return $existingVehicle['id'];
+        }
+
+        // Créer un nouveau véhicule
+        $brand = $data['vehicleBrand'] ?: $this->getDefaultBrand($fuelType);
+        $model = $data['vehicleModel'] ?: $this->getDefaultModel($fuelType);
+        $color = 'Grise'; // Couleur par défaut
+
+        $sql = "INSERT INTO vehicles (user_id, brand, model, color, license_plate, first_registration, fuel_type, seats_available)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        $db = $this->getDatabase();
+        if (!$db) {
+            throw new \Exception('Base de données non accessible');
+        }
+        $stmt = $db->prepare($sql);
+        $licensePlate = $this->generateLicensePlate();
+        $firstRegistration = date('Y-m-d', strtotime('-2 years'));
+
+        $stmt->execute([
+            $driverId,
+            $brand,
+            $model,
+            $color,
+            $licensePlate,
+            $firstRegistration,
+            $fuelType,
+            $data['seats']
+        ]);
+
+        return $db->lastInsertId();
     }
 
     private function mapVehicleType($type) {
-        switch ($type) {
+        switch($type) {
             case 'electric': return 'electrique';
             case 'hybrid': return 'hybride';
             case 'gasoline': return 'essence';
@@ -404,7 +377,7 @@ class RideController extends BaseController {
     }
 
     private function getDefaultBrand($fuelType) {
-        switch ($fuelType) {
+        switch($fuelType) {
             case 'electrique': return 'Tesla';
             case 'hybride': return 'Toyota';
             case 'essence': return 'Peugeot';
@@ -413,7 +386,7 @@ class RideController extends BaseController {
     }
 
     private function getDefaultModel($fuelType) {
-        switch ($fuelType) {
+        switch($fuelType) {
             case 'electrique': return 'Model 3';
             case 'hybride': return 'Prius';
             case 'essence': return '308';
@@ -426,20 +399,5 @@ class RideController extends BaseController {
         $numbers = sprintf('%03d', rand(100, 999));
         $letters2 = chr(rand(65, 90)) . chr(rand(65, 90));
         return $letters1 . '-' . $numbers . '-' . $letters2;
-    }
-
-    private function buildOrderClause($sortBy) {
-        switch ($sortBy) {
-            case 'price':
-                return 'ORDER BY r.price_per_seat ASC';
-            case 'rating':
-                // Pour l'instant, on trie par nombre d'avis (à améliorer plus tard avec une vraie table de ratings)
-                return 'ORDER BY r.departure_datetime ASC'; // Fallback temporaire
-            case 'ecological':
-                return 'ORDER BY v.is_ecological DESC, v.fuel_type = "electrique" DESC, r.price_per_seat ASC';
-            case 'datetime':
-            default:
-                return 'ORDER BY r.departure_datetime ASC';
-        }
     }
 }
