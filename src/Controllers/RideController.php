@@ -166,6 +166,53 @@ class RideController extends BaseController {
         }
     }
 
+    public function getRideDetails($rideId) {
+        header('Content-Type: application/json');
+
+        try {
+            $rideId = intval($rideId);
+
+            if ($rideId <= 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'ID de trajet invalide']);
+                return;
+            }
+
+            $sql = "SELECT
+                        r.*,
+                        u.pseudo as driver_name,
+                        u.email as driver_email,
+                        u.profile_picture as driver_avatar,
+                        u.bio as driver_bio,
+                        v.brand, v.model, v.color, v.fuel_type, v.is_ecological
+                    FROM rides r
+                    JOIN users u ON r.driver_id = u.id
+                    JOIN vehicles v ON r.vehicle_id = v.id
+                    WHERE r.id = ?";
+
+            $db = $this->getDatabase();
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+            $ride = $stmt->fetch();
+
+            if (!$ride) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Trajet non trouvé']);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'ride' => $ride
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors de la récupération des détails', 'details' => $e->getMessage()]);
+            error_log($e->getMessage());
+        }
+    }
+
     public function searchRides() {
         header('Content-Type: application/json');
 

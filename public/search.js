@@ -24,7 +24,7 @@ let pagination = {};
 async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
     try {
         console.log('🔄 Chargement des trajets depuis l\'API...');
-        showLoadingSpinner(true);
+        showLoadingSpinner(true, true);
 
         currentPage = page;
         currentSearchParams = searchParams;
@@ -91,7 +91,7 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
         console.error('❌ Erreur réseau:', error);
         showNoResults();
     } finally {
-        showLoadingSpinner(false);
+        showLoadingSpinner(false, true);
     }
 }
 
@@ -314,18 +314,92 @@ function showNotification(message, type = 'info') {
 // FONCTION PRINCIPALE - DÉTAILS COVOITURAGE
 // =====================================
 
-function viewRideDetails(rideId) {
-    console.log(`Affichage des détails du trajet ${rideId}`);
-    
-    const rideData = ridesDetailsData[rideId];
-    
-    if (!rideData) {
-        console.warn(`Aucune donnée trouvée pour le trajet ${rideId}`);
-        showNotification(`Détails du covoiturage #${rideId} non disponibles`, 'warning');
-        return;
+async function viewRideDetails(rideId) {
+    console.log(`🔍 Chargement des détails du trajet ${rideId} depuis l'API...`);
+
+    try {
+        // Afficher le spinner SANS vider la liste des rides (clearRidesList = false)
+        showLoadingSpinner(true, false);
+
+        const response = await fetch(`/api/rides/${rideId}`, {
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            console.error(`❌ Erreur API: ${data.error}`);
+            showNotification(data.error || 'Impossible de charger les détails', 'error');
+            return;
+        }
+
+        console.log('✅ Détails du trajet chargés:', data.ride);
+
+        // Transformer les données de l'API vers le format attendu par showRideModal
+        const rideData = transformRideDataForModal(data.ride);
+        showRideModal(rideData);
+
+    } catch (error) {
+        console.error('❌ Erreur réseau:', error);
+        showNotification('Erreur de connexion au serveur', 'error');
+    } finally {
+        // Masquer le spinner après le chargement
+        showLoadingSpinner(false, false);
     }
-    
-    showRideModal(rideData);
+}
+
+// Transformer les données de l'API vers le format attendu par la modale
+function transformRideDataForModal(apiRide) {
+    const departureDate = new Date(apiRide.departure_datetime);
+    const departureTime = departureDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    let arrivalTime = 'N/A';
+    if (apiRide.estimated_arrival_datetime) {
+        const arrivalDate = new Date(apiRide.estimated_arrival_datetime);
+        arrivalTime = arrivalDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Calcul de la durée
+    let duration = 'N/A';
+    if (apiRide.duration_minutes) {
+        const hours = Math.floor(apiRide.duration_minutes / 60);
+        const minutes = apiRide.duration_minutes % 60;
+        duration = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+    }
+
+    // Avatar du conducteur
+    const driverAvatar = apiRide.driver_name ? apiRide.driver_name.charAt(0).toUpperCase() : 'U';
+
+    return {
+        id: apiRide.id,
+        driver: apiRide.driver_name || 'Conducteur',
+        avatar: driverAvatar,
+        rating: 4.0, // TODO: Calculer depuis une table de ratings
+        reviewCount: 0, // TODO: Compter depuis une table de reviews
+        driverBio: apiRide.driver_bio || 'Conducteur expérimenté',
+        departure: {
+            city: apiRide.departure_city,
+            time: departureTime
+        },
+        arrival: {
+            city: apiRide.arrival_city,
+            time: arrivalTime
+        },
+        duration: duration,
+        car: {
+            model: `${apiRide.brand || ''} ${apiRide.model || ''}`.trim() || 'Véhicule',
+            color: apiRide.color || 'Inconnu'
+        },
+        ecological: apiRide.is_ecological || apiRide.fuel_type === 'electrique',
+        preferences: {
+            pets: apiRide.pets_allowed || false,
+            music: false // Pas dans la DB pour l'instant
+        },
+        description: apiRide.description || 'Trajet convivial et écologique !',
+        reviews: [], // TODO: Charger depuis une table de reviews
+        price: apiRide.price_per_seat,
+        seatsAvailable: apiRide.available_seats
+    };
 }
 
 function showRideModal(ride) {
@@ -684,14 +758,16 @@ function applyFiltersAndDisplay() {
 }
 
 // Afficher/masquer le spinner de chargement
-function showLoadingSpinner(show) {
+function showLoadingSpinner(show, clearRidesList = true) {
     const spinner = document.getElementById('loadingSpinner');
     const ridesList = document.getElementById('ridesList');
 
     if (spinner) {
         spinner.style.display = show ? 'block' : 'none';
     }
-    if (ridesList && show) {
+    // Ne vider la liste que si clearRidesList est true (par défaut)
+    // Utile pour ne pas vider lors de l'ouverture des détails
+    if (ridesList && show && clearRidesList) {
         ridesList.innerHTML = '';
     }
 }

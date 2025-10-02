@@ -22,6 +22,13 @@ session_start();
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
 
+// Check for ride details endpoint first (before switch)
+if (preg_match('/^\/api\/rides\/(\d+)$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->getRideDetails($matches[1]);
+    exit;
+}
+
 switch ($path) {
     case '/':
     case '/index.html':
@@ -45,7 +52,7 @@ switch ($path) {
         include 'profil.html';
         break;
 
-    // API Routes
+    // API Routes - Rides
     case '/api/rides/create':
         $controller = new RideController($db);
         $controller->createRide();

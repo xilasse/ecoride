@@ -410,17 +410,8 @@
             }
 
             // Initialiser les autres composants
-            // NOTE: Ces initialisations sont maintenant faites par initializeWithAPI()
-            // et pourraient être supprimées si redondantes
-            if (typeof initFilters === 'function') {
-                initFilters();
-            }
-            if (typeof initSorting === 'function') {
-                initSorting();
-            }
-            if (typeof initDetailButtons === 'function') {
-                initDetailButtons();
-            }
+            // NOTE: Ces initialisations sont déjà faites par search.js dans son DOMContentLoaded
+            // Ne pas les appeler ici pour éviter les doublons d'écouteurs d'événements
 
             console.log('✅ Initialisation terminée');
         });
