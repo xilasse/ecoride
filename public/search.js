@@ -1,99 +1,129 @@
 /**
- * VARIABLES PARTIELLEMENT OBSOLÈTES :
- * - maxDuration et minRating dans currentFilters : Pas encore implémentés côté serveur
+ * EcoRide - JavaScript principal pour la page Covoiturages
+ * Version nettoyée sans duplication
  */
 
 // Variables globales
 let currentFilters = {
     ecoOnly: false,
     maxPrice: 50,
-    // NOTE: maxDuration et minRating ne sont pas encore implémentés côté serveur
-    maxDuration: 999999,  // TODO: Implémenter le filtre durée dans l'API
-    minRating: 0,         // TODO: Implémenter le filtre note dans l'API (nécessite table ratings)
+    maxDuration: 999999,
+    minRating: 0,
     petsAllowed: false,
     nonSmoking: false
 };
 
 let currentSort = 'datetime';
-let allRides = []; // Stockage des trajets récupérés de l'API
-let currentPage = 1;
-let currentSearchParams = {};
-let pagination = {};
 
-// Charger les trajets depuis l'API
-async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
-    try {
-        console.log('🔄 Chargement des trajets depuis l\'API...');
-        showLoadingSpinner(true, true);
-
-        currentPage = page;
-        currentSearchParams = searchParams;
-
-        let url = '/api/rides';
-        const params = new URLSearchParams();
-
-        // Ajouter les paramètres de pagination
-        params.append('page', page);
-        params.append('limit', 10);
-
-        // Ajouter les paramètres de recherche si fournis
-        if (searchParams.from) params.append('from', searchParams.from);
-        if (searchParams.to) params.append('to', searchParams.to);
-        if (searchParams.date) params.append('date', searchParams.date);
-
-        // Ajouter les paramètres de filtrage si fournis
-        const activeFilters = filters || currentFilters;
-        if (activeFilters.ecoOnly) {
-            params.append('eco_only', 'true');
-        }
-        if (activeFilters.maxPrice && activeFilters.maxPrice < 50) {
-            params.append('max_price', activeFilters.maxPrice);
-        }
-        if (activeFilters.petsAllowed) {
-            params.append('pets_allowed', 'true');
-        }
-        if (activeFilters.nonSmoking) {
-            params.append('non_smoking', 'true');
-        }
-
-        // Ajouter le paramètre de tri
-        if (currentSort && currentSort !== 'datetime') {
-            params.append('sort_by', currentSort);
-        }
-
-        if (searchParams.from || searchParams.to || searchParams.date) {
-            url = `/api/rides/search?${params.toString()}`;
-        } else {
-            url = `/api/rides?${params.toString()}`;
-        }
-
-        console.log('🌐 URL de l\'API appelée:', url); // Debug URL
-        const response = await fetch(url, {
-            credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (data.rides) {
-            allRides = data.rides;
-            pagination = data.pagination || {};
-            console.log(`✅ ${allRides.length} trajets chargés (page ${pagination.current_page || 1}/${pagination.total_pages || 1})`);
-
-            // Afficher les trajets et la pagination (pas besoin d'appliquer les filtres côté client)
-            displayRidesFromAPI();
-            updatePaginationUI();
-        } else {
-            console.error('❌ Erreur lors du chargement:', data.error);
-            showNoResults();
-        }
-
-    } catch (error) {
-        console.error('❌ Erreur réseau:', error);
-        showNoResults();
-    } finally {
-        showLoadingSpinner(false, true);
+// Données simulées pour les détails des covoiturages
+const ridesDetailsData = {
+    1: {
+        id: 1,
+        driver: "MarieDriveGreen",
+        avatar: "M",
+        rating: 4.8,
+        reviewCount: 24,
+        departure: { city: "Paris", time: "14:00" },
+        arrival: { city: "Lyon", time: "18:30" },
+        duration: "4h 30min",
+        car: { model: "Tesla Model 3", color: "Blanche", type: "electric" },
+        price: 35,
+        seatsAvailable: 3,
+        ecological: true,
+        preferences: { pets: true, smoking: false, music: true },
+        description: "Trajet écologique Paris-Lyon en Tesla. Musique d'ambiance et bonne humeur !",
+        driverBio: "Passionnée d'écologie et de conduite responsable. 5 ans d'expérience en covoiturage.",
+        reviews: [
+            { author: "Pierre", rating: 5, comment: "Excellent trajet, très ponctuelle !" },
+            { author: "Sophie", rating: 5, comment: "Conductrice sympa, voyage agréable" },
+            { author: "Marc", rating: 4, comment: "Très bien, je recommande" }
+        ]
+    },
+    2: {
+        id: 2,
+        driver: "PaulEcoDriver",
+        avatar: "P",
+        rating: 4.6,
+        reviewCount: 18,
+        departure: { city: "Lyon", time: "09:00" },
+        arrival: { city: "Marseille", time: "12:15" },
+        duration: "3h 15min",
+        car: { model: "Renault ZOE", color: "Bleue", type: "electric" },
+        price: 28,
+        seatsAvailable: 2,
+        ecological: true,
+        preferences: { pets: false, smoking: false, music: true },
+        description: "Trajet matinal Lyon-Marseille. Véhicule 100% électrique !",
+        driverBio: "Adepte des voyages matinaux et des véhicules électriques.",
+        reviews: [
+            { author: "Julie", rating: 5, comment: "Parfait pour un trajet matinal" },
+            { author: "Thomas", rating: 4, comment: "Très professionnel" }
+        ]
+    },
+    3: {
+        id: 3,
+        driver: "JeanEcoDriver",
+        avatar: "J",
+        rating: 4.2,
+        reviewCount: 31,
+        departure: { city: "Paris", time: "08:00" },
+        arrival: { city: "Bordeaux", time: "13:45" },
+        duration: "5h 45min",
+        car: { model: "Toyota Prius", color: "Grise", type: "hybrid" },
+        price: 42,
+        seatsAvailable: 3,
+        ecological: false,
+        preferences: { pets: true, smoking: false, music: false },
+        description: "Paris-Bordeaux en véhicule hybride. Arrêt possible aire de repos.",
+        driverBio: "Conducteur expérimenté, voyages longue distance.",
+        reviews: [
+            { author: "Marie", rating: 4, comment: "Trajet agréable et sécurisé" },
+            { author: "Luc", rating: 4, comment: "Ponctuel et sympathique" }
+        ]
+    },
+    4: {
+        id: 4,
+        driver: "JeanEcoDriver",
+        avatar: "J",
+        rating: 4.5,
+        reviewCount: 12,
+        departure: { city: "Toulouse", time: "16:30" },
+        arrival: { city: "Montpellier", time: "19:00" },
+        duration: "2h 30min",
+        car: { model: "Peugeot 308", color: "Noire", type: "essence" },
+        price: 22,
+        seatsAvailable: 4,
+        ecological: false,
+        preferences: { pets: false, smoking: false, music: false },
+        description: "Trajet Toulouse-Montpellier en fin de journée.",
+        driverBio: "Conducteur expérimenté, voyages longue distance.",
+        reviews: [
+            { author: "Claire", rating: 5, comment: "Très bien, ponctuel" },
+            { author: "Marc", rating: 4, comment: "Trajet agréable" }
+        ]
+    },
+    5: {
+        id: 5,
+        driver: "SophieVerte",
+        avatar: "S",
+        rating: 4.9,
+        reviewCount: 15,
+        departure: { city: "Lille", time: "10:15" },
+        arrival: { city: "Bruxelles", time: "12:00" },
+        duration: "1h 45min",
+        car: { model: "Nissan Leaf", color: "Verte", type: "electric" },
+        price: 18,
+        seatsAvailable: 4,
+        ecological: true,
+        preferences: { pets: true, smoking: false, music: true },
+        description: "Trajet international Lille-Bruxelles en Nissan Leaf électrique. Voyage écologique garanti !",
+        driverBio: "Spécialiste des trajets internationaux écologiques.",
+        reviews: [
+            { author: "Pierre", rating: 5, comment: "Parfait, très écologique" },
+            { author: "Anne", rating: 5, comment: "Conductrice excellente" }
+        ]
     }
-}
+};
 
 // =====================================
 // INITIALISATION
@@ -105,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initFilters();
     initSorting();
     initDetailButtons();
-    initializeWithAPI(); // Initialize API functionality and search form handler
+    loadRidesFromAPI();
 
     console.log('Page Covoiturages initialisée avec succès');
 });
@@ -130,7 +160,7 @@ function initFilters() {
         priceRange.addEventListener('input', function() {
             priceValue.textContent = this.value + '€';
             currentFilters.maxPrice = parseInt(this.value);
-            reloadWithFilters();
+            applyFilters();
         });
         priceValue.textContent = priceRange.value + '€';
         currentFilters.maxPrice = parseInt(priceRange.value);
@@ -141,23 +171,23 @@ function initFilters() {
     if (ecoOnly) {
         ecoOnly.addEventListener('change', function() {
             currentFilters.ecoOnly = this.checked;
-            reloadWithFilters();
+            applyFilters();
         });
     }
-
+    
     const petsAllowed = document.getElementById('petsAllowed');
     if (petsAllowed) {
         petsAllowed.addEventListener('change', function() {
             currentFilters.petsAllowed = this.checked;
-            reloadWithFilters();
+            applyFilters();
         });
     }
-
+    
     const smokingAllowed = document.getElementById('smokingAllowed');
     if (smokingAllowed) {
         smokingAllowed.addEventListener('change', function() {
             currentFilters.nonSmoking = this.checked;
-            reloadWithFilters();
+            applyFilters();
         });
     }
     
@@ -166,15 +196,15 @@ function initFilters() {
     if (durationFilter) {
         durationFilter.addEventListener('change', function() {
             currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
-            reloadWithFilters();
+            applyFilters();
         });
     }
-
+    
     const ratingFilter = document.getElementById('ratingFilter');
     if (ratingFilter) {
         ratingFilter.addEventListener('change', function() {
             currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
-            reloadWithFilters();
+            applyFilters();
         });
     }
     
@@ -190,7 +220,7 @@ function initSorting() {
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
             currentSort = this.value;
-            reloadWithSort();
+            sortRides(this.value);
         });
     }
 }
@@ -213,21 +243,54 @@ function initDetailButtons() {
     });
 }
 
+// =====================================
+// FONCTIONS DE FILTRAGE
+// =====================================
+
+function applyFilters() {
+    console.log('Application des filtres...', currentFilters);
+
+    // Appliquer les filtres côté serveur
+    loadRidesFromAPI();
+}
+
+function extractRideData(rideElement) {
+    return {
+        price: parseInt(rideElement.dataset.price) || 0,
+        rating: parseFloat(rideElement.dataset.rating) || 0,
+        ecological: rideElement.dataset.ecological === 'true',
+        duration: parseInt(rideElement.dataset.duration) || 0,
+        allowsPets: rideElement.querySelector('.fa-paw') !== null,
+        nonSmoking: rideElement.querySelector('.fa-smoking-ban') !== null
+    };
+}
+
+function matchesAllFilters(rideData, filters) {
+    return (
+        (!filters.ecoOnly || rideData.ecological) &&
+        (rideData.price <= filters.maxPrice) &&
+        (rideData.duration <= filters.maxDuration) &&
+        (rideData.rating >= filters.minRating) &&
+        (!filters.petsAllowed || rideData.allowsPets) &&
+        (!filters.nonSmoking || rideData.nonSmoking)
+    );
+}
+
 function clearAllFilters() {
     console.log('Effacement de tous les filtres');
-
+    
     // Reset checkboxes
     const checkboxes = document.querySelectorAll('.filters-sidebar input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
-
+    
     // Reset selects
     const selects = document.querySelectorAll('.filters-sidebar select');
     selects.forEach(select => {
         select.selectedIndex = 0;
     });
-
+    
     // Reset price range
     const priceRange = document.getElementById('priceRange');
     const priceValue = document.getElementById('priceValue');
@@ -235,7 +298,7 @@ function clearAllFilters() {
         priceRange.value = 50;
         priceValue.textContent = '50€';
     }
-
+    
     // Reset filters object
     currentFilters = {
         ecoOnly: false,
@@ -245,33 +308,66 @@ function clearAllFilters() {
         petsAllowed: false,
         nonSmoking: false
     };
-
-    reloadWithFilters();
+    
+    applyFilters();
     showNotification('Filtres effacés', 'success');
-}
-
-// Nouvelle fonction pour recharger les données avec les filtres actuels
-function reloadWithFilters() {
-    console.log('🔄 Rechargement avec filtres:', currentFilters);
-    loadRidesFromAPI(currentSearchParams, 1, currentFilters); // Retour à la page 1 quand on change les filtres
-}
-
-// Nouvelle fonction pour recharger les données avec le tri actuel
-function reloadWithSort() {
-    console.log('🔄 Rechargement avec tri:', currentSort);
-    loadRidesFromAPI(currentSearchParams, 1, currentFilters); // Retour à la page 1 quand on change le tri
 }
 
 // =====================================
 // FONCTIONS DE TRI
 // =====================================
 
-// Cette fonction est maintenant obsolète car le tri est fait côté serveur
-// Gardée pour la compatibilité mais redirige vers reloadWithSort
 function sortRides(criteria) {
-    console.log('⚠️  sortRides() obsolète, redirection vers reloadWithSort()');
-    currentSort = criteria;
-    reloadWithSort();
+    console.log(`Tri par: ${criteria}`);
+    
+    const ridesList = document.getElementById('ridesList');
+    if (!ridesList) return;
+    
+    const rides = Array.from(ridesList.querySelectorAll('.ride-card:not([style*="display: none"])'));
+    
+    rides.sort((a, b) => {
+        switch(criteria) {
+            case 'price':
+                return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+            case 'rating':
+                return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+            case 'ecological':
+                const aEco = a.dataset.ecological === 'true';
+                const bEco = b.dataset.ecological === 'true';
+                if (aEco === bEco) {
+                    return parseInt(a.dataset.price) - parseInt(b.dataset.price);
+                }
+                return bEco - aEco;
+            default:
+                return 0;
+        }
+    });
+    
+    rides.forEach(ride => ridesList.appendChild(ride));
+}
+
+// =====================================
+// FONCTIONS D'INTERFACE
+// =====================================
+
+function updateResultsCount(count) {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        const text = `${count} covoiturage${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}`;
+        resultsCount.textContent = text;
+    }
+}
+
+function toggleNoResultsMessage(show) {
+    const noResults = document.getElementById('noResults');
+    const ridesList = document.getElementById('ridesList');
+    
+    if (noResults) {
+        noResults.style.display = show ? 'block' : 'none';
+    }
+    if (ridesList) {
+        ridesList.style.display = show ? 'none' : 'block';
+    }
 }
 
 function showNotification(message, type = 'info') {
@@ -314,92 +410,18 @@ function showNotification(message, type = 'info') {
 // FONCTION PRINCIPALE - DÉTAILS COVOITURAGE
 // =====================================
 
-async function viewRideDetails(rideId) {
-    console.log(`🔍 Chargement des détails du trajet ${rideId} depuis l'API...`);
-
-    try {
-        // Afficher le spinner SANS vider la liste des rides (clearRidesList = false)
-        showLoadingSpinner(true, false);
-
-        const response = await fetch(`/api/rides/${rideId}`, {
-            credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            console.error(`❌ Erreur API: ${data.error}`);
-            showNotification(data.error || 'Impossible de charger les détails', 'error');
-            return;
-        }
-
-        console.log('✅ Détails du trajet chargés:', data.ride);
-
-        // Transformer les données de l'API vers le format attendu par showRideModal
-        const rideData = transformRideDataForModal(data.ride);
-        showRideModal(rideData);
-
-    } catch (error) {
-        console.error('❌ Erreur réseau:', error);
-        showNotification('Erreur de connexion au serveur', 'error');
-    } finally {
-        // Masquer le spinner après le chargement
-        showLoadingSpinner(false, false);
+function viewRideDetails(rideId) {
+    console.log(`Affichage des détails du trajet ${rideId}`);
+    
+    const rideData = ridesDetailsData[rideId];
+    
+    if (!rideData) {
+        console.warn(`Aucune donnée trouvée pour le trajet ${rideId}`);
+        showNotification(`Détails du covoiturage #${rideId} non disponibles`, 'warning');
+        return;
     }
-}
-
-// Transformer les données de l'API vers le format attendu par la modale
-function transformRideDataForModal(apiRide) {
-    const departureDate = new Date(apiRide.departure_datetime);
-    const departureTime = departureDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-    let arrivalTime = 'N/A';
-    if (apiRide.estimated_arrival_datetime) {
-        const arrivalDate = new Date(apiRide.estimated_arrival_datetime);
-        arrivalTime = arrivalDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    // Calcul de la durée
-    let duration = 'N/A';
-    if (apiRide.duration_minutes) {
-        const hours = Math.floor(apiRide.duration_minutes / 60);
-        const minutes = apiRide.duration_minutes % 60;
-        duration = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
-    }
-
-    // Avatar du conducteur
-    const driverAvatar = apiRide.driver_name ? apiRide.driver_name.charAt(0).toUpperCase() : 'U';
-
-    return {
-        id: apiRide.id,
-        driver: apiRide.driver_name || 'Conducteur',
-        avatar: driverAvatar,
-        rating: 4.0, // TODO: Calculer depuis une table de ratings
-        reviewCount: 0, // TODO: Compter depuis une table de reviews
-        driverBio: apiRide.driver_bio || 'Conducteur expérimenté',
-        departure: {
-            city: apiRide.departure_city,
-            time: departureTime
-        },
-        arrival: {
-            city: apiRide.arrival_city,
-            time: arrivalTime
-        },
-        duration: duration,
-        car: {
-            model: `${apiRide.brand || ''} ${apiRide.model || ''}`.trim() || 'Véhicule',
-            color: apiRide.color || 'Inconnu'
-        },
-        ecological: apiRide.is_ecological || apiRide.fuel_type === 'electrique',
-        preferences: {
-            pets: apiRide.pets_allowed || false,
-            music: false // Pas dans la DB pour l'instant
-        },
-        description: apiRide.description || 'Trajet convivial et écologique !',
-        reviews: [], // TODO: Charger depuis une table de reviews
-        price: apiRide.price_per_seat,
-        seatsAvailable: apiRide.available_seats
-    };
+    
+    showRideModal(rideData);
 }
 
 function showRideModal(ride) {
@@ -618,61 +640,133 @@ function participateRide(rideId) {
 }
 
 // =====================================
-// NOUVELLES FONCTIONS POUR API RÉELLE
+// FONCTIONS API
 // =====================================
 
-// Générer le HTML d'une carte de trajet depuis les données API
-function generateRideCardFromAPI(ride) {
-    const departureDate = new Date(ride.departure_datetime);
-    const departureTime = departureDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+function loadRidesFromAPI() {
+    console.log('Chargement des trajets depuis l\'API...');
 
-    // Calculer l'heure d'arrivée si disponible
-    let arrivalTime = 'N/A';
-    if (ride.estimated_arrival_datetime) {
-        const arrivalDate = new Date(ride.estimated_arrival_datetime);
-        arrivalTime = arrivalDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const ridesList = document.getElementById('ridesList');
+
+    if (loadingSpinner) loadingSpinner.style.display = 'block';
+    if (ridesList) ridesList.style.display = 'none';
+
+    // Construire les paramètres de filtrage
+    const params = new URLSearchParams();
+
+    if (currentFilters.maxPrice < 100) {
+        params.append('maxPrice', currentFilters.maxPrice);
     }
 
-    // Badge écologique
-    const ecoBadge = ride.is_ecological || ride.fuel_type === 'electrique' ?
-        '<span class="eco-badge ms-auto"><i class="fas fa-leaf"></i> Écologique</span>' : '';
-
-    // Avatar du conducteur (première lettre du pseudo)
-    const driverAvatar = ride.driver_name ? ride.driver_name.charAt(0).toUpperCase() : 'U';
-
-    // Calcul de la durée
-    let duration = 'N/A';
-    if (ride.duration_minutes) {
-        const hours = Math.floor(ride.duration_minutes / 60);
-        const minutes = ride.duration_minutes % 60;
-        duration = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+    if (currentFilters.maxDuration < 999999) {
+        params.append('maxDuration', currentFilters.maxDuration);
     }
 
-    // Véhicule
-    const vehicleInfo = `${ride.brand || 'Véhicule'} ${ride.model || ''} - ${ride.color || 'Couleur inconnue'}`;
+    if (currentFilters.minRating > 0) {
+        params.append('minRating', currentFilters.minRating);
+    }
 
-    // Préférences
-    const petsInfo = ride.pets_allowed ? 'Animaux OK' : 'Pas d\'animaux';
-    const smokingInfo = ride.smoking_allowed ? 'Fumeur OK' : 'Non-fumeur';
+    if (currentFilters.ecoOnly) {
+        params.append('ecoOnly', 'true');
+    }
+
+    if (currentFilters.petsAllowed) {
+        params.append('petsAllowed', 'true');
+    }
+
+    if (currentFilters.nonSmoking) {
+        params.append('nonSmoking', 'true');
+    }
+
+    const url = `/api/rides${params.toString() ? '?' + params.toString() : ''}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+
+            if (data.rides) {
+                renderRides(data.rides);
+                updateResultsCount(data.rides.length);
+                toggleNoResultsMessage(data.rides.length === 0);
+            } else {
+                console.error('Erreur API:', data.error || 'Erreur inconnue');
+                showNotification('Erreur lors du chargement des trajets', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur réseau:', error);
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+            showNotification('Erreur de connexion', 'error');
+        });
+}
+
+function renderRides(rides) {
+    const ridesList = document.getElementById('ridesList');
+    if (!ridesList) return;
+
+    if (rides.length === 0) {
+        ridesList.innerHTML = '';
+        ridesList.style.display = 'none';
+        return;
+    }
+
+    ridesList.innerHTML = rides.map(ride => createRideCard(ride)).join('');
+    ridesList.style.display = 'block';
+}
+
+function createRideCard(ride) {
+    const durationHours = Math.floor(ride.duration_minutes / 60);
+    const durationMinutes = ride.duration_minutes % 60;
+    const durationDisplay = `${durationHours}h ${durationMinutes.toString().padStart(2, '0')}min`;
+
+    const departureTime = new Date(ride.departure_datetime).toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    const arrivalTime = ride.estimated_arrival_datetime ?
+        new Date(ride.estimated_arrival_datetime).toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : '';
+
+    const isEcological = ride.is_ecological == 1;
+    const rating = parseFloat(ride.driver_rating) || 0;
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    let starsHTML = '';
+    for (let i = 0; i < fullStars; i++) {
+        starsHTML += '<i class="fas fa-star"></i>';
+    }
+    if (hasHalfStar) {
+        starsHTML += '<i class="fas fa-star-half-alt"></i>';
+    }
+    for (let i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++) {
+        starsHTML += '<i class="far fa-star"></i>';
+    }
 
     return `
-        <div class="ride-card" data-price="${ride.price_per_seat}" data-rating="0" data-ecological="${ride.is_ecological}" data-duration="${ride.duration_minutes || 0}" data-ride-id="${ride.id}">
+        <div class="ride-card" data-price="${ride.price_per_seat}" data-rating="${rating}" data-ecological="${isEcological}" data-duration="${ride.duration_minutes}" data-ride-id="${ride.id}">
             <div class="row">
                 <div class="col-md-8">
                     <div class="driver-info">
-                        <div class="driver-avatar">${driverAvatar}</div>
+                        <div class="driver-avatar">${ride.driver_name.charAt(0).toUpperCase()}</div>
                         <div>
-                            <h6 class="mb-1">${ride.driver_name || 'Conducteur'}</h6>
+                            <h6 class="mb-1">${ride.driver_name}</h6>
                             <div class="rating">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <span class="text-muted ms-1">4.0 (nouveau)</span>
+                                ${starsHTML}
+                                <span class="text-muted ms-1">${rating} avis</span>
                             </div>
                         </div>
-                        ${ecoBadge}
+                        ${isEcological ?
+                            '<span class="eco-badge ms-auto"><i class="fas fa-leaf"></i> Écologique</span>' :
+                            ride.fuel_type === 'hybride' ?
+                                '<span class="badge bg-warning text-dark ms-auto"><i class="fas fa-leaf"></i> Hybride</span>' :
+                                '<span class="badge bg-secondary ms-auto"><i class="fas fa-gas-pump"></i> Essence</span>'
+                        }
                     </div>
 
                     <div class="route-info mb-2">
@@ -690,17 +784,17 @@ function generateRideCardFromAPI(ride) {
                             </div>
                         </div>
                         <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>${duration}
-                            <i class="fas fa-car ms-3 me-1"></i>${vehicleInfo}
+                            <i class="fas fa-clock me-1"></i>${durationDisplay}
+                            <i class="fas fa-car ms-3 me-1"></i>${ride.brand} ${ride.model} - ${ride.color}
                         </small>
                     </div>
 
                     <div class="ride-details">
-                        <p class="mb-2 small">${ride.description || 'Trajet convivial et écologique !'}</p>
+                        <p class="mb-2 small">${ride.description || 'Aucune description disponible'}</p>
                         <div class="d-flex gap-3 small text-muted">
                             <span><i class="fas fa-users me-1"></i><span class="seats-available">${ride.available_seats}</span> places restantes</span>
-                            <span><i class="fas fa-paw me-1"></i>${petsInfo}</span>
-                            <span><i class="fas fa-smoking-ban me-1"></i>${smokingInfo}</span>
+                            <span><i class="fas fa-${ride.pets_allowed ? 'paw' : 'ban'} me-1"></i>${ride.pets_allowed ? 'Animaux OK' : 'Pas d\'animaux'}</span>
+                            <span><i class="fas fa-smoking-ban me-1"></i>Non-fumeur</span>
                         </div>
                     </div>
                 </div>
@@ -717,196 +811,10 @@ function generateRideCardFromAPI(ride) {
     `;
 }
 
-// Afficher les trajets depuis l'API
-function displayRidesFromAPI() {
-    const ridesList = document.getElementById('ridesList');
-    const noResults = document.getElementById('noResults');
-    const resultsCount = document.getElementById('resultsCount');
-
-    if (!ridesList) return;
-
-    if (allRides.length === 0) {
-        ridesList.innerHTML = '';
-        if (noResults) noResults.style.display = 'block';
-        if (resultsCount) resultsCount.textContent = '0 covoiturage trouvé';
-        return;
-    }
-
-    // Générer le HTML pour tous les trajets
-    const ridesHTML = allRides.map(ride => generateRideCardFromAPI(ride)).join('');
-    ridesList.innerHTML = ridesHTML;
-
-    if (noResults) noResults.style.display = 'none';
-
-    // Afficher le compte avec les informations de pagination
-    const totalCount = pagination.total_count || allRides.length;
-    const currentPage = pagination.current_page || 1;
-    const totalPages = pagination.total_pages || 1;
-
-    if (resultsCount) {
-        resultsCount.textContent = `${totalCount} covoiturage${totalCount > 1 ? 's' : ''} trouvé${totalCount > 1 ? 's' : ''} (Page ${currentPage}/${totalPages})`;
-    }
-
-    console.log(`✅ ${allRides.length} trajets affichés (page ${currentPage}/${totalPages})`);
-}
-
-// Cette fonction est maintenant obsolète car le filtrage est fait côté serveur
-// Gardée pour la compatibilité mais redirige vers reloadWithFilters
-function applyFiltersAndDisplay() {
-    console.log('⚠️  applyFiltersAndDisplay() obsolète, redirection vers reloadWithFilters()');
-    reloadWithFilters();
-}
-
-// Afficher/masquer le spinner de chargement
-function showLoadingSpinner(show, clearRidesList = true) {
-    const spinner = document.getElementById('loadingSpinner');
-    const ridesList = document.getElementById('ridesList');
-
-    if (spinner) {
-        spinner.style.display = show ? 'block' : 'none';
-    }
-    // Ne vider la liste que si clearRidesList est true (par défaut)
-    // Utile pour ne pas vider lors de l'ouverture des détails
-    if (ridesList && show && clearRidesList) {
-        ridesList.innerHTML = '';
-    }
-}
-
-// Afficher l'état "aucun résultat"
-function showNoResults() {
-    const ridesList = document.getElementById('ridesList');
-    const noResults = document.getElementById('noResults');
-    const resultsCount = document.getElementById('resultsCount');
-    const paginationContainer = document.getElementById('pagination');
-
-    if (ridesList) ridesList.innerHTML = '';
-    if (noResults) noResults.style.display = 'block';
-    if (resultsCount) resultsCount.textContent = '0 covoiturage trouvé';
-    if (paginationContainer) paginationContainer.innerHTML = '';
-}
-
-// Mettre à jour l'interface de pagination
-function updatePaginationUI() {
-    const paginationContainer = document.getElementById('pagination');
-    if (!paginationContainer || !pagination.total_pages || pagination.total_pages <= 1) {
-        if (paginationContainer) paginationContainer.innerHTML = '';
-        return;
-    }
-
-    const currentPage = pagination.current_page || 1;
-    const totalPages = pagination.total_pages;
-    const hasPrevious = pagination.has_previous;
-    const hasNext = pagination.has_next;
-
-    let paginationHTML = '<nav aria-label="Navigation des pages"><ul class="pagination justify-content-center">';
-
-    // Bouton précédent
-    if (hasPrevious) {
-        paginationHTML += `
-            <li class="page-item">
-                <a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">
-                    <i class="fas fa-chevron-left"></i> Précédent
-                </a>
-            </li>
-        `;
-    } else {
-        paginationHTML += `
-            <li class="page-item disabled">
-                <span class="page-link"><i class="fas fa-chevron-left"></i> Précédent</span>
-            </li>
-        `;
-    }
-
-    // Numéros de page
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, currentPage + 2);
-
-    if (startPage > 1) {
-        paginationHTML += '<li class="page-item"><a class="page-link" href="#" onclick="goToPage(1)">1</a></li>';
-        if (startPage > 2) {
-            paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-        if (i === currentPage) {
-            paginationHTML += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
-        } else {
-            paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
-        }
-    }
-
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-        }
-        paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${totalPages})">${totalPages}</a></li>`;
-    }
-
-    // Bouton suivant
-    if (hasNext) {
-        paginationHTML += `
-            <li class="page-item">
-                <a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">
-                    Suivant <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>
-        `;
-    } else {
-        paginationHTML += `
-            <li class="page-item disabled">
-                <span class="page-link">Suivant <i class="fas fa-chevron-right"></i></span>
-            </li>
-        `;
-    }
-
-    paginationHTML += '</ul></nav>';
-    paginationContainer.innerHTML = paginationHTML;
-}
-
-// Naviguer vers une page spécifique
-function goToPage(page) {
-    if (page < 1 || (pagination.total_pages && page > pagination.total_pages)) {
-        return;
-    }
-
-    console.log(`📄 Navigation vers la page ${page}`);
-    loadRidesFromAPI(currentSearchParams, page, currentFilters);
-}
-
-// Initialisation avec chargement des données API
-function initializeWithAPI() {
-    console.log('🚀 Initialisation avec API réelle');
-
-    // Charger les trajets par défaut
-    loadRidesFromAPI();
-
-    // Gestionnaire de recherche
-    const searchForm = document.getElementById('searchForm');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const searchParams = {
-                from: document.getElementById('departure')?.value || '',
-                to: document.getElementById('arrival')?.value || '',
-                date: document.getElementById('date')?.value || ''
-            };
-
-            console.log('🔍 Recherche avec paramètres:', searchParams);
-            console.log('🔍 Bouton rechercher cliqué!'); // Debug log
-            alert('Recherche lancée avec: ' + JSON.stringify(searchParams)); // Debug alert
-            loadRidesFromAPI(searchParams, 1, currentFilters); // Retour à la page 1 pour une nouvelle recherche
-        });
-    }
-}
-
 // Export global pour compatibilité
 window.viewRideDetails = viewRideDetails;
 window.participateRide = participateRide;
-window.goToPage = goToPage;
-window.applyFilters = applyFiltersAndDisplay;
+window.applyFilters = applyFilters;
 window.loadRidesFromAPI = loadRidesFromAPI;
-window.initializeWithAPI = initializeWithAPI;
 
-console.log('Module EcoRide avec API réelle chargé et prêt !');
+console.log('Module EcoRide chargé et prêt !');

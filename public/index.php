@@ -1,12 +1,11 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../config/database.php';
+require_once '../vendor/autoload.php';
 
 use EcoRide\Controllers\RideController;
 use EcoRide\Controllers\AuthController;
 
-// Créer l'instance de base de données
-$db = Database::getInstance();
+// Configuration
+$config = require_once '../config/config.php';
 
 // Configuration des sessions
 ini_set('session.cookie_lifetime', 86400); // 24 heures
@@ -21,13 +20,6 @@ session_start();
 // Router simple
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
-
-// Check for ride details endpoint first (before switch)
-if (preg_match('/^\/api\/rides\/(\d+)$/', $path, $matches)) {
-    $controller = new RideController($db);
-    $controller->getRideDetails($matches[1]);
-    exit;
-}
 
 switch ($path) {
     case '/':
@@ -52,44 +44,68 @@ switch ($path) {
         include 'profil.html';
         break;
 
-    // API Routes - Rides
+    // API Routes
     case '/api/rides/create':
-        $controller = new RideController($db);
+        $controller = new RideController($config);
         $controller->createRide();
         break;
     case '/api/rides':
-        $controller = new RideController($db);
+        $controller = new RideController($config);
         $controller->getRides();
         break;
     case '/api/rides/search':
-        $controller = new RideController($db);
+        $controller = new RideController($config);
         $controller->searchRides();
         break;
 
     // Auth Routes
     case '/api/auth/login':
-        $controller = new AuthController($db);
+        $controller = new AuthController($config);
         $controller->login();
         break;
     case '/api/auth/register':
-        $controller = new AuthController($db);
+        $controller = new AuthController($config);
         $controller->register();
         break;
     case '/api/auth/logout':
-        $controller = new AuthController($db);
+        $controller = new AuthController($config);
         $controller->logout();
         break;
     case '/api/auth/profile':
-        $controller = new AuthController($db);
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->updateProfile();
-        } else {
-            $controller->getProfile();
-        }
+        $controller = new AuthController($config);
+        $controller->getProfile();
         break;
     case '/api/auth/session':
-        $controller = new AuthController($db);
+        $controller = new AuthController($config);
         $controller->checkSession();
+        break;
+
+    // Test DB endpoint
+    case '/api/test/db':
+        header('Content-Type: application/json');
+        try {
+            $controller = new AuthController($config);
+            $db = $controller->getDatabase();
+            if ($db) {
+                $stmt = $db->query("SELECT 1 as test");
+                $result = $stmt->fetch();
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Base de données accessible',
+                    'test_result' => $result['test']
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Base de données non accessible'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Erreur DB: ' . $e->getMessage()
+            ]);
+        }
         break;
 
     default:
