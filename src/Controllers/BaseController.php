@@ -26,12 +26,13 @@ class BaseController {
                 [
                     \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                     \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                    \PDO::ATTR_TIMEOUT => 5 // Timeout de 5 secondes
+                    \PDO::ATTR_TIMEOUT => 5, // Timeout de 5 secondes
+                    \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
                 ]
             );
 
             // Configurer l'encodage après la connexion
-            $this->db->exec("SET NAMES utf8mb4");
+            $this->db->exec(statement: "SET NAMES utf8mb4");
         } catch (\PDOException $e) {
             // Sur Railway, ne pas faire planter l'app si la DB n'est pas encore prête
             if (isset($_ENV['RAILWAY_ENVIRONMENT'])) {
