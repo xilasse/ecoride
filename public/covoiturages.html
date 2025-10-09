@@ -373,20 +373,38 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JavaScript -->
-    
-    <script src="./search.js?v=3"></script>
-    <script src="./main.js?v=2"></script>
+
+    <!-- Components JavaScript - ORDRE IMPORTANT -->
+    <!-- 1. État et variables globales -->
+    <script src="components/state.js"></script>
+
+    <!-- 2. Utilitaires de base -->
+    <script src="components/notifications.js"></script>
+    <script src="components/loadingSpinner.js"></script>
+    <script src="components/utils.js"></script>
+
+    <!-- 3. Fonctionnalités principales -->
+    <script src="components/participateRide.js"></script>
+    <script src="components/rideDetails.js"></script>
+    <script src="components/ridesList.js"></script>
+    <script src="components/pagination.js"></script>
+
+    <!-- 4. Filtres et tri -->
+    <script src="components/filters.js"></script>
+    <script src="components/sorting.js"></script>
+
+    <!-- 5. Initialisation -->
+    <script src="components/init.js"></script>
+
+    <!-- Autres modules -->
     <script src="./reservation-system.js"></script>
     <script src="./create-ride.js"></script>
     <script src="./auth.js"></script>
 
-    <!-- Script d'initialisation avec API réelle -->
+    <!-- Script de mise à jour de la navigation -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Initialisation de la page covoiturages avec API réelle');
-
-            // Mettre à jour la navigation
+        // Mettre à jour la navigation après chargement de la page
+        window.addEventListener('load', function() {
             if (typeof updateNavigationUI === 'function') {
                 fetch('/api/auth/session', { credentials: 'include' })
                     .then(response => response.json())
@@ -397,23 +415,6 @@
                         console.log('Utilisateur non connecté');
                     });
             }
-
-            // Initialiser avec l'API au lieu des données statiques
-            if (typeof initializeWithAPI === 'function') {
-                initializeWithAPI();
-            } else {
-                console.warn('⚠️ Fonction initializeWithAPI non trouvée, fallback vers chargement direct');
-                // Fallback : charger directement les trajets
-                if (typeof loadRidesFromAPI === 'function') {
-                    loadRidesFromAPI();
-                }
-            }
-
-            // Initialiser les autres composants
-            // NOTE: Ces initialisations sont déjà faites par search.js dans son DOMContentLoaded
-            // Ne pas les appeler ici pour éviter les doublons d'écouteurs d'événements
-
-            console.log('✅ Initialisation terminée');
         });
     </script>
 </body>
