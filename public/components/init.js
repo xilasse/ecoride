@@ -7,71 +7,18 @@
 // INITIALISATION
 // =====================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initialisation de la page Covoiturages...');
+    console.log('Initialisation de la page...');
 
-    initDateInputs();
-    initFilters();
-    initSorting();
-    initDetailButtons();
-    initSearchForm();
-    initializeWithAPI();
+    // Appeler les fonctions uniquement si elles existent
+    if (typeof initDateInputs === 'function') initDateInputs();
+    if (typeof initFilters === 'function') initFilters();
+    if (typeof initSorting === 'function') initSorting();
+    if (typeof initDetailButtons === 'function') initDetailButtons();
+    if (typeof initSearchButtons === 'function') initSearchButtons();
+    if (typeof initializeWithAPI === 'function') initializeWithAPI();
 
-    console.log('Page Covoiturages initialisée avec succès');
+    console.log('Page initialisée avec succès');
 });
-
-// Initialisation du formulaire de recherche
-function initSearchForm() {
-    const searchForm = document.getElementById('searchForm');
-    console.log(searchForm)
-    if (!searchForm) {
-        console.warn('⚠️ Formulaire de recherche non trouvé');
-        return;
-    }
-
-    const submitButton = searchForm.querySelector('button[type="submit"]');
-
-    // Gestionnaire de soumission du formulaire
-    // Mode CAPTURE pour garantir l'interception
-    searchForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const searchParams = {
-            from: document.getElementById('departure')?.value.trim() || '',
-            to: document.getElementById('arrival')?.value.trim() || '',
-            date: document.getElementById('date')?.value || ''
-        };
-
-        console.log('🔍 Recherche avec paramètres:', searchParams);
-
-        // Mettre à jour les paramètres de recherche globaux
-        window.currentSearchParams = searchParams;
-
-        // Lancer la recherche
-        if (typeof loadRidesFromAPI === 'function') {
-            loadRidesFromAPI(searchParams, 1, currentFilters);
-
-            // Notification
-            if (typeof showNotification === 'function') {
-                let message = 'Recherche lancée';
-                if (searchParams.from) message += ` depuis ${searchParams.from}`;
-                if (searchParams.to) message += ` vers ${searchParams.to}`;
-                if (searchParams.date) message += ` le ${new Date(searchParams.date).toLocaleDateString('fr-FR')}`;
-                showNotification(message, 'info');
-            }
-        }
-    }, true);
-
-    // Gestionnaire du bouton pour forcer le submit
-    if (submitButton) {
-        submitButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
-            searchForm.dispatchEvent(submitEvent);
-        });
-    }
-
-    console.log('✅ Formulaire de recherche initialisé');
-}
 
 // Initialisation avec chargement des données API
 function initializeWithAPI() {

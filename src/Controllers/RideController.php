@@ -226,6 +226,12 @@ class RideController extends BaseController {
             $limit = isset($_GET['limit']) ? max(1, min(50, intval($_GET['limit']))) : 10;
             $offset = ($page - 1) * $limit;
 
+            // Paramètres de filtrage
+            $ecoOnly = isset($_GET['eco_only']) && $_GET['eco_only'] === 'true';
+            $maxPrice = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+            $petsAllowed = isset($_GET['pets_allowed']) && $_GET['pets_allowed'] === 'true';
+            $nonSmoking = isset($_GET['non_smoking']) && $_GET['non_smoking'] === 'true';
+
             // Construction de la clause WHERE
             $whereConditions = ["r.status_id IN (1, 2)", "r.departure_datetime >= NOW()"];
             $params = [];
@@ -243,6 +249,24 @@ class RideController extends BaseController {
             if (!empty($date)) {
                 $whereConditions[] = "DATE(r.departure_datetime) = ?";
                 $params[] = $date;
+            }
+
+            // Ajouter les filtres
+            if ($ecoOnly) {
+                $whereConditions[] = "(v.is_ecological = 1 OR v.fuel_type = 'electrique')";
+            }
+
+            if ($maxPrice !== null && $maxPrice > 0) {
+                $whereConditions[] = "r.price_per_seat <= ?";
+                $params[] = $maxPrice;
+            }
+
+            if ($petsAllowed) {
+                $whereConditions[] = "r.pets_allowed = 1";
+            }
+
+            if ($nonSmoking) {
+                $whereConditions[] = "r.smoking_allowed = 0";
             }
 
             $whereClause = implode(' AND ', $whereConditions);

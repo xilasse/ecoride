@@ -19,12 +19,15 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
         if (searchParams.date) params.append('date', searchParams.date);
 
         // Ajouter les paramètres de filtrage si fournis
-        const activeFilters = filters || currentFilters;
+        const activeFilters = filters || window.currentFilters;
+        console.log('🔍 Filtres actifs utilisés:', activeFilters);
+
         if (activeFilters.ecoOnly) {
             params.append('eco_only', 'true');
         }
         if (activeFilters.maxPrice && activeFilters.maxPrice < 50) {
             params.append('max_price', activeFilters.maxPrice);
+            console.log('💰 Filtre prix appliqué:', activeFilters.maxPrice);
         }
         if (activeFilters.petsAllowed) {
             params.append('pets_allowed', 'true');
@@ -34,8 +37,8 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
         }
 
         // Ajouter le paramètre de tri
-        if (currentSort && currentSort !== 'datetime') {
-            params.append('sort_by', currentSort);
+        if (window.currentSort && window.currentSort !== 'datetime') {
+            params.append('sort_by', window.currentSort);
         }
 
         if (searchParams.from || searchParams.to || searchParams.date) {
@@ -94,18 +97,18 @@ function initFilters() {
     if (priceRange && priceValue) {
         priceRange.addEventListener('input', function() {
             priceValue.textContent = this.value + '€';
-            currentFilters.maxPrice = parseInt(this.value);
+            window.currentFilters.maxPrice = parseInt(this.value);
             reloadWithFilters();
         });
         priceValue.textContent = priceRange.value + '€';
-        currentFilters.maxPrice = parseInt(priceRange.value);
+        window.currentFilters.maxPrice = parseInt(priceRange.value);
     }
-    
+
     // Checkbox filters
     const ecoOnly = document.getElementById('ecoOnly');
     if (ecoOnly) {
         ecoOnly.addEventListener('change', function() {
-            currentFilters.ecoOnly = this.checked;
+            window.currentFilters.ecoOnly = this.checked;
             reloadWithFilters();
         });
     }
@@ -113,7 +116,7 @@ function initFilters() {
     const petsAllowed = document.getElementById('petsAllowed');
     if (petsAllowed) {
         petsAllowed.addEventListener('change', function() {
-            currentFilters.petsAllowed = this.checked;
+            window.currentFilters.petsAllowed = this.checked;
             reloadWithFilters();
         });
     }
@@ -121,16 +124,16 @@ function initFilters() {
     const smokingAllowed = document.getElementById('smokingAllowed');
     if (smokingAllowed) {
         smokingAllowed.addEventListener('change', function() {
-            currentFilters.nonSmoking = this.checked;
+            window.currentFilters.nonSmoking = this.checked;
             reloadWithFilters();
         });
     }
-    
+
     // Select filters
     const durationFilter = document.getElementById('durationFilter');
     if (durationFilter) {
         durationFilter.addEventListener('change', function() {
-            currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
+            window.currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
             reloadWithFilters();
         });
     }
@@ -138,7 +141,7 @@ function initFilters() {
     const ratingFilter = document.getElementById('ratingFilter');
     if (ratingFilter) {
         ratingFilter.addEventListener('change', function() {
-            currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
+            window.currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
             reloadWithFilters();
         });
     }
@@ -202,7 +205,7 @@ function clearAllFilters() {
     }
 
     // Reset filters object
-    currentFilters = {
+    window.currentFilters = {
         ecoOnly: false,
         maxPrice: 50,
         maxDuration: 999999,
@@ -217,14 +220,14 @@ function clearAllFilters() {
 
 // Nouvelle fonction pour recharger les données avec les filtres actuels
 function reloadWithFilters() {
-    console.log('🔄 Rechargement avec filtres:', currentFilters);
-    loadRidesFromAPI(currentSearchParams, 1, currentFilters); // Retour à la page 1 quand on change les filtres
+    console.log('🔄 Rechargement avec filtres:', window.currentFilters);
+    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters); // Retour à la page 1 quand on change les filtres
 }
 
 // Nouvelle fonction pour recharger les données avec le tri actuel
 function reloadWithSort() {
-    console.log('🔄 Rechargement avec tri:', currentSort);
-    loadRidesFromAPI(currentSearchParams, 1, currentFilters); // Retour à la page 1 quand on change le tri
+    console.log('🔄 Rechargement avec tri:', window.currentSort);
+    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters); // Retour à la page 1 quand on change le tri
 }
 
 // Afficher les trajets depuis l'API
@@ -281,7 +284,7 @@ function showNoResults() {
 // Gardée pour la compatibilité mais redirige vers reloadWithSort
 function sortRides(criteria) {
     console.log('⚠️  sortRides() obsolète, redirection vers reloadWithSort()');
-    currentSort = criteria;
+    window.currentSort = criteria;
     reloadWithSort();
 }
 
@@ -293,6 +296,7 @@ function sortRides(criteria) {
 function generateRideCardFromAPI(ride) {
     const departureDate = new Date(ride.departure_datetime);
     const departureTime = departureDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const departureDay = departureDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     // Calculer l'heure d'arrivée si disponible
     let arrivalTime = 'N/A';
@@ -344,6 +348,9 @@ function generateRideCardFromAPI(ride) {
                     </div>
 
                     <div class="route-info mb-2">
+                        <div class="mb-1">
+                            <small class="text-muted"><i class="fas fa-calendar me-1"></i>${departureDay}</small>
+                        </div>
                         <div class="d-flex align-items-center mb-2">
                             <div class="me-3">
                                 <i class="fas fa-circle text-success"></i>

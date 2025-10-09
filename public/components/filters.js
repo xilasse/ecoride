@@ -15,6 +15,8 @@ function initDateInputs() {
 }
 
 function initFilters() {
+    console.log('🔧 Initialisation des filtres, currentFilters:', window.currentFilters);
+
     // Price range slider
     const priceRange = document.getElementById('priceRange');
     const priceValue = document.getElementById('priceValue');
@@ -22,18 +24,19 @@ function initFilters() {
     if (priceRange && priceValue) {
         priceRange.addEventListener('input', function() {
             priceValue.textContent = this.value + '€';
-            currentFilters.maxPrice = parseInt(this.value);
+            window.currentFilters.maxPrice = parseInt(this.value);
+            console.log('💰 Prix changé:', window.currentFilters.maxPrice);
             reloadWithFilters();
         });
         priceValue.textContent = priceRange.value + '€';
-        currentFilters.maxPrice = parseInt(priceRange.value);
+        window.currentFilters.maxPrice = parseInt(priceRange.value);
     }
 
     // Checkbox filters
     const ecoOnly = document.getElementById('ecoOnly');
     if (ecoOnly) {
         ecoOnly.addEventListener('change', function() {
-            currentFilters.ecoOnly = this.checked;
+            window.currentFilters.ecoOnly = this.checked;
             reloadWithFilters();
         });
     }
@@ -41,7 +44,7 @@ function initFilters() {
     const petsAllowed = document.getElementById('petsAllowed');
     if (petsAllowed) {
         petsAllowed.addEventListener('change', function() {
-            currentFilters.petsAllowed = this.checked;
+            window.currentFilters.petsAllowed = this.checked;
             reloadWithFilters();
         });
     }
@@ -49,7 +52,7 @@ function initFilters() {
     const smokingAllowed = document.getElementById('smokingAllowed');
     if (smokingAllowed) {
         smokingAllowed.addEventListener('change', function() {
-            currentFilters.nonSmoking = this.checked;
+            window.currentFilters.nonSmoking = this.checked;
             reloadWithFilters();
         });
     }
@@ -58,7 +61,7 @@ function initFilters() {
     const durationFilter = document.getElementById('durationFilter');
     if (durationFilter) {
         durationFilter.addEventListener('change', function() {
-            currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
+            window.currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
             reloadWithFilters();
         });
     }
@@ -66,7 +69,7 @@ function initFilters() {
     const ratingFilter = document.getElementById('ratingFilter');
     if (ratingFilter) {
         ratingFilter.addEventListener('change', function() {
-            currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
+            window.currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
             reloadWithFilters();
         });
     }
@@ -102,7 +105,7 @@ function clearAllFilters() {
     }
 
     // Reset filters object
-    currentFilters = {
+    window.currentFilters = {
         ecoOnly: false,
         maxPrice: 50,
         maxDuration: 999999,
@@ -117,8 +120,8 @@ function clearAllFilters() {
 
 // Nouvelle fonction pour recharger les données avec les filtres actuels
 function reloadWithFilters() {
-    console.log('🔄 Rechargement avec filtres:', currentFilters);
-    loadRidesFromAPI(currentSearchParams, 1, currentFilters); // Retour à la page 1 quand on change les filtres
+    console.log('🔄 Rechargement avec filtres:', window.currentFilters);
+    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters); // Retour à la page 1 quand on change les filtres
 }
 
 // Export global
