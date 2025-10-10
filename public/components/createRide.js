@@ -123,7 +123,29 @@ function createNewRide(rideData) {
         credentials: 'include',
         body: JSON.stringify(rideData)
     })
-    .then(response => response.json())
+    .then(response => {
+        // Vérifier si l'utilisateur n'est pas connecté
+        if (response.status === 401) {
+            return response.json().then(data => {
+                // Fermer le modal
+                const createRideModal = bootstrap.Modal.getInstance(document.getElementById('createRideModal'));
+                if (createRideModal) createRideModal.hide();
+
+                // Afficher une notification d'erreur
+                if (typeof showNotification === 'function') {
+                    showNotification('Vous devez être connecté pour créer un trajet', 'danger');
+                }
+
+                // Rediriger vers la page de connexion après un court délai
+                setTimeout(() => {
+                    window.location.href = '/connexion';
+                }, 1500);
+
+                throw new Error('Authentication required');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Fermer le modal et réinitialiser le formulaire
@@ -142,9 +164,9 @@ function createNewRide(rideData) {
             if (typeof loadRidesFromAPI === 'function') {
                 loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters);
             }
-        } else {
+        } else if (data.error) {
             if (typeof showNotification === 'function') {
-                showNotification('Erreur lors de la création du trajet: ' + (data.error || 'Erreur inconnue'), 'danger');
+                showNotification('Erreur lors de la création du trajet: ' + data.error, 'danger');
             }
         }
     })

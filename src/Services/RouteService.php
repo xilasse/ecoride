@@ -16,7 +16,7 @@ class RouteService {
         // Clé API OpenRouteService (gratuite)
         // Pour obtenir une clé : https://openrouteservice.org/dev/#/signup
         $this->apiKey = 'API_KEY_HERE';
-        //$this->apiKey = $_ENV['OPENROUTE_API_KEY'] ?? 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImM2M2FmYjAwZjM5NDRjNmVhZTEyODIwMGExMDMxZWNkIiwiaCI6Im11cm11cjY0In0=';
+        //$this->apiKey = $_ENV['OPENROUTE_API_KEY'] ?? 'API_KEY_HERE';
 
         // Connexion Redis pour le cache (optionnel)
         $this->redis = null;

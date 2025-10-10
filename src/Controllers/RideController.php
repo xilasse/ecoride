@@ -11,6 +11,17 @@ class RideController extends BaseController {
         header('Content-Type: application/json');
 
         try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'error' => 'Vous devez être connecté pour créer un trajet',
+                    'redirect' => '/connexion',
+                    'requiresAuth' => true
+                ]);
+                return;
+            }
+
             // Vérifier que c'est une requête POST
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 http_response_code(405);
@@ -408,8 +419,8 @@ class RideController extends BaseController {
             $db = $this->getDatabase();
             $stmt = $db->prepare($sql);
 
-            // TODO: Remplacer par l'ID du conducteur authentifié
-            $driverId = $_SESSION['user_id'] ?? 4; // Fallback à 4 pour les tests
+            // Utiliser l'ID du conducteur authentifié (vérifié au début de createRide)
+            $driverId = $_SESSION['user_id'];
 
             $petsAllowed = (is_array($data['preferences']) && in_array('pets', $data['preferences'])) ? 1 : 0;
             $smokingAllowed = (is_array($data['preferences']) && !in_array('nosmoking', $data['preferences'])) ? 1 : 0;
@@ -443,7 +454,7 @@ class RideController extends BaseController {
         try {
             // Récupérer ou créer un véhicule
             $fuelType = $this->mapVehicleType($data['vehicleType']);
-            $driverId = $_SESSION['user_id'] ?? 4; // TODO: Remplacer par l'ID du conducteur authentifié
+            $driverId = $_SESSION['user_id'];
 
             $sql = "SELECT id FROM vehicles
                     WHERE user_id = ? AND fuel_type = ?
