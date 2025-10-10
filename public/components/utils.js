@@ -102,8 +102,6 @@ function initSearchButtons() {
         const to = document.getElementById('arrival')?.value.trim() || '';
         const date = document.getElementById('date')?.value || '';
 
-        console.log('📍 Page détectée:', pathname, '- isIndexPage:', isIndexPage);
-
         // Si on est sur index.html, rediriger vers covoiturages.html
         if (isIndexPage) {
             // Validation basique
@@ -124,14 +122,12 @@ function initSearchButtons() {
         // Sinon, on est sur covoiturages.html, lancer la recherche directement
         else {
             const searchParams = { from, to, date };
-            console.log('🔍 Recherche avec paramètres:', searchParams);
 
             // Mettre à jour les paramètres de recherche globaux
             window.currentSearchParams = searchParams;
 
             // Lancer la recherche avec les filtres actuels
             if (typeof loadRidesFromAPI === 'function') {
-                // Utiliser les filtres depuis window pour être sûr d'avoir la dernière version
                 const filters = window.currentFilters || {
                     ecoOnly: false,
                     maxPrice: 50,

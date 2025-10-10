@@ -54,7 +54,15 @@ services:
       MAIL_PORT: ${MAIL_PORT}
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-      
+
+      # Configuration Redis
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # API Keys
+      OPENROUTE_API_KEY: ${OPENROUTE_API_KEY}
+
     volumes:
       - ./:/var/www/html
       - vendor_data:/var/www/html/vendor

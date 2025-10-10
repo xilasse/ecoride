@@ -2,6 +2,13 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/database.php';
 
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
+error_log('✅ OPENROUTE_API_KEY: ' . ($_ENV['OPENROUTE_API_KEY'] ?? 'non défini'));
+
 use EcoRide\Controllers\RideController;
 use EcoRide\Controllers\AuthController;
 

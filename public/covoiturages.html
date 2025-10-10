@@ -248,13 +248,18 @@
 
                         <!-- Date et heure -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="rideDate" class="form-label">Date du trajet *</label>
                                 <input type="date" class="form-control" id="rideDate" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="rideTime" class="form-label">Heure de départ *</label>
                                 <input type="time" class="form-control" id="rideTime" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="arrivalTime" class="form-label">Heure d'arrivée <small class="text-muted">(optionnel)</small></label>
+                                <input type="time" class="form-control" id="arrivalTime" placeholder="Auto si vide">
+                                <small class="text-muted d-block">Laissez vide pour calcul auto</small>
                             </div>
                         </div>
 
@@ -393,12 +398,14 @@
     <script src="components/filters.js"></script>
     <script src="components/sorting.js"></script>
 
-    <!-- 5. Initialisation -->
+    <!-- 5. Fonctionnalités supplémentaires -->
+    <script src="components/createRide.js"></script>
+    <script src="components/reservation.js"></script>
+
+    <!-- 6. Initialisation -->
     <script src="components/init.js"></script>
 
     <!-- Autres modules -->
-    <script src="./reservation-system.js"></script>
-    <script src="./create-ride.js"></script>
     <script src="./auth.js"></script>
 
     <!-- Script de mise à jour de la navigation -->

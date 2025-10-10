@@ -7,17 +7,15 @@
 // INITIALISATION
 // =====================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initialisation de la page...');
-
     // Appeler les fonctions uniquement si elles existent
     if (typeof initDateInputs === 'function') initDateInputs();
     if (typeof initFilters === 'function') initFilters();
     if (typeof initSorting === 'function') initSorting();
     if (typeof initDetailButtons === 'function') initDetailButtons();
     if (typeof initSearchButtons === 'function') initSearchButtons();
+    if (typeof initCreateRide === 'function') initCreateRide();
+    if (typeof initReservation === 'function') initReservation();
     if (typeof initializeWithAPI === 'function') initializeWithAPI();
-
-    console.log('Page initialisée avec succès');
 });
 
 // Initialisation avec chargement des données API
@@ -30,8 +28,6 @@ function initializeWithAPI() {
 
     // S'il y a des paramètres URL, pré-remplir le formulaire et lancer la recherche
     if (from || to || date) {
-        console.log('📍 Paramètres de recherche détectés dans l\'URL');
-
         // Pré-remplir le formulaire
         if (from) {
             const departureInput = document.getElementById('departure');
@@ -53,8 +49,11 @@ function initializeWithAPI() {
             date: date || ''
         };
 
+        // Mettre à jour les paramètres de recherche globaux
+        window.currentSearchParams = searchParams;
+
         if (typeof loadRidesFromAPI === 'function') {
-            loadRidesFromAPI(searchParams, 1, currentFilters);
+            loadRidesFromAPI(searchParams, 1, window.currentFilters);
         }
     } else {
         // Charger les trajets par défaut au démarrage

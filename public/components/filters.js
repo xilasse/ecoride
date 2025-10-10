@@ -15,8 +15,6 @@ function initDateInputs() {
 }
 
 function initFilters() {
-    console.log('🔧 Initialisation des filtres, currentFilters:', window.currentFilters);
-
     // Price range slider
     const priceRange = document.getElementById('priceRange');
     const priceValue = document.getElementById('priceValue');
@@ -25,7 +23,6 @@ function initFilters() {
         priceRange.addEventListener('input', function() {
             priceValue.textContent = this.value + '€';
             window.currentFilters.maxPrice = parseInt(this.value);
-            console.log('💰 Prix changé:', window.currentFilters.maxPrice);
             reloadWithFilters();
         });
         priceValue.textContent = priceRange.value + '€';
@@ -120,8 +117,7 @@ function clearAllFilters() {
 
 // Nouvelle fonction pour recharger les données avec les filtres actuels
 function reloadWithFilters() {
-    console.log('🔄 Rechargement avec filtres:', window.currentFilters);
-    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters); // Retour à la page 1 quand on change les filtres
+    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters);
 }
 
 // Export global

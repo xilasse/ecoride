@@ -1,6 +1,5 @@
 async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
     try {
-        console.log('🔄 Chargement des trajets depuis l\'API...');
         showLoadingSpinner(true, true);
 
         currentPage = page;
@@ -20,14 +19,12 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
 
         // Ajouter les paramètres de filtrage si fournis
         const activeFilters = filters || window.currentFilters;
-        console.log('🔍 Filtres actifs utilisés:', activeFilters);
 
         if (activeFilters.ecoOnly) {
             params.append('eco_only', 'true');
         }
         if (activeFilters.maxPrice && activeFilters.maxPrice < 50) {
             params.append('max_price', activeFilters.maxPrice);
-            console.log('💰 Filtre prix appliqué:', activeFilters.maxPrice);
         }
         if (activeFilters.petsAllowed) {
             params.append('pets_allowed', 'true');
@@ -47,7 +44,6 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
             url = `/api/rides?${params.toString()}`;
         }
 
-        console.log('🌐 URL de l\'API appelée:', url); // Debug URL
         const response = await fetch(url, {
             credentials: 'include'
         });
@@ -57,13 +53,10 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
         if (data.rides) {
             allRides = data.rides;
             pagination = data.pagination || {};
-            console.log(`✅ ${allRides.length} trajets chargés (page ${pagination.current_page || 1}/${pagination.total_pages || 1})`);
 
-            // Afficher les trajets et la pagination (pas besoin d'appliquer les filtres côté client)
             displayRidesFromAPI();
             updatePaginationUI();
         } else {
-            console.error('❌ Erreur lors du chargement:', data.error);
             showNoResults();
         }
 
@@ -182,8 +175,6 @@ function initDetailButtons() {
 }
 
 function clearAllFilters() {
-    console.log('Effacement de tous les filtres');
-
     // Reset checkboxes
     const checkboxes = document.querySelectorAll('.filters-sidebar input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
@@ -220,14 +211,12 @@ function clearAllFilters() {
 
 // Nouvelle fonction pour recharger les données avec les filtres actuels
 function reloadWithFilters() {
-    console.log('🔄 Rechargement avec filtres:', window.currentFilters);
-    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters); // Retour à la page 1 quand on change les filtres
+    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters);
 }
 
 // Nouvelle fonction pour recharger les données avec le tri actuel
 function reloadWithSort() {
-    console.log('🔄 Rechargement avec tri:', window.currentSort);
-    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters); // Retour à la page 1 quand on change le tri
+    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters);
 }
 
 // Afficher les trajets depuis l'API
@@ -259,8 +248,6 @@ function displayRidesFromAPI() {
     if (resultsCount) {
         resultsCount.textContent = `${totalCount} covoiturage${totalCount > 1 ? 's' : ''} trouvé${totalCount > 1 ? 's' : ''} (Page ${currentPage}/${totalPages})`;
     }
-
-    console.log(`✅ ${allRides.length} trajets affichés (page ${currentPage}/${totalPages})`);
 }
 
 // Afficher l'état "aucun résultat"
@@ -283,7 +270,6 @@ function showNoResults() {
 // Cette fonction est maintenant obsolète car le tri est fait côté serveur
 // Gardée pour la compatibilité mais redirige vers reloadWithSort
 function sortRides(criteria) {
-    console.log('⚠️  sortRides() obsolète, redirection vers reloadWithSort()');
     window.currentSort = criteria;
     reloadWithSort();
 }
@@ -396,7 +382,6 @@ function generateRideCardFromAPI(ride) {
 // Cette fonction est maintenant obsolète car le filtrage est fait côté serveur
 // Gardée pour la compatibilité mais redirige vers reloadWithFilters
 function applyFiltersAndDisplay() {
-    console.log('⚠️  applyFiltersAndDisplay() obsolète, redirection vers reloadWithFilters()');
     reloadWithFilters();
 }
 

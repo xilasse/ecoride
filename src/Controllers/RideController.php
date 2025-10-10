@@ -3,6 +3,7 @@ namespace EcoRide\Controllers;
 
 use DateTime;
 use PDO;
+use EcoRide\Services\RouteService;
 
 class RideController extends BaseController {
 
@@ -42,6 +43,28 @@ class RideController extends BaseController {
                 return;
             }
 
+            // Calculer l'heure d'arrivée si non fournie
+            if (empty($input['arrivalTime'])) {
+                $routeService = new RouteService();
+                $arrivalData = $routeService->calculateArrivalTime(
+                    $input['from'],
+                    $input['to'],
+                    $input['date'],
+                    $input['time']
+                );
+                $input['estimated_arrival_datetime'] = $arrivalData['arrival_datetime'];
+                $input['duration_minutes'] = $arrivalData['duration_minutes'];
+            } else {
+                // Utiliser l'heure fournie par le chauffeur
+                $input['estimated_arrival_datetime'] = $input['date'] . ' ' . $input['arrivalTime'] . ':00';
+
+                // Calculer la durée
+                $departure = new DateTime($input['date'] . ' ' . $input['time']);
+                $arrival = new DateTime($input['estimated_arrival_datetime']);
+                $interval = $departure->diff($arrival);
+                $input['duration_minutes'] = ($interval->h * 60) + $interval->i;
+            }
+
             // Insérer en base de données
             $rideId = $this->saveRide($input);
 
@@ -54,8 +77,8 @@ class RideController extends BaseController {
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]); // Include details for debugging
             error_log($e->getMessage());
+            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
         }
     }
 
@@ -350,10 +373,10 @@ class RideController extends BaseController {
             return false;
         }
 
-        // Validation de la date (pas dans le passé)
-        $rideDate = new DateTime($data['date']);
-        $today = new DateTime();
-        if ($rideDate < $today) {
+        // Validation de la date et heure (pas dans le passé)
+        $rideDateTime = new DateTime($data['date'] . ' ' . $data['time']);
+        $now = new DateTime();
+        if ($rideDateTime < $now) {
             return false;
         }
 
@@ -375,11 +398,11 @@ class RideController extends BaseController {
 
             $sql = "INSERT INTO rides (
                         driver_id, vehicle_id, departure_city, arrival_city,
-                        departure_datetime, price_per_seat, available_seats,
-                        total_seats, description, departure_address,
-                        pets_allowed, smoking_allowed
+                        departure_datetime, estimated_arrival_datetime, duration_minutes,
+                        price_per_seat, available_seats, total_seats, description,
+                        departure_address, pets_allowed, smoking_allowed
                     ) VALUES (
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                     )";
 
             $db = $this->getDatabase();
@@ -388,8 +411,8 @@ class RideController extends BaseController {
             // TODO: Remplacer par l'ID du conducteur authentifié
             $driverId = $_SESSION['user_id'] ?? 4; // Fallback à 4 pour les tests
 
-            $petsAllowed = is_array($data['preferences']) ? in_array('pets', $data['preferences']) : false;
-            $smokingAllowed = is_array($data['preferences']) ? !in_array('nosmoking', $data['preferences']) : true;
+            $petsAllowed = (is_array($data['preferences']) && in_array('pets', $data['preferences'])) ? 1 : 0;
+            $smokingAllowed = (is_array($data['preferences']) && !in_array('nosmoking', $data['preferences'])) ? 1 : 0;
 
             $stmt->execute([
                 $driverId,
@@ -397,6 +420,8 @@ class RideController extends BaseController {
                 $data['from'],
                 $data['to'],
                 $departureDateTime,
+                $data['estimated_arrival_datetime'] ?? null,
+                $data['duration_minutes'] ?? null,
                 $data['price'],
                 $data['seats'],
                 $data['seats'], // total_seats = available_seats initialement
