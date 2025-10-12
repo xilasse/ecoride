@@ -36,6 +36,13 @@ if (preg_match('/^\/api\/rides\/(\d+)\/cancel$/', $path, $matches)) {
     exit;
 }
 
+// Check for ride validate payments endpoint
+if (preg_match('/^\/api\/rides\/(\d+)\/validate-payments$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->validateRidePayments($matches[1]);
+    exit;
+}
+
 // Check for vehicle endpoints
 if (preg_match('/^\/api\/vehicles\/(\d+)$/', $path, $matches)) {
     $controller = new \EcoRide\Controllers\VehicleController($db);
@@ -51,6 +58,13 @@ if (preg_match('/^\/api\/vehicles\/(\d+)$/', $path, $matches)) {
 if (preg_match('/^\/api\/reservations\/(\d+)\/cancel$/', $path, $matches)) {
     $controller = new \EcoRide\Controllers\ReservationController($db);
     $controller->cancelReservation($matches[1]);
+    exit;
+}
+
+// Check for reservation release escrow endpoint
+if (preg_match('/^\/api\/reservations\/(\d+)\/release-escrow$/', $path, $matches)) {
+    $controller = new \EcoRide\Controllers\ReservationController($db);
+    $controller->releaseEscrow($matches[1]);
     exit;
 }
 
@@ -102,6 +116,10 @@ switch ($path) {
         break;
 
     // API Routes - Reservations
+    case '/api/reservations/create':
+        $controller = new \EcoRide\Controllers\ReservationController($db);
+        $controller->createReservation();
+        break;
     case '/api/reservations/user':
         $controller = new \EcoRide\Controllers\ReservationController($db);
         $controller->getUserReservations();

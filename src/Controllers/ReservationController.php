@@ -182,18 +182,23 @@ class ReservationController extends BaseController {
             }
 
             // Validation des champs requis
-            if (empty($input['ride_id']) || empty($input['seats'])) {
+            if (empty($input['ride_id'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Trajet et nombre de places requis']);
+                echo json_encode(['error' => 'Trajet requis']);
                 return;
             }
 
             $rideId = intval($input['ride_id']);
-            $seatsRequested = intval($input['seats']);
+            $price = floatval($input['price'] ?? 0);
+            $reservationFor = !empty($input['reservation_for']) ? trim($input['reservation_for']) : null;
+            $paymentMethod = $input['payment_method'] ?? 'credits_escrow';
 
-            // Vérifier que le trajet existe et a assez de places
+            // Vérifier que le trajet existe et récupérer les informations
             $db = $this->getDatabase();
-            $sql = "SELECT * FROM rides WHERE id = ? AND status_id IN (1, 2)";
+            $sql = "SELECT r.*, u.pseudo as driver_name
+                    FROM rides r
+                    JOIN users u ON r.driver_id = u.id
+                    WHERE r.id = ? AND r.status_id IN (1, 2)";
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId]);
             $ride = $stmt->fetch();
@@ -218,7 +223,7 @@ class ReservationController extends BaseController {
             }
 
             // Vérifier les places disponibles
-            if ($ride['available_seats'] < $seatsRequested) {
+            if ($ride['available_seats'] < 1) {
                 http_response_code(400);
                 echo json_encode([
                     'success' => false,
@@ -241,26 +246,109 @@ class ReservationController extends BaseController {
                 return;
             }
 
-            // Créer la réservation
-            $sql = "INSERT INTO reservations (user_id, ride_id, seats_reserved, status_id)
-                    VALUES (?, ?, ?, 1)";
+            // Récupérer le solde de crédits de l'utilisateur
+            $sql = "SELECT credits, credits_blocked FROM users WHERE id = ?";
             $stmt = $db->prepare($sql);
-            $stmt->execute([$userId, $rideId, $seatsRequested]);
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
 
-            $reservationId = $db->lastInsertId();
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Utilisateur non trouvé'
+                ]);
+                return;
+            }
 
-            // Décrémenter le nombre de places disponibles
-            $sql = "UPDATE rides
-                    SET available_seats = available_seats - ?
-                    WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$seatsRequested, $rideId]);
+            // Vérifier que l'utilisateur a assez de crédits
+            if ($user['credits'] < $price) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Solde de crédits insuffisant',
+                    'required' => $price,
+                    'available' => $user['credits']
+                ]);
+                return;
+            }
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Réservation créée avec succès',
-                'reservationId' => $reservationId
-            ]);
+            // Démarrer une transaction
+            $db->beginTransaction();
+
+            try {
+                // 1. Bloquer les crédits (débiter du compte disponible et ajouter au compte bloqué)
+                $sql = "UPDATE users
+                        SET credits = credits - ?,
+                            credits_blocked = credits_blocked + ?
+                        WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$price, $price, $userId]);
+
+                // 2. Créer la réservation avec escrow
+                $sql = "INSERT INTO reservations (
+                            user_id, ride_id, seats_reserved, status_id, total_price,
+                            escrow_amount, escrow_status, payment_method, reservation_for
+                        ) VALUES (?, ?, 1, 2, ?, ?, 'blocked', ?, ?)";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([
+                    $userId,
+                    $rideId,
+                    $price,
+                    $price,
+                    $paymentMethod,
+                    $reservationFor
+                ]);
+
+                $reservationId = $db->lastInsertId();
+
+                // 3. Enregistrer la transaction de crédit
+                $sql = "INSERT INTO credit_transactions (
+                            user_id, amount, type, status, related_reservation_id, related_ride_id,
+                            description, escrow_related, balance_before, balance_after, completed_at
+                        ) VALUES (?, ?, 'reservation', 'completed', ?, ?, ?, TRUE, ?, ?, NOW())";
+                $stmt = $db->prepare($sql);
+                $balanceBefore = $user['credits'];
+                $balanceAfter = $user['credits'] - $price;
+                $description = "Réservation trajet {$ride['departure_city']} → {$ride['arrival_city']} - Crédits bloqués en escrow";
+                $stmt->execute([
+                    $userId,
+                    -$price, // Négatif car c'est un débit
+                    $reservationId,
+                    $rideId,
+                    $description,
+                    $balanceBefore,
+                    $balanceAfter
+                ]);
+
+                // 4. Décrémenter le nombre de places disponibles
+                $sql = "UPDATE rides
+                        SET available_seats = available_seats - 1
+                        WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$rideId]);
+
+                // Valider la transaction
+                $db->commit();
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Réservation créée avec succès',
+                    'reservationId' => $reservationId,
+                    'escrow' => [
+                        'amount' => $price,
+                        'status' => 'blocked',
+                        'message' => 'Vos crédits sont sécurisés et seront versés au conducteur 24-48h après le trajet'
+                    ],
+                    'newBalance' => $balanceAfter,
+                    'blockedCredits' => floatval($user['credits_blocked']) + $price
+                ]);
+
+            } catch (Exception $e) {
+                // Annuler la transaction en cas d'erreur
+                $db->rollBack();
+                throw $e;
+            }
 
         } catch (Exception $e) {
             http_response_code(500);
@@ -269,7 +357,134 @@ class ReservationController extends BaseController {
                 'error' => 'Erreur lors de la création de la réservation',
                 'details' => $e->getMessage()
             ]);
-            error_log($e->getMessage());
+            error_log('Erreur createReservation: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Libère l'escrow et transfère les crédits au conducteur
+     * Appelé automatiquement 24-48h après la fin du trajet
+     */
+    public function releaseEscrow($reservationId) {
+        header('Content-Type: application/json');
+
+        try {
+            $reservationId = intval($reservationId);
+            $db = $this->getDatabase();
+
+            // Récupérer la réservation avec les infos du trajet et du conducteur
+            $sql = "SELECT res.*, r.driver_id, r.departure_city, r.arrival_city, r.estimated_arrival_datetime
+                    FROM reservations res
+                    JOIN rides r ON res.ride_id = r.id
+                    WHERE res.id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$reservationId]);
+            $reservation = $stmt->fetch();
+
+            if (!$reservation) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Réservation non trouvée'
+                ]);
+                return;
+            }
+
+            // Vérifier que l'escrow est toujours bloqué
+            if ($reservation['escrow_status'] !== 'blocked') {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'L\'escrow a déjà été traité',
+                    'current_status' => $reservation['escrow_status']
+                ]);
+                return;
+            }
+
+            $escrowAmount = floatval($reservation['escrow_amount']);
+            $passengerId = $reservation['user_id'];
+            $driverId = $reservation['driver_id'];
+
+            // Démarrer une transaction
+            $db->beginTransaction();
+
+            try {
+                // 1. Débloquer les crédits du passager
+                $sql = "UPDATE users
+                        SET credits_blocked = credits_blocked - ?
+                        WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$escrowAmount, $passengerId]);
+
+                // 2. Créditer le conducteur
+                $sql = "SELECT credits FROM users WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$driverId]);
+                $driver = $stmt->fetch();
+
+                if (!$driver) {
+                    throw new Exception('Conducteur non trouvé');
+                }
+
+                $sql = "UPDATE users
+                        SET credits = credits + ?,
+                            total_credits_earned = total_credits_earned + ?
+                        WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$escrowAmount, $escrowAmount, $driverId]);
+
+                // 3. Mettre à jour la réservation
+                $sql = "UPDATE reservations
+                        SET escrow_status = 'released',
+                            escrow_released_at = NOW(),
+                            status_id = 5
+                        WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$reservationId]);
+
+                // 4. Enregistrer la transaction pour le conducteur
+                $sql = "INSERT INTO credit_transactions (
+                            user_id, amount, type, status, related_reservation_id, related_ride_id,
+                            description, escrow_related, balance_before, balance_after, completed_at
+                        ) VALUES (?, ?, 'payout', 'completed', ?, ?, ?, TRUE, ?, ?, NOW())";
+                $stmt = $db->prepare($sql);
+                $balanceBefore = $driver['credits'];
+                $balanceAfter = $driver['credits'] + $escrowAmount;
+                $description = "Paiement trajet {$reservation['departure_city']} → {$reservation['arrival_city']} - Escrow libéré";
+                $stmt->execute([
+                    $driverId,
+                    $escrowAmount,
+                    $reservationId,
+                    $reservation['ride_id'],
+                    $description,
+                    $balanceBefore,
+                    $balanceAfter
+                ]);
+
+                // Valider la transaction
+                $db->commit();
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Escrow libéré avec succès',
+                    'amount' => $escrowAmount,
+                    'driver_id' => $driverId,
+                    'driver_new_balance' => $balanceAfter
+                ]);
+
+            } catch (Exception $e) {
+                $db->rollBack();
+                throw $e;
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la libération de l\'escrow',
+                'details' => $e->getMessage()
+            ]);
+            error_log('Erreur releaseEscrow: ' . $e->getMessage());
         }
     }
 

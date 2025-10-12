@@ -8,11 +8,14 @@ DROP TRIGGER IF EXISTS prevent_self_booking;
 DROP PROCEDURE IF EXISTS BookRide;
 DROP VIEW IF EXISTS user_stats;
 DROP VIEW IF EXISTS ride_details;
+DROP TABLE IF EXISTS credit_transactions;
 DROP TABLE IF EXISTS user_preferences;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS reservations;
+DROP TABLE IF EXISTS reservation_statuses;
 DROP TABLE IF EXISTS rides;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS ride_statuses;
@@ -51,7 +54,13 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL,
     pseudo VARCHAR(100) NOT NULL UNIQUE,
     role_id INT NOT NULL DEFAULT 3, -- 3 = utilisateur par défaut
-    credits INT DEFAULT 20,
+
+    -- Système de crédits avec escrow
+    credits DECIMAL(10,2) DEFAULT 100.00, -- Crédits disponibles (1 crédit = 1€)
+    credits_blocked DECIMAL(10,2) DEFAULT 0.00, -- Crédits bloqués en escrow
+    total_credits_earned DECIMAL(10,2) DEFAULT 0.00, -- Total des crédits gagnés (conducteur)
+    total_credits_spent DECIMAL(10,2) DEFAULT 0.00, -- Total des crédits dépensés (passager)
+
     is_driver BOOLEAN DEFAULT FALSE,
     is_passenger BOOLEAN DEFAULT TRUE,
     profile_picture VARCHAR(255) NULL,
@@ -67,12 +76,17 @@ CREATE TABLE users (
     total_rides_as_passenger INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (role_id) REFERENCES user_roles(id),
     INDEX idx_email (email),
     INDEX idx_pseudo (pseudo),
     INDEX idx_role (role_id),
-    INDEX idx_active (is_active)
+    INDEX idx_active (is_active),
+    INDEX idx_credits (credits),
+    INDEX idx_credits_blocked (credits_blocked),
+
+    CONSTRAINT chk_credits_positive CHECK (credits >= 0),
+    CONSTRAINT chk_credits_blocked_positive CHECK (credits_blocked >= 0)
 );
 
 -- Table des véhicules
@@ -159,10 +173,24 @@ CREATE TABLE reservations (
     seats_reserved TINYINT NOT NULL DEFAULT 1,
     status_id INT NOT NULL DEFAULT 1,
     total_price DECIMAL(8,2) NOT NULL,
+
+    -- Système d'escrow (paiement sécurisé)
+    escrow_amount DECIMAL(10,2) NOT NULL, -- Montant bloqué
+    escrow_status ENUM('blocked', 'released', 'refunded') DEFAULT 'blocked', -- Statut de l'escrow
+    payment_method VARCHAR(50) DEFAULT 'credits_escrow', -- Méthode de paiement
+    reservation_for VARCHAR(255) NULL, -- Nom de la personne pour qui la réservation est faite
+
+    -- Politique d'annulation
+    cancellation_policy TEXT NULL, -- Politique d'annulation applicable
+    refund_amount DECIMAL(10,2) NULL, -- Montant remboursé en cas d'annulation
+    refund_percentage INT NULL, -- Pourcentage de remboursement
+    compensation_amount DECIMAL(10,2) NULL, -- Compensation au conducteur en cas d'annulation
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     cancelled_at DATETIME NULL,
     cancellation_reason TEXT NULL,
+    escrow_released_at DATETIME NULL, -- Date de libération de l'escrow
 
     FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -174,9 +202,12 @@ CREATE TABLE reservations (
     INDEX idx_created_at (created_at),
     INDEX idx_reservation_user_date (user_id, created_at),
     INDEX idx_reservation_ride_status (ride_id, status_id),
+    INDEX idx_escrow_status (escrow_status),
+    INDEX idx_payment_method (payment_method),
 
     CONSTRAINT chk_seats_reserved CHECK (seats_reserved >= 1),
-    CONSTRAINT chk_reservation_price CHECK (total_price >= 0)
+    CONSTRAINT chk_reservation_price CHECK (total_price >= 0),
+    CONSTRAINT chk_escrow_amount CHECK (escrow_amount >= 0)
 );
 
 -- Table des réservations (ancien format - pour compatibilité)
@@ -289,12 +320,54 @@ CREATE TABLE notifications (
     action_url VARCHAR(500) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_at DATETIME NULL,
-    
+
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user (user_id),
     INDEX idx_unread (is_read),
     INDEX idx_type (notification_type),
     INDEX idx_created (created_at)
+);
+
+-- Table des transactions de crédits (système d'escrow)
+CREATE TABLE credit_transactions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL, -- Montant (positif = crédit, négatif = débit)
+    type ENUM('purchase', 'reservation', 'refund', 'payout', 'commission', 'penalty', 'bonus', 'adjustment') NOT NULL,
+    status ENUM('pending', 'completed', 'failed', 'cancelled') DEFAULT 'pending',
+
+    -- Informations de transaction
+    related_reservation_id INT NULL, -- Lien vers la réservation si applicable
+    related_ride_id INT NULL, -- Lien vers le trajet si applicable
+    description TEXT NOT NULL,
+
+    -- Détails escrow
+    escrow_related BOOLEAN DEFAULT FALSE, -- Si la transaction est liée à un escrow
+    balance_before DECIMAL(10,2) NULL, -- Solde avant transaction
+    balance_after DECIMAL(10,2) NULL, -- Solde après transaction
+
+    -- Audit
+    created_by INT NULL, -- Utilisateur ou admin qui a créé la transaction
+    processed_by INT NULL, -- Admin qui a validé (si applicable)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (related_reservation_id) REFERENCES reservations(id) ON DELETE SET NULL,
+    FOREIGN KEY (related_ride_id) REFERENCES rides(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL,
+
+    INDEX idx_user (user_id),
+    INDEX idx_type (type),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at),
+    INDEX idx_reservation (related_reservation_id),
+    INDEX idx_ride (related_ride_id),
+    INDEX idx_user_date (user_id, created_at),
+    INDEX idx_escrow (escrow_related),
+
+    CONSTRAINT chk_amount_not_zero CHECK (amount != 0)
 );
 
 -- ========================================
@@ -404,12 +477,12 @@ INSERT INTO rides (driver_id, vehicle_id, departure_city, departure_address, arr
 (6, 4, 'Laval', 'Château', 'Alençon', 'Dentelle', '2025-12-03 08:45:00', '2025-12-03 10:00:00', 21.00, 3, 4, 75, 95, 'Laval-Alençon Mayenne-Orne', FALSE, TRUE),
 (6, 5, 'Montauban', 'Place Nationale', 'Auch', 'Cathédrale', '2025-12-04 15:30:00', '2025-12-04 17:00:00', 23.00, 4, 4, 90, 110, 'Montauban-Auch Gers', FALSE, TRUE);
 
--- Réservations (nouvelle table)
-INSERT INTO reservations (ride_id, user_id, seats_reserved, status_id, total_price) VALUES
-(1, 7, 1, 2, 35.00), -- Pierre réserve le trajet Paris-Lyon de Marie
-(1, 8, 1, 2, 35.00), -- Claire réserve aussi le trajet Paris-Lyon
-(2, 7, 1, 2, 28.00), -- Pierre réserve Lyon-Marseille
-(3, 8, 2, 2, 84.00); -- Claire réserve 2 places Paris-Bordeaux
+-- Réservations (nouvelle table avec escrow)
+INSERT INTO reservations (ride_id, user_id, seats_reserved, status_id, total_price, escrow_amount, escrow_status, payment_method, reservation_for) VALUES
+(1, 7, 1, 2, 35.00, 35.00, 'blocked', 'credits_escrow', 'Pierre Durand'), -- Pierre réserve le trajet Paris-Lyon de Marie
+(1, 8, 1, 2, 35.00, 35.00, 'blocked', 'credits_escrow', 'Claire Moreau'), -- Claire réserve aussi le trajet Paris-Lyon
+(2, 7, 1, 2, 28.00, 28.00, 'blocked', 'credits_escrow', 'Pierre Durand'), -- Pierre réserve Lyon-Marseille
+(3, 8, 2, 2, 84.00, 84.00, 'blocked', 'credits_escrow', 'Claire Moreau'); -- Claire réserve 2 places Paris-Bordeaux
 
 -- Réservations (ancienne table bookings pour compatibilité)
 INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price, booking_status, is_passenger_validated, is_driver_validated) VALUES
@@ -417,6 +490,25 @@ INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price, booking_
 (1, 8, 1, 35.00, 'confirmed', FALSE, FALSE),
 (2, 7, 1, 28.00, 'confirmed', FALSE, FALSE),
 (3, 8, 2, 84.00, 'confirmed', FALSE, FALSE);
+
+-- Transactions de crédits (exemples avec escrow)
+INSERT INTO credit_transactions (user_id, amount, type, status, related_reservation_id, related_ride_id, description, escrow_related, balance_before, balance_after, completed_at) VALUES
+-- Pierre bloque 35 crédits pour Paris-Lyon
+(7, -35.00, 'reservation', 'completed', 1, 1, 'Réservation trajet Paris-Lyon - Crédits bloqués en escrow', TRUE, 100.00, 65.00, NOW()),
+-- Pierre bloque 28 crédits pour Lyon-Marseille
+(7, -28.00, 'reservation', 'completed', 3, 2, 'Réservation trajet Lyon-Marseille - Crédits bloqués en escrow', TRUE, 65.00, 37.00, NOW()),
+-- Claire bloque 35 crédits pour Paris-Lyon
+(8, -35.00, 'reservation', 'completed', 2, 1, 'Réservation trajet Paris-Lyon - Crédits bloqués en escrow', TRUE, 100.00, 65.00, NOW()),
+-- Claire bloque 84 crédits pour Paris-Bordeaux (2 places)
+(8, -84.00, 'reservation', 'completed', 4, 3, 'Réservation trajet Paris-Bordeaux (2 places) - Crédits bloqués en escrow', TRUE, 65.00, -19.00, NOW()),
+-- Achat de crédits par l'admin (exemple)
+(1, 1000.00, 'purchase', 'completed', NULL, NULL, 'Achat initial de crédits - Administrateur', FALSE, 0.00, 1000.00, NOW()),
+-- Bonus de bienvenue pour les nouveaux utilisateurs
+(4, 100.00, 'bonus', 'completed', NULL, NULL, 'Bonus de bienvenue - Nouveau conducteur', FALSE, 0.00, 100.00, NOW()),
+(5, 100.00, 'bonus', 'completed', NULL, NULL, 'Bonus de bienvenue - Nouveau conducteur', FALSE, 0.00, 100.00, NOW()),
+(6, 100.00, 'bonus', 'completed', NULL, NULL, 'Bonus de bienvenue - Nouveau conducteur', FALSE, 0.00, 100.00, NOW()),
+(7, 100.00, 'bonus', 'completed', NULL, NULL, 'Bonus de bienvenue - Nouveau passager', FALSE, 0.00, 100.00, NOW()),
+(8, 100.00, 'bonus', 'completed', NULL, NULL, 'Bonus de bienvenue - Nouveau passager', FALSE, 0.00, 100.00, NOW());
 
 -- Préférences utilisateur pour les chauffeurs
 INSERT INTO user_preferences (user_id, preference_key, preference_value, is_mandatory) VALUES 

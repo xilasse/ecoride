@@ -139,7 +139,8 @@ class AuthController extends BaseController {
                         'id' => $user['id'],
                         'pseudo' => $user['pseudo'],
                         'email' => $user['email'],
-                        'credits' => $user['credits']
+                        'credits' => $user['credits'],
+                        'credits_blocked' => $user['credits_blocked'] ?? 0
                     ]
                 ]);
             } else {
@@ -217,7 +218,8 @@ class AuthController extends BaseController {
                         'id' => $user['id'],
                         'pseudo' => $user['pseudo'],
                         'email' => $user['email'],
-                        'credits' => $user['credits']
+                        'credits' => $user['credits'],
+                        'credits_blocked' => $user['credits_blocked'] ?? 0
                     ]
                 ]);
             } else {
@@ -270,6 +272,7 @@ class AuthController extends BaseController {
                         'profile_picture' => $user['profile_picture'],
                         'role_id' => $user['role_id'],
                         'credits' => $user['credits'],
+                        'credits_blocked' => $user['credits_blocked'] ?? 0,
                         'rating' => $user['rating_average'],
                         'totalRidesAsDriver' => $user['total_rides_as_driver'],
                         'totalRidesAsPassenger' => $user['total_rides_as_passenger']
@@ -290,19 +293,42 @@ class AuthController extends BaseController {
 
         $isLoggedIn = isset($_SESSION['is_logged_in']) && $_SESSION['is_logged_in'];
 
-        echo json_encode([
-            'isLoggedIn' => $isLoggedIn,
-            'user' => $isLoggedIn ? [
-                'id' => $_SESSION['user_id'],
-                'pseudo' => $_SESSION['user_pseudo'],
-                'email' => $_SESSION['user_email']
-            ] : null
-        ]);
+        if ($isLoggedIn) {
+            // Récupérer les informations complètes depuis la BDD pour avoir les crédits à jour
+            $user = $this->getUserById($_SESSION['user_id']);
+
+            if ($user) {
+                echo json_encode([
+                    'isLoggedIn' => true,
+                    'user' => [
+                        'id' => $user['id'],
+                        'pseudo' => $user['pseudo'],
+                        'email' => $user['email'],
+                        'credits' => $user['credits'],
+                        'credits_blocked' => $user['credits_blocked'] ?? 0,
+                        'role_id' => $user['role_id']
+                    ]
+                ]);
+            } else {
+                // Session invalide, détruire la session
+                $_SESSION = [];
+                session_destroy();
+                echo json_encode([
+                    'isLoggedIn' => false,
+                    'user' => null
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'isLoggedIn' => false,
+                'user' => null
+            ]);
+        }
     }
 
     private function authenticateUser($email, $password) {
         $db = $this->getDatabase();
-        $sql = "SELECT id, email, password_hash, pseudo, role_id, credits, rating_average,
+        $sql = "SELECT id, email, password_hash, pseudo, role_id, credits, credits_blocked, rating_average,
                        total_rides_as_driver, total_rides_as_passenger, is_active
                 FROM users
                 WHERE email = ? AND is_active = 1";
@@ -367,7 +393,7 @@ class AuthController extends BaseController {
     private function getUserById($userId) {
         $db = $this->getDatabase();
         $sql = "SELECT id, email, pseudo, phone, city, birthdate, gender, bio,
-                       role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger,
+                       role_id, credits, credits_blocked, rating_average, total_rides_as_driver, total_rides_as_passenger,
                        profile_picture
                 FROM users
                 WHERE id = ? AND is_active = 1";

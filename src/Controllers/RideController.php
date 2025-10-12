@@ -558,7 +558,13 @@ class RideController extends BaseController {
                         v.brand, v.model, v.color, v.fuel_type, v.is_ecological,
                         (SELECT COUNT(*) FROM reservations res
                          WHERE res.ride_id = r.id
-                         AND res.status_id IN (1, 2)) as confirmed_passengers
+                         AND res.status_id IN (1, 2)) as confirmed_passengers,
+                        (SELECT COUNT(*) FROM reservations res
+                         WHERE res.ride_id = r.id
+                         AND res.escrow_status = 'blocked') as pending_escrow_count,
+                        (SELECT SUM(res.escrow_amount) FROM reservations res
+                         WHERE res.ride_id = r.id
+                         AND res.escrow_status = 'blocked') as pending_escrow_amount
                     FROM rides r
                     JOIN users u ON r.driver_id = u.id
                     JOIN vehicles v ON r.vehicle_id = v.id
@@ -653,6 +659,196 @@ class RideController extends BaseController {
             4 => 'cancelled'
         ];
         return $statuses[$statusId] ?? 'pending';
+    }
+
+    public function validateRidePayments($rideId) {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $rideId = intval($rideId);
+            $db = $this->getDatabase();
+
+            // Vérifier que le trajet appartient à l'utilisateur
+            $sql = "SELECT r.*, r.departure_datetime
+                    FROM rides r
+                    WHERE r.id = ? AND r.driver_id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId, $userId]);
+            $ride = $stmt->fetch();
+
+            if (!$ride) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
+                ]);
+                return;
+            }
+
+            // Vérifier que le trajet est terminé depuis 24h
+            $departureDate = new DateTime($ride['departure_datetime']);
+            $now = new DateTime();
+            $hoursSinceDeparture = ($now->getTimestamp() - $departureDate->getTimestamp()) / 3600;
+
+            if ($hoursSinceDeparture < 24) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Le paiement ne peut être validé que 24h après le départ',
+                    'hours_remaining' => ceil(24 - $hoursSinceDeparture)
+                ]);
+                return;
+            }
+
+            // Récupérer toutes les réservations avec escrow bloqué pour ce trajet
+            $sql = "SELECT res.id, res.user_id, res.escrow_amount
+                    FROM reservations res
+                    WHERE res.ride_id = ? AND res.escrow_status = 'blocked'";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+            $reservations = $stmt->fetchAll();
+
+            if (count($reservations) === 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Aucun paiement en attente pour ce trajet'
+                ]);
+                return;
+            }
+
+            $totalAmount = 0;
+            $successCount = 0;
+            $errorCount = 0;
+
+            // Traiter chaque réservation
+            foreach ($reservations as $reservation) {
+                $db->beginTransaction();
+
+                try {
+                    $escrowAmount = floatval($reservation['escrow_amount']);
+                    $passengerId = $reservation['user_id'];
+
+                    // Calculer la commission (2 crédits fixes ou 10% du montant, ce qui est le plus petit)
+                    $commission = min(2.0, $escrowAmount * 0.10);
+                    $driverAmount = $escrowAmount - $commission;
+
+                    // 1. Débloquer les crédits du passager
+                    $sql = "UPDATE users
+                            SET credits_blocked = credits_blocked - ?
+                            WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$escrowAmount, $passengerId]);
+
+                    // 2. Créditer le conducteur (montant après commission)
+                    $sql = "SELECT credits FROM users WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$userId]);
+                    $driver = $stmt->fetch();
+
+                    if (!$driver) {
+                        throw new Exception('Conducteur non trouvé');
+                    }
+
+                    $balanceBefore = floatval($driver['credits']);
+
+                    $sql = "UPDATE users
+                            SET credits = credits + ?,
+                                total_credits_earned = total_credits_earned + ?
+                            WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$driverAmount, $driverAmount, $userId]);
+
+                    $balanceAfter = $balanceBefore + $driverAmount;
+
+                    // 3. Créditer l'admin avec la commission (user_id = 1 pour l'admin)
+                    $adminId = 1; // ID du compte admin
+                    $sql = "UPDATE users
+                            SET credits = credits + ?
+                            WHERE id = ? AND role_id = 1";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$commission, $adminId]);
+
+                    // 3. Mettre à jour la réservation
+                    $sql = "UPDATE reservations
+                            SET escrow_status = 'released',
+                                escrow_released_at = NOW(),
+                                status_id = 5
+                            WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$reservation['id']]);
+
+                    // 4. Enregistrer la transaction pour le conducteur
+                    $sql = "INSERT INTO credit_transactions (
+                                user_id, amount, type, status, related_reservation_id, related_ride_id,
+                                description, escrow_related, balance_before, balance_after, completed_at
+                            ) VALUES (?, ?, 'payout', 'completed', ?, ?, ?, TRUE, ?, ?, NOW())";
+                    $stmt = $db->prepare($sql);
+                    $description = "Paiement trajet {$ride['departure_city']} → {$ride['arrival_city']} - Validation manuelle (après commission {$commission}€)";
+                    $stmt->execute([
+                        $userId,
+                        $driverAmount,
+                        $reservation['id'],
+                        $rideId,
+                        $description,
+                        $balanceBefore,
+                        $balanceAfter
+                    ]);
+
+                    // 5. Enregistrer la transaction de commission pour l'admin
+                    $sql = "INSERT INTO credit_transactions (
+                                user_id, amount, type, status, related_reservation_id, related_ride_id,
+                                description, escrow_related, completed_at
+                            ) VALUES (?, ?, 'commission', 'completed', ?, ?, ?, TRUE, NOW())";
+                    $stmt = $db->prepare($sql);
+                    $commissionDesc = "Commission trajet {$ride['departure_city']} → {$ride['arrival_city']}";
+                    $stmt->execute([
+                        $adminId,
+                        $commission,
+                        $reservation['id'],
+                        $rideId,
+                        $commissionDesc
+                    ]);
+
+                    $db->commit();
+                    $totalAmount += $driverAmount;
+                    $successCount++;
+
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    error_log('Erreur validation paiement réservation #' . $reservation['id'] . ': ' . $e->getMessage());
+                    $errorCount++;
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => "Paiement validé avec succès",
+                'total_amount' => $totalAmount,
+                'reservations_processed' => $successCount,
+                'errors' => $errorCount
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la validation du paiement',
+                'details' => $e->getMessage()
+            ]);
+            error_log('Erreur validateRidePayments: ' . $e->getMessage());
+        }
     }
 
     private function buildOrderClause($sortBy) {

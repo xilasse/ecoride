@@ -174,7 +174,7 @@ function showRideModal(ride) {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="fas fa-times me-2"></i>Fermer
                         </button>
-                        <button type="button" class="btn btn-success" onclick="participateRide(${ride.id})">
+                        <button type="button" class="btn btn-success" onclick="participateRide(${ride.id}, ${ride.price}, ${ride.seatsAvailable})">
                             <i class="fas fa-check me-2"></i>Participer au covoiturage
                         </button>
                     </div>
