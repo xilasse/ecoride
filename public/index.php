@@ -22,10 +22,35 @@ session_start();
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
 
-// Check for ride details endpoint first (before switch)
+// Check for dynamic ride endpoints first (before switch)
 if (preg_match('/^\/api\/rides\/(\d+)$/', $path, $matches)) {
     $controller = new RideController($db);
     $controller->getRideDetails($matches[1]);
+    exit;
+}
+
+// Check for ride cancel endpoint
+if (preg_match('/^\/api\/rides\/(\d+)\/cancel$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->cancelRide($matches[1]);
+    exit;
+}
+
+// Check for vehicle endpoints
+if (preg_match('/^\/api\/vehicles\/(\d+)$/', $path, $matches)) {
+    $controller = new \EcoRide\Controllers\VehicleController($db);
+    if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        $controller->deleteVehicle($matches[1]);
+    } else {
+        $controller->getVehicle($matches[1]);
+    }
+    exit;
+}
+
+// Check for reservation cancel endpoint
+if (preg_match('/^\/api\/reservations\/(\d+)\/cancel$/', $path, $matches)) {
+    $controller = new \EcoRide\Controllers\ReservationController($db);
+    $controller->cancelReservation($matches[1]);
     exit;
 }
 
@@ -61,9 +86,25 @@ switch ($path) {
         $controller = new RideController($db);
         $controller->getRides();
         break;
+    case '/api/rides/user':
+        $controller = new RideController($db);
+        $controller->getUserRides();
+        break;
     case '/api/rides/search':
         $controller = new RideController($db);
         $controller->searchRides();
+        break;
+
+    // API Routes - Vehicles
+    case '/api/vehicles/user':
+        $controller = new \EcoRide\Controllers\VehicleController($db);
+        $controller->getUserVehicles();
+        break;
+
+    // API Routes - Reservations
+    case '/api/reservations/user':
+        $controller = new \EcoRide\Controllers\ReservationController($db);
+        $controller->getUserReservations();
         break;
 
     // Auth Routes
@@ -90,6 +131,10 @@ switch ($path) {
     case '/api/auth/session':
         $controller = new AuthController($db);
         $controller->checkSession();
+        break;
+    case '/api/auth/upload-avatar':
+        $controller = new AuthController($db);
+        $controller->uploadAvatar();
         break;
 
     default:

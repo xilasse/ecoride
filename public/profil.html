@@ -50,8 +50,8 @@
         <div class="container">
             <div class="profile-header-content">
                 <div class="profile-picture">
-                    <img src="/api/placeholder/100/100" alt="Photo de profil" id="profileAvatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <div class="profile-placeholder">👤</div>
+                    <img src="" alt="Photo de profil" id="profileAvatar" style="display: none;">
+                    <div class="profile-placeholder" id="profilePlaceholder">👤</div>
                 </div>
                 <div class="profile-info">
                     <h1 id="profileUserName"></h1>
@@ -77,13 +77,13 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="rides-tab" data-bs-toggle="tab" data-bs-target="#rides" type="button" role="tab">
-                        🚗 Mes trajets
+                    <button class="nav-link" id="created-rides-tab" data-bs-toggle="tab" data-bs-target="#created-rides" type="button" role="tab">
+                        🚗 Trajets créés
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations" type="button" role="tab">
-                        📅 Réservations
+                    <button class="nav-link" id="joined-rides-tab" data-bs-toggle="tab" data-bs-target="#joined-rides" type="button" role="tab">
+                        🎫 Trajets rejoints
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -104,8 +104,71 @@
             <!-- Onglet Informations -->
             <div class="tab-pane fade show active" id="info" role="tabpanel">
                 <div class="profile-content-card">
-                    <h3>Informations personnelles</h3>
-                    <form id="profileForm" class="profile-form">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>Informations personnelles</h3>
+                        <button class="btn btn-outline-primary" id="editProfileBtn" onclick="toggleEditMode()">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                    </div>
+
+                    <!-- Mode Lecture -->
+                    <div id="profileViewMode">
+                        <div class="profile-info-section">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Pseudo</label>
+                                        <div class="info-value" id="viewPseudo">-</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Email</label>
+                                        <div class="info-value" id="viewEmail">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Téléphone</label>
+                                        <div class="info-value" id="viewPhone">Non renseigné</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Ville</label>
+                                        <div class="info-value" id="viewCity">Non renseigné</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Date de naissance</label>
+                                        <div class="info-value" id="viewBirthdate">Non renseigné</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <label class="info-label">Genre</label>
+                                        <div class="info-value" id="viewGender">Non spécifié</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="info-item">
+                                        <label class="info-label">Bio</label>
+                                        <div class="info-value" id="viewBio">Aucune bio renseignée</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Édition -->
+                    <form id="profileForm" class="profile-form" style="display: none;">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -155,20 +218,23 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Adresse complète</label>
-                            <input type="text" class="form-control" id="profileAddress" placeholder="Adresse complète (optionnel)">
-                        </div>
-                        <div class="form-group">
                             <label>Bio</label>
                             <textarea class="form-control" id="profileBio" rows="3" placeholder="Parlez-nous de vous..."></textarea>
                         </div>
-                        <button type="submit" class="btn btn-success">💾 Enregistrer</button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="toggleEditMode()">
+                                <i class="fas fa-times"></i> Annuler
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Onglet Mes trajets -->
-            <div class="tab-pane fade" id="rides" role="tabpanel">
+            <!-- Onglet Trajets créés -->
+            <div class="tab-pane fade" id="created-rides" role="tabpanel">
                 <div class="profile-content-card">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h3>Mes trajets proposés</h3>
@@ -184,17 +250,17 @@
                 </div>
             </div>
 
-            <!-- Onglet Réservations -->
-            <div class="tab-pane fade" id="reservations" role="tabpanel">
+            <!-- Onglet Trajets rejoints -->
+            <div class="tab-pane fade" id="joined-rides" role="tabpanel">
                 <div class="profile-content-card">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3>Mes réservations</h3>
-                        <a href="covoiturages.html" class="btn btn-success">🔍 Rechercher</a>
+                        <h3>Trajets auxquels je participe</h3>
+                        <a href="covoiturages.html" class="btn btn-success">🔍 Rechercher un trajet</a>
                     </div>
-                    <div id="myReservationsList">
+                    <div id="myJoinedRidesList">
                         <div class="empty-state">
-                            <h5>📅 Aucune réservation</h5>
-                            <p>Vous n'avez pas encore réservé de trajet.</p>
+                            <h5>🎫 Aucune participation</h5>
+                            <p>Vous n'avez pas encore rejoint de trajet.</p>
                             <a href="covoiturages.html" class="btn btn-primary">Rechercher un trajet</a>
                         </div>
                     </div>
@@ -258,6 +324,15 @@
     <!-- Auth JS -->
     <script src="./auth.js"></script>
 
+    <!-- Components JS -->
+    <script src="./components/avatarUtils.js"></script>
+    <script src="./components/notifications.js"></script>
+    <script src="./components/profile.js"></script>
+    <script src="./components/userRides.js"></script>
+    <script src="./components/userJoinedRides.js"></script>
+    <script src="./components/vehicles.js"></script>
+    <script src="./components/rideDetails.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Initialisation de la page profil');
@@ -267,7 +342,12 @@
                 .then(response => response.json())
                 .then(data => {
                     if (!data.isLoggedIn) {
-                        window.location.href = 'connexion.html';
+                        if (typeof showNotification === 'function') {
+                            showNotification('Veuillez vous connecter pour accéder à cette page', 'error');
+                        }
+                        setTimeout(() => {
+                            window.location.href = 'connexion.html';
+                        }, 2000);
                         return;
                     }
 
@@ -281,11 +361,34 @@
                 })
                 .catch(error => {
                     console.error('❌ Erreur session:', error);
-                    window.location.href = 'connexion.html';
+                    if (typeof showNotification === 'function') {
+                        showNotification('Erreur de connexion au serveur', 'error');
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'connexion.html';
+                    }, 2000);
                 });
 
             // Charger les données du profil
-            loadProfileData();
+            if (typeof loadProfileData === 'function') {
+                loadProfileData();
+            }
+
+            // Initialiser le formulaire de profil
+            if (typeof initProfileForm === 'function') {
+                initProfileForm();
+            }
+
+            // Initialiser les onglets pour charger les données au clic
+            if (typeof initUserRidesTab === 'function') {
+                initUserRidesTab();
+            }
+            if (typeof initUserJoinedRidesTab === 'function') {
+                initUserJoinedRidesTab();
+            }
+            if (typeof initVehiclesTab === 'function') {
+                initVehiclesTab();
+            }
 
             // Initialiser les dropdowns Bootstrap après mise à jour de la navigation
             setTimeout(() => {
@@ -299,162 +402,6 @@
                 console.log('✅ Dropdowns Bootstrap initialisés');
             }, 1000);
         });
-
-        function loadProfileData() {
-            console.log('📋 Chargement des données du profil');
-
-            fetch('/api/auth/profile', {
-                credentials: 'include'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.user) {
-                    const user = data.user;
-
-                    // Informations de base
-                    document.getElementById('profileUserName').textContent = user.pseudo || 'Utilisateur';
-                    document.getElementById('profileUserEmail').textContent = user.email || '';
-                    document.getElementById('profilePseudo').value = user.pseudo || '';
-                    document.getElementById('profileEmailDisplay').value = user.email || '';
-
-                    // Informations personnelles depuis la base de données
-                    document.getElementById('profilePhone').value = user.phone || '';
-                    document.getElementById('profileBio').value = user.bio || '';
-
-                    // Gestion de l'adresse (extraction ville depuis address_user)
-                    if (user.address) {
-                        document.getElementById('profileAddress').value = user.address;
-                        // Extraire la ville de l'adresse complète
-                        const addressParts = user.address.split(',');
-                        const city = addressParts.length > 1 ? addressParts[addressParts.length - 1].trim() : user.address;
-                        document.getElementById('profileCity').value = city;
-                    }
-
-                    // Statistiques
-                    document.getElementById('profileCredits').textContent = user.credits || '0';
-                    document.getElementById('profileRating').textContent = user.rating || '0.0';
-
-                    // Calcul du total des trajets (chauffeur + passager)
-                    const totalRidesDriver = user.totalRidesAsDriver || 0;
-                    const totalRidesPassenger = user.totalRidesAsPassenger || 0;
-                    const totalRides = totalRidesDriver + totalRidesPassenger;
-                    document.getElementById('profileTotalRides').textContent = totalRides;
-
-                    // Affichage du rôle
-                    const roleNames = {1: 'Administrateur', 2: 'Employé', 3: 'Utilisateur', 4: 'Visiteur'};
-                    const roleName = roleNames[user.role_id] || 'Utilisateur';
-                    document.getElementById('profileRoleDisplay').textContent = roleName;
-
-                    // Mise à jour des informations de genre et date de naissance si disponibles
-                    if (user.birthdate) {
-                        const birthdateInput = document.getElementById('profileBirthdate');
-                        if (birthdateInput) {
-                            birthdateInput.value = user.birthdate;
-                        }
-                    }
-
-                    if (user.gender) {
-                        const genderSelect = document.getElementById('profileGender');
-                        if (genderSelect) {
-                            genderSelect.value = user.gender;
-                        }
-                    }
-
-                    console.log('✅ Données du profil chargées:', user);
-                } else {
-                    console.error('❌ Erreur dans la réponse:', data);
-                    if (!data.success) {
-                        // Si pas connecté, rediriger
-                        window.location.href = 'connexion.html';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('❌ Erreur lors du chargement du profil:', error);
-                // En cas d'erreur réseau, rediriger vers la connexion
-                window.location.href = 'connexion.html';
-            });
-        }
-
-        // Gestion du formulaire de profil
-        document.getElementById('profileForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            saveProfile();
-        });
-
-        function saveProfile() {
-            console.log('💾 Sauvegarde du profil...');
-
-            const profileData = {
-                phone: document.getElementById('profilePhone').value,
-                address: document.getElementById('profileAddress').value,
-                birthdate: document.getElementById('profileBirthdate').value,
-                gender: document.getElementById('profileGender').value,
-                bio: document.getElementById('profileBio').value
-            };
-
-            fetch('/api/auth/profile', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(profileData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Afficher un message de succès
-                    showMessage('✅ Profil mis à jour avec succès !', 'success');
-                    // Recharger les données du profil
-                    loadProfileData();
-                } else {
-                    showMessage('❌ Erreur: ' + (data.error || 'Erreur inconnue'), 'error');
-                }
-            })
-            .catch(error => {
-                console.error('❌ Erreur lors de la sauvegarde:', error);
-                showMessage('❌ Erreur de réseau lors de la sauvegarde', 'error');
-            });
-        }
-
-        function showMessage(message, type) {
-            // Créer un élément de notification
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-            alert.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-
-            // Insérer au début du contenu du profil
-            const profileContent = document.querySelector('.profile-content-card');
-            profileContent.insertBefore(alert, profileContent.firstChild);
-
-            // Supprimer automatiquement après 5 secondes
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.remove();
-                }
-            }, 5000);
-        }
-
-        // Fonctions de gestion
-        function editProfile() {
-            console.log('Édition du profil');
-        }
-
-        function addVehicle() {
-            console.log('Ajout d\'un véhicule');
-        }
-
-        function changePassword() {
-            console.log('Changement de mot de passe');
-        }
-
-        function deactivateAccount() {
-            console.log('Désactivation du compte');
-        }
     </script>
 </body>
 </html>

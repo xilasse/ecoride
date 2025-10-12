@@ -56,7 +56,7 @@ CREATE TABLE users (
     is_passenger BOOLEAN DEFAULT TRUE,
     profile_picture VARCHAR(255) NULL,
     phone VARCHAR(20) NULL,
-    address_user TEXT NULL,
+    city VARCHAR(255) NULL,
     birthdate DATE NULL,
     gender ENUM('male', 'female', 'other', 'prefer_not_to_say') NULL,
     bio TEXT NULL,
@@ -143,7 +143,43 @@ CREATE TABLE rides (
     CONSTRAINT chk_dates CHECK (estimated_arrival_datetime IS NULL OR estimated_arrival_datetime > departure_datetime)
 );
 
--- Table des réservations
+-- Table des statuts de réservation
+CREATE TABLE reservation_statuses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    status_name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table des réservations (participations aux trajets)
+CREATE TABLE reservations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    ride_id INT NOT NULL,
+    user_id INT NOT NULL,
+    seats_reserved TINYINT NOT NULL DEFAULT 1,
+    status_id INT NOT NULL DEFAULT 1,
+    total_price DECIMAL(8,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    cancelled_at DATETIME NULL,
+    cancellation_reason TEXT NULL,
+
+    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (status_id) REFERENCES reservation_statuses(id),
+    UNIQUE KEY unique_user_ride (ride_id, user_id),
+    INDEX idx_ride (ride_id),
+    INDEX idx_user (user_id),
+    INDEX idx_status (status_id),
+    INDEX idx_created_at (created_at),
+    INDEX idx_reservation_user_date (user_id, created_at),
+    INDEX idx_reservation_ride_status (ride_id, status_id),
+
+    CONSTRAINT chk_seats_reserved CHECK (seats_reserved >= 1),
+    CONSTRAINT chk_reservation_price CHECK (total_price >= 0)
+);
+
+-- Table des réservations (ancien format - pour compatibilité)
 CREATE TABLE bookings (
     id INT PRIMARY KEY AUTO_INCREMENT,
     ride_id INT NOT NULL,
@@ -163,7 +199,7 @@ CREATE TABLE bookings (
     is_driver_validated BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
     FOREIGN KEY (passenger_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY unique_passenger_ride (ride_id, passenger_id),
@@ -171,7 +207,7 @@ CREATE TABLE bookings (
     INDEX idx_passenger (passenger_id),
     INDEX idx_status (booking_status),
     INDEX idx_booking_date (booking_date),
-    
+
     CONSTRAINT chk_seats_booked CHECK (seats_booked >= 1),
     CONSTRAINT chk_total_price CHECK (total_price >= 0)
 );
@@ -273,13 +309,21 @@ INSERT INTO user_roles (id, role_name, description) VALUES
 (4, 'visitor', 'Visiteur - accès limité en lecture seule');
 
 -- Statuts des covoiturages
-INSERT INTO ride_statuses (status_name, description) VALUES 
+INSERT INTO ride_statuses (status_name, description) VALUES
 ('created', 'Covoiturage créé, en attente de participants'),
 ('confirmed', 'Covoiturage confirmé avec des participants'),
 ('started', 'Covoiturage en cours'),
 ('completed', 'Covoiturage terminé avec succès'),
 ('cancelled', 'Covoiturage annulé'),
 ('dispute', 'Covoiturage en litige');
+
+-- Statuts des réservations
+INSERT INTO reservation_statuses (id, status_name, description) VALUES
+(1, 'pending', 'Réservation en attente de confirmation'),
+(2, 'confirmed', 'Réservation confirmée par le conducteur'),
+(3, 'rejected', 'Réservation refusée par le conducteur'),
+(4, 'cancelled', 'Réservation annulée'),
+(5, 'completed', 'Trajet terminé');
 
 -- ========================================
 -- INSERTION DES DONNÉES DE TEST
@@ -360,12 +404,19 @@ INSERT INTO rides (driver_id, vehicle_id, departure_city, departure_address, arr
 (6, 4, 'Laval', 'Château', 'Alençon', 'Dentelle', '2025-12-03 08:45:00', '2025-12-03 10:00:00', 21.00, 3, 4, 75, 95, 'Laval-Alençon Mayenne-Orne', FALSE, TRUE),
 (6, 5, 'Montauban', 'Place Nationale', 'Auch', 'Cathédrale', '2025-12-04 15:30:00', '2025-12-04 17:00:00', 23.00, 4, 4, 90, 110, 'Montauban-Auch Gers', FALSE, TRUE);
 
--- Réservations
-INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price, is_passenger_validated, is_driver_validated) VALUES 
-(1, 7, 1, 35.00, FALSE, FALSE), -- Pierre réserve le trajet Paris-Lyon de Marie
-(1, 8, 1, 35.00, FALSE, FALSE), -- Claire réserve aussi le trajet Paris-Lyon
-(2, 7, 1, 28.00, FALSE, FALSE), -- Pierre réserve Lyon-Marseille
-(3, 8, 2, 84.00, FALSE, FALSE); -- Claire réserve 2 places Paris-Bordeaux
+-- Réservations (nouvelle table)
+INSERT INTO reservations (ride_id, user_id, seats_reserved, status_id, total_price) VALUES
+(1, 7, 1, 2, 35.00), -- Pierre réserve le trajet Paris-Lyon de Marie
+(1, 8, 1, 2, 35.00), -- Claire réserve aussi le trajet Paris-Lyon
+(2, 7, 1, 2, 28.00), -- Pierre réserve Lyon-Marseille
+(3, 8, 2, 2, 84.00); -- Claire réserve 2 places Paris-Bordeaux
+
+-- Réservations (ancienne table bookings pour compatibilité)
+INSERT INTO bookings (ride_id, passenger_id, seats_booked, total_price, booking_status, is_passenger_validated, is_driver_validated) VALUES
+(1, 7, 1, 35.00, 'confirmed', FALSE, FALSE),
+(1, 8, 1, 35.00, 'confirmed', FALSE, FALSE),
+(2, 7, 1, 28.00, 'confirmed', FALSE, FALSE),
+(3, 8, 2, 84.00, 'confirmed', FALSE, FALSE);
 
 -- Préférences utilisateur pour les chauffeurs
 INSERT INTO user_preferences (user_id, preference_key, preference_value, is_mandatory) VALUES 

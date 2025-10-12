@@ -900,11 +900,12 @@ body {
             color: var(--eco-secondary);
         }
 
-        .tab-content {
+        /* Onglets personnalisés pour la page connexion UNIQUEMENT */
+        .login-card .tab-content {
             display: none;
         }
 
-        .tab-content.active {
+        .login-card .tab-content.active {
             display: block;
         }
 
@@ -1439,9 +1440,9 @@ body {
 }
 
 .profile-tabs .nav-link {
-    background: none;
-    border: none;
-    color: var(--eco-primary);
+    background: white;
+    border: 2px solid var(--eco-light);
+    color: var(--eco-primary) !important;
     font-weight: 600;
     padding: 15px 25px;
     margin: 0 5px;
@@ -1452,13 +1453,14 @@ body {
 
 .profile-tabs .nav-link:hover {
     background: var(--eco-light);
-    color: var(--eco-primary);
+    color: var(--eco-primary) !important;
     transform: translateY(-2px);
 }
 
 .profile-tabs .nav-link.active {
-    background: var(--eco-primary);
-    color: white;
+    background: var(--eco-primary) !important;
+    color: white !important;
+    border: 2px solid var(--eco-primary);
     border-bottom: 3px solid var(--eco-accent);
 }
 
@@ -1470,6 +1472,8 @@ body {
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     margin-bottom: 30px;
     border: 1px solid var(--eco-light);
+    min-height: 200px; /* Forcer une hauteur minimale */
+    overflow: visible; /* S'assurer que le contenu n'est pas coupé */
 }
 
 .profile-content-card h3 {
@@ -1522,6 +1526,58 @@ body {
     font-size: 1.1rem;
 }
 
+/* Cartes de trajet utilisateur dans le profil */
+#myRidesList {
+    min-height: 100px;
+    overflow: visible;
+    display: block !important;
+}
+
+.user-ride-card {
+    margin-bottom: 20px;
+    display: block;
+    min-height: 50px;
+}
+
+.user-ride-card .card {
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    background: white;
+    display: block;
+}
+
+.user-ride-card .card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.user-ride-card .card-body {
+    padding: 25px;
+    background: white;
+    color: var(--eco-primary);
+}
+
+.user-ride-card .card-title {
+    color: var(--eco-primary);
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.user-ride-card .route-info {
+    background: var(--eco-white);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid var(--eco-light);
+}
+
+.user-ride-card .ride-stats {
+    background: rgba(127, 176, 105, 0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
 /* Sections paramètres */
 .settings-section {
     margin-bottom: 30px;
@@ -1560,6 +1616,38 @@ body {
 .settings-item p {
     margin: 5px 0 0 0;
     color: #6c757d;
+}
+
+/* Mode lecture des informations */
+.profile-info-section .info-item {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--eco-white) 0%, rgba(215, 239, 199, 0.1) 100%);
+    border-radius: 12px;
+    border: 1px solid var(--eco-light);
+    transition: all 0.3s ease;
+}
+
+.profile-info-section .info-item:hover {
+    background: var(--eco-white);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.profile-info-section .info-label {
+    display: block;
+    font-weight: 600;
+    color: var(--eco-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.profile-info-section .info-value {
+    font-size: 1.1rem;
+    color: var(--eco-primary);
+    font-weight: 500;
+    word-wrap: break-word;
 }
 
 /* Responsive */

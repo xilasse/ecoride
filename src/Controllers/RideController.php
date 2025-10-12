@@ -2,6 +2,7 @@
 namespace EcoRide\Controllers;
 
 use DateTime;
+use Exception;
 use PDO;
 use EcoRide\Services\RouteService;
 
@@ -533,6 +534,125 @@ class RideController extends BaseController {
         $numbers = sprintf('%03d', rand(100, 999));
         $letters2 = chr(rand(65, 90)) . chr(rand(65, 90));
         return $letters1 . '-' . $numbers . '-' . $letters2;
+    }
+
+    public function getUserRides() {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+
+            $sql = "SELECT
+                        r.*,
+                        u.pseudo as driver_name,
+                        v.brand, v.model, v.color, v.fuel_type, v.is_ecological,
+                        (SELECT COUNT(*) FROM reservations res
+                         WHERE res.ride_id = r.id
+                         AND res.status_id IN (1, 2)) as confirmed_passengers
+                    FROM rides r
+                    JOIN users u ON r.driver_id = u.id
+                    JOIN vehicles v ON r.vehicle_id = v.id
+                    WHERE r.driver_id = ?
+                    ORDER BY r.departure_datetime DESC";
+
+            $db = $this->getDatabase();
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$userId]);
+            $rides = $stmt->fetchAll();
+
+            // Ajouter le statut en texte
+            foreach ($rides as &$ride) {
+                $ride['status'] = $this->getRideStatus($ride['status_id']);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'rides' => $rides
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la récupération des trajets',
+                'details' => $e->getMessage()
+            ]);
+            error_log($e->getMessage());
+        }
+    }
+
+    public function cancelRide($rideId) {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $rideId = intval($rideId);
+
+            // Vérifier que le trajet appartient à l'utilisateur
+            $sql = "SELECT id FROM rides WHERE id = ? AND driver_id = ?";
+            $db = $this->getDatabase();
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId, $userId]);
+            $ride = $stmt->fetch();
+
+            if (!$ride) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
+                ]);
+                return;
+            }
+
+            // Mettre à jour le statut à "annulé" (status_id = 4)
+            $sql = "UPDATE rides SET status_id = 4 WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Trajet annulé avec succès'
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de l\'annulation',
+                'details' => $e->getMessage()
+            ]);
+            error_log($e->getMessage());
+        }
+    }
+
+    private function getRideStatus($statusId) {
+        $statuses = [
+            1 => 'pending',
+            2 => 'confirmed',
+            3 => 'completed',
+            4 => 'cancelled'
+        ];
+        return $statuses[$statusId] ?? 'pending';
     }
 
     private function buildOrderClause($sortBy) {

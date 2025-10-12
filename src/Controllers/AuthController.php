@@ -6,22 +6,119 @@ use DateTime;
 
 class AuthController extends BaseController {
 
+    // Constantes de validation
+    private const ALLOWED_GENDERS = ['male', 'female', 'other', 'prefer_not_to_say'];
+    private const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    private const IMAGE_EXTENSION_MAP = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp'
+    ];
+    private const MAX_AVATAR_SIZE = 2097152; // 2MB en bytes
+    private const MIN_IMAGE_DIMENSION = 50;
+    private const MAX_IMAGE_DIMENSION = 4000;
+
+    /**
+     * Vérifie que la requête est POST
+     */
+    private function ensurePostMethod() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Méthode non autorisée']);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Parse et valide le JSON de la requête
+     */
+    private function parseJsonInput() {
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Données JSON invalides']);
+            return false;
+        }
+        return $input;
+    }
+
+    /**
+     * Vérifie que l'utilisateur est connecté
+     */
+    private function ensureAuthenticated() {
+        if (!isset($_SESSION['is_logged_in']) || !$_SESSION['is_logged_in']) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Non connecté']);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Créer une session pour un utilisateur
+     */
+    private function createUserSession($user) {
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_pseudo'] = $user['pseudo'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_role'] = $user['role_id'];
+        $_SESSION['is_logged_in'] = true;
+        $_SESSION['login_time'] = time();
+    }
+
+    /**
+     * Valide une date de naissance
+     */
+    private function validateBirthdate($birthdate) {
+        if (empty($birthdate)) {
+            return true; // Optionnel
+        }
+        $date = DateTime::createFromFormat('Y-m-d', $birthdate);
+        if (!$date || $date->format('Y-m-d') !== $birthdate) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Format de date de naissance invalide (YYYY-MM-DD)']);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Valide un genre
+     */
+    private function validateGender($gender) {
+        if (empty($gender)) {
+            return true; // Optionnel
+        }
+        if (!in_array($gender, self::ALLOWED_GENDERS)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Genre invalide']);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Gère les erreurs de manière centralisée
+     */
+    private function handleError(Exception $e, $context = '') {
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Erreur interne du serveur',
+            'details' => $e->getMessage()
+        ]);
+        error_log($context . ': ' . $e->getMessage());
+    }
+
     public function login() {
         header('Content-Type: application/json');
 
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                http_response_code(405);
-                echo json_encode(['error' => 'Méthode non autorisée']);
-                return;
-            }
+            if (!$this->ensurePostMethod()) return;
 
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Données JSON invalides']);
-                return;
-            }
+            $input = $this->parseJsonInput();
+            if ($input === false) return;
 
             if (empty($input['email']) || empty($input['password'])) {
                 http_response_code(400);
@@ -32,15 +129,7 @@ class AuthController extends BaseController {
             $user = $this->authenticateUser($input['email'], $input['password']);
 
             if ($user) {
-                // Créer la session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_pseudo'] = $user['pseudo'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_role'] = $user['role_id'];
-                $_SESSION['is_logged_in'] = true;
-                $_SESSION['login_time'] = time();
-
-                // Mettre à jour la dernière connexion
+                $this->createUserSession($user);
                 $this->updateLastLogin($user['id']);
 
                 echo json_encode([
@@ -59,9 +148,7 @@ class AuthController extends BaseController {
             }
 
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]); // Include details for debugging
-            error_log($e->getMessage());
+            $this->handleError($e, 'Login');
         }
     }
 
@@ -69,18 +156,10 @@ class AuthController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                http_response_code(405);
-                echo json_encode(['error' => 'Méthode non autorisée']);
-                return;
-            }
+            if (!$this->ensurePostMethod()) return;
 
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Données JSON invalides']);
-                return;
-            }
+            $input = $this->parseJsonInput();
+            if ($input === false) return;
 
             if (empty($input['email']) || empty($input['password']) || empty($input['pseudo'])) {
                 http_response_code(400);
@@ -88,7 +167,7 @@ class AuthController extends BaseController {
                 return;
             }
 
-            // Validation
+            // Validation des champs obligatoires
             if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Email invalide']);
@@ -107,21 +186,9 @@ class AuthController extends BaseController {
                 return;
             }
 
-            // Validation optionnelle des champs supplémentaires
-            if (!empty($input['birthdate'])) {
-                $birthdate = DateTime::createFromFormat('Y-m-d', $input['birthdate']);
-                if (!$birthdate || $birthdate->format('Y-m-d') !== $input['birthdate']) {
-                    http_response_code(400);
-                    echo json_encode(['error' => 'Format de date de naissance invalide (YYYY-MM-DD)']);
-                    return;
-                }
-            }
-
-            if (!empty($input['gender']) && !in_array($input['gender'], ['male', 'female', 'other', 'prefer_not_to_say'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Genre invalide']);
-                return;
-            }
+            // Validation des champs optionnels
+            if (!$this->validateBirthdate($input['birthdate'] ?? '')) return;
+            if (!$this->validateGender($input['gender'] ?? '')) return;
 
             if (!empty($input['phone']) && !preg_match('/^(\+33|0)[1-9](\d{8})$/', $input['phone'])) {
                 http_response_code(400);
@@ -140,14 +207,8 @@ class AuthController extends BaseController {
             $userId = $this->createUser($input);
 
             if ($userId) {
-                // Connexion automatique après inscription
                 $user = $this->getUserById($userId);
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_pseudo'] = $user['pseudo'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_role'] = $user['role_id'];
-                $_SESSION['is_logged_in'] = true;
-                $_SESSION['login_time'] = time();
+                $this->createUserSession($user);
 
                 echo json_encode([
                     'success' => true,
@@ -165,9 +226,7 @@ class AuthController extends BaseController {
             }
 
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
-            error_log($e->getMessage());
+            $this->handleError($e, 'Register');
         }
     }
 
@@ -175,7 +234,6 @@ class AuthController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            // Nettoyer les variables de session
             $_SESSION = [];
             session_destroy();
 
@@ -185,9 +243,7 @@ class AuthController extends BaseController {
             ]);
 
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erreur lors de la déconnexion', 'details' => $e->getMessage()]);
-            error_log($e->getMessage());
+            $this->handleError($e, 'Logout');
         }
     }
 
@@ -195,11 +251,7 @@ class AuthController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            if (!isset($_SESSION['is_logged_in']) || !$_SESSION['is_logged_in']) {
-                http_response_code(401);
-                echo json_encode(['error' => 'Non connecté']);
-                return;
-            }
+            if (!$this->ensureAuthenticated()) return;
 
             $user = $this->getUserById($_SESSION['user_id']);
 
@@ -211,10 +263,12 @@ class AuthController extends BaseController {
                         'pseudo' => $user['pseudo'],
                         'email' => $user['email'],
                         'phone' => $user['phone'],
-                        'address' => $user['address'],
+                        'city' => $user['city'],
                         'birthdate' => $user['birthdate'],
                         'gender' => $user['gender'],
                         'bio' => $user['bio'],
+                        'profile_picture' => $user['profile_picture'],
+                        'role_id' => $user['role_id'],
                         'credits' => $user['credits'],
                         'rating' => $user['rating_average'],
                         'totalRidesAsDriver' => $user['total_rides_as_driver'],
@@ -227,9 +281,7 @@ class AuthController extends BaseController {
             }
 
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
-            error_log($e->getMessage());
+            $this->handleError($e, 'GetProfile');
         }
     }
 
@@ -280,13 +332,13 @@ class AuthController extends BaseController {
 
             // Préparer les données optionnelles
             $phone = !empty($data['phone']) ? $data['phone'] : null;
-            $address_user = !empty($data['address_user']) ? $data['address_user'] : null;
+            $city = !empty($data['city']) ? $data['city'] : null;
             $birthdate = !empty($data['birthdate']) ? $data['birthdate'] : null;
             $gender = !empty($data['gender']) ? $data['gender'] : null;
             $bio = !empty($data['bio']) ? $data['bio'] : null;
 
             $sql = "INSERT INTO users (
-                        email, password_hash, pseudo, phone, address_user,
+                        email, password_hash, pseudo, phone, city,
                         birthdate, gender, bio, role_id, credits, is_active, is_verified
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 3, 20, 1, 0)";
 
@@ -298,7 +350,7 @@ class AuthController extends BaseController {
                 $passwordHash,
                 $data['pseudo'],
                 $phone,
-                $address_user,
+                $city,
                 $birthdate,
                 $gender,
                 $bio
@@ -314,8 +366,9 @@ class AuthController extends BaseController {
 
     private function getUserById($userId) {
         $db = $this->getDatabase();
-        $sql = "SELECT id, email, pseudo, phone, address_user, birthdate, gender, bio,
-                       role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger
+        $sql = "SELECT id, email, pseudo, phone, city, birthdate, gender, bio,
+                       role_id, credits, rating_average, total_rides_as_driver, total_rides_as_passenger,
+                       profile_picture
                 FROM users
                 WHERE id = ? AND is_active = 1";
 
@@ -328,54 +381,27 @@ class AuthController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                http_response_code(405);
-                echo json_encode(['error' => 'Méthode non autorisée']);
-                return;
-            }
+            if (!$this->ensurePostMethod()) return;
+            if (!$this->ensureAuthenticated()) return;
 
-            if (!isset($_SESSION['is_logged_in']) || !$_SESSION['is_logged_in']) {
-                http_response_code(401);
-                echo json_encode(['error' => 'Non connecté']);
-                return;
-            }
+            $input = $this->parseJsonInput();
+            if ($input === false) return;
 
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            // Validation des champs
+            if (!empty($input['phone']) && strlen($input['phone']) < 8) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Données JSON invalides']);
+                echo json_encode(['error' => 'Numéro de téléphone trop court']);
                 return;
             }
 
-            $userId = $_SESSION['user_id'];
-            $db = $this->getDatabase();
-
-            // Validation optionnelle des champs
-            if (!empty($input['phone']) && !preg_match('/^(\+33|0)[1-9](\d{8})$/', $input['phone'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Numéro de téléphone invalide']);
-                return;
-            }
-
-            if (!empty($input['birthdate'])) {
-                $birthdate = DateTime::createFromFormat('Y-m-d', $input['birthdate']);
-                if (!$birthdate || $birthdate->format('Y-m-d') !== $input['birthdate']) {
-                    http_response_code(400);
-                    echo json_encode(['error' => 'Format de date de naissance invalide (YYYY-MM-DD)']);
-                    return;
-                }
-            }
-
-            if (!empty($input['gender']) && !in_array($input['gender'], ['male', 'female', 'other', 'prefer_not_to_say'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Genre invalide']);
-                return;
-            }
+            if (!$this->validateBirthdate($input['birthdate'] ?? '')) return;
+            if (!$this->validateGender($input['gender'] ?? '')) return;
 
             // Mise à jour du profil
+            $db = $this->getDatabase();
             $sql = "UPDATE users SET
                         phone = ?,
-                        address_user = ?,
+                        city = ?,
                         birthdate = ?,
                         gender = ?,
                         bio = ?,
@@ -384,12 +410,12 @@ class AuthController extends BaseController {
 
             $stmt = $db->prepare($sql);
             $result = $stmt->execute([
-                $input['phone'] ?? null,
-                $input['address'] ?? null,
-                $input['birthdate'] ?? null,
-                $input['gender'] ?? null,
-                $input['bio'] ?? null,
-                $userId
+                !empty($input['phone']) ? $input['phone'] : null,
+                !empty($input['city']) ? $input['city'] : null,
+                !empty($input['birthdate']) ? $input['birthdate'] : null,
+                !empty($input['gender']) ? $input['gender'] : null,
+                !empty($input['bio']) ? $input['bio'] : null,
+                $_SESSION['user_id']
             ]);
 
             if ($result) {
@@ -403,9 +429,123 @@ class AuthController extends BaseController {
             }
 
         } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Erreur interne du serveur', 'details' => $e->getMessage()]);
-            error_log($e->getMessage());
+            $this->handleError($e, 'UpdateProfile');
+        }
+    }
+
+    public function uploadAvatar() {
+        header('Content-Type: application/json');
+
+        try {
+            if (!$this->ensurePostMethod()) return;
+            if (!$this->ensureAuthenticated()) return;
+
+            // Vérifier qu'un fichier a été uploadé
+            if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Aucun fichier uploadé ou erreur d\'upload']);
+                return;
+            }
+
+            $file = $_FILES['avatar'];
+            $userId = $_SESSION['user_id'];
+
+            // Vérifier le type de fichier avec finfo (MIME type réel)
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+
+            if (!in_array($mimeType, self::ALLOWED_IMAGE_TYPES)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Type de fichier non autorisé. Utilisez JPG, PNG, GIF ou WebP.']);
+                return;
+            }
+
+            // Mapper le MIME type vers une extension sécurisée
+            $extension = self::IMAGE_EXTENSION_MAP[$mimeType];
+
+            // Vérifier la taille
+            if ($file['size'] > self::MAX_AVATAR_SIZE) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Le fichier ne doit pas dépasser 2MB']);
+                return;
+            }
+
+            // Vérifier que c'est vraiment une image valide
+            $imageInfo = @getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Le fichier n\'est pas une image valide']);
+                return;
+            }
+
+            // Vérifier les dimensions
+            list($width, $height) = $imageInfo;
+            if ($width < self::MIN_IMAGE_DIMENSION || $height < self::MIN_IMAGE_DIMENSION) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => "L'image doit faire au moins {self::MIN_IMAGE_DIMENSION}x{self::MIN_IMAGE_DIMENSION} pixels"]);
+                return;
+            }
+            if ($width > self::MAX_IMAGE_DIMENSION || $height > self::MAX_IMAGE_DIMENSION) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => "L'image ne doit pas dépasser {self::MAX_IMAGE_DIMENSION}x{self::MAX_IMAGE_DIMENSION} pixels"]);
+                return;
+            }
+
+            // Générer un nom de fichier basé sur l'ID utilisateur (extension contrôlée par nous)
+            $filename = 'user_' . $userId . '.' . $extension;
+            $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
+            $uploadPath = $uploadDir . $filename;
+
+            // Créer le dossier s'il n'existe pas
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            // Supprimer l'ancien avatar s'il existe
+            $db = $this->getDatabase();
+            $sql = "SELECT profile_picture FROM users WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+
+            if ($user && !empty($user['profile_picture'])) {
+                $oldAvatarPath = $uploadDir . $user['profile_picture'];
+                if (file_exists($oldAvatarPath)) {
+                    if (unlink($oldAvatarPath)) {
+                        error_log("✅ Ancien avatar supprimé: {$user['profile_picture']}");
+                    } else {
+                        error_log("⚠️ Impossible de supprimer l'ancien avatar: {$user['profile_picture']}");
+                    }
+                }
+            }
+
+            // Déplacer le fichier uploadé
+            if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                // Mettre à jour la base de données
+                $sql = "UPDATE users SET profile_picture = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $result = $stmt->execute([$filename, $userId]);
+
+                if ($result) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Avatar mis à jour avec succès',
+                        'avatarUrl' => '/uploads/avatars/' . $filename
+                    ]);
+                } else {
+                    // Supprimer le fichier si la BDD n'a pas été mise à jour
+                    @unlink($uploadPath);
+                    http_response_code(500);
+                    echo json_encode(['success' => false, 'error' => 'Erreur lors de la mise à jour de la base de données']);
+                }
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Erreur lors de l\'enregistrement du fichier']);
+            }
+
+        } catch (Exception $e) {
+            $this->handleError($e, 'UploadAvatar');
         }
     }
 

@@ -32,6 +32,12 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
         if (activeFilters.nonSmoking) {
             params.append('non_smoking', 'true');
         }
+        if (activeFilters.maxDuration && activeFilters.maxDuration < 999999) {
+            params.append('max_duration', activeFilters.maxDuration);
+        }
+        if (activeFilters.minRating && activeFilters.minRating > 0) {
+            params.append('min_rating', activeFilters.minRating);
+        }
 
         // Ajouter le paramètre de tri
         if (window.currentSort && window.currentSort !== 'datetime') {
@@ -68,156 +74,7 @@ async function loadRidesFromAPI(searchParams = {}, page = 1, filters = null) {
     }
 }
 
-// NOTE: L'initialisation (DOMContentLoaded) est maintenant dans init.js
-// Ne pas dupliquer ici pour éviter les conflits
-
-function initDateInputs() {
-    const dateInput = document.getElementById('date');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.min = today;
-        if (!dateInput.value) {
-            dateInput.value = today;
-        }
-    }
-}
-
-function initFilters() {
-    // Price range slider
-    const priceRange = document.getElementById('priceRange');
-    const priceValue = document.getElementById('priceValue');
-    
-    if (priceRange && priceValue) {
-        priceRange.addEventListener('input', function() {
-            priceValue.textContent = this.value + '€';
-            window.currentFilters.maxPrice = parseInt(this.value);
-            reloadWithFilters();
-        });
-        priceValue.textContent = priceRange.value + '€';
-        window.currentFilters.maxPrice = parseInt(priceRange.value);
-    }
-
-    // Checkbox filters
-    const ecoOnly = document.getElementById('ecoOnly');
-    if (ecoOnly) {
-        ecoOnly.addEventListener('change', function() {
-            window.currentFilters.ecoOnly = this.checked;
-            reloadWithFilters();
-        });
-    }
-
-    const petsAllowed = document.getElementById('petsAllowed');
-    if (petsAllowed) {
-        petsAllowed.addEventListener('change', function() {
-            window.currentFilters.petsAllowed = this.checked;
-            reloadWithFilters();
-        });
-    }
-
-    const smokingAllowed = document.getElementById('smokingAllowed');
-    if (smokingAllowed) {
-        smokingAllowed.addEventListener('change', function() {
-            window.currentFilters.nonSmoking = this.checked;
-            reloadWithFilters();
-        });
-    }
-
-    // Select filters
-    const durationFilter = document.getElementById('durationFilter');
-    if (durationFilter) {
-        durationFilter.addEventListener('change', function() {
-            window.currentFilters.maxDuration = this.value ? parseInt(this.value) : 999999;
-            reloadWithFilters();
-        });
-    }
-
-    const ratingFilter = document.getElementById('ratingFilter');
-    if (ratingFilter) {
-        ratingFilter.addEventListener('change', function() {
-            window.currentFilters.minRating = this.value ? parseFloat(this.value) : 0;
-            reloadWithFilters();
-        });
-    }
-    
-    // Clear filters button
-    const clearBtn = document.getElementById('clearFilters');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', clearAllFilters);
-    }
-}
-
-function initSorting() {
-    const sortSelect = document.getElementById('sortBy');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
-            currentSort = this.value;
-            reloadWithSort();
-        });
-    }
-}
-
-function initDetailButtons() {
-    // Utiliser la délégation d'événements pour éviter les duplications
-    document.addEventListener('click', function(e) {
-        // Gérer uniquement les boutons "Détails" qui ne sont pas des boutons de réservation
-        if (e.target.closest('.btn-detail') && !e.target.closest('.reservation-btn')) {
-            e.preventDefault();
-            const button = e.target.closest('.btn-detail');
-            const rideCard = button.closest('.ride-card');
-            let rideId = button.dataset.rideId || (rideCard ? rideCard.dataset.rideId : null);
-            
-            if (rideId) {
-                console.log(`Clic sur bouton détail - ID: ${rideId}`);
-                viewRideDetails(rideId);
-            }
-        }
-    });
-}
-
-function clearAllFilters() {
-    // Reset checkboxes
-    const checkboxes = document.querySelectorAll('.filters-sidebar input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
-
-    // Reset selects
-    const selects = document.querySelectorAll('.filters-sidebar select');
-    selects.forEach(select => {
-        select.selectedIndex = 0;
-    });
-
-    // Reset price range
-    const priceRange = document.getElementById('priceRange');
-    const priceValue = document.getElementById('priceValue');
-    if (priceRange && priceValue) {
-        priceRange.value = 50;
-        priceValue.textContent = '50€';
-    }
-
-    // Reset filters object
-    window.currentFilters = {
-        ecoOnly: false,
-        maxPrice: 50,
-        maxDuration: 999999,
-        minRating: 0,
-        petsAllowed: false,
-        nonSmoking: false
-    };
-
-    reloadWithFilters();
-    showNotification('Filtres effacés', 'success');
-}
-
-// Nouvelle fonction pour recharger les données avec les filtres actuels
-function reloadWithFilters() {
-    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters);
-}
-
-// Nouvelle fonction pour recharger les données avec le tri actuel
-function reloadWithSort() {
-    loadRidesFromAPI(window.currentSearchParams, 1, window.currentFilters);
-}
+// La fonction initDetailButtons() est maintenant dans utils.js pour éviter la duplication
 
 // Afficher les trajets depuis l'API
 function displayRidesFromAPI() {
@@ -263,21 +120,6 @@ function showNoResults() {
     if (paginationContainer) paginationContainer.innerHTML = '';
 }
 
-// =====================================
-// FONCTIONS DE TRI
-// =====================================
-
-// Cette fonction est maintenant obsolète car le tri est fait côté serveur
-// Gardée pour la compatibilité mais redirige vers reloadWithSort
-function sortRides(criteria) {
-    window.currentSort = criteria;
-    reloadWithSort();
-}
-
-// =====================================
-// NOUVELLES FONCTIONS POUR API RÉELLE
-// =====================================
-
 // Générer le HTML d'une carte de trajet depuis les données API
 function generateRideCardFromAPI(ride) {
     const departureDate = new Date(ride.departure_datetime);
@@ -295,8 +137,10 @@ function generateRideCardFromAPI(ride) {
     const ecoBadge = ride.is_ecological || ride.fuel_type === 'electrique' ?
         '<span class="eco-badge ms-auto"><i class="fas fa-leaf"></i> Écologique</span>' : '';
 
-    // Avatar du conducteur (première lettre du pseudo)
-    const driverAvatar = ride.driver_name ? ride.driver_name.charAt(0).toUpperCase() : 'U';
+    // Avatar du conducteur avec avatarUtils
+    const driverAvatarHTML = window.AvatarUtils
+        ? window.AvatarUtils.generateAvatarHTML(ride, 'small', 'driver-avatar')
+        : `<div class="driver-avatar">${ride.driver_name ? ride.driver_name.charAt(0).toUpperCase() : 'U'}</div>`;
 
     // Calcul de la durée
     let duration = 'N/A';
@@ -318,7 +162,7 @@ function generateRideCardFromAPI(ride) {
             <div class="row">
                 <div class="col-md-8">
                     <div class="driver-info">
-                        <div class="driver-avatar">${driverAvatar}</div>
+                        ${driverAvatarHTML}
                         <div>
                             <h6 class="mb-1">${ride.driver_name || 'Conducteur'}</h6>
                             <div class="rating">
@@ -379,16 +223,6 @@ function generateRideCardFromAPI(ride) {
 }
 
 
-// Cette fonction est maintenant obsolète car le filtrage est fait côté serveur
-// Gardée pour la compatibilité mais redirige vers reloadWithFilters
-function applyFiltersAndDisplay() {
-    reloadWithFilters();
-}
-
-// Export global pour compatibilité
-window.applyFilters = applyFiltersAndDisplay;
+// Export global
 window.loadRidesFromAPI = loadRidesFromAPI;
-window.initDateInputs = initDateInputs;
-window.initFilters = initFilters;
-window.initSorting = initSorting;
 window.initDetailButtons = initDetailButtons;

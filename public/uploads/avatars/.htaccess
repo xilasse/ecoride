@@ -1,0 +1,23 @@
+# Sécurité pour le dossier des avatars
+# Interdire l'exécution de scripts PHP
+
+# Désactiver le moteur PHP
+php_flag engine off
+
+# Bloquer tous les fichiers PHP
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+
+# Autoriser seulement les images
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Require all granted
+</FilesMatch>
+
+# Désactiver l'affichage du contenu du dossier
+Options -Indexes
+
+# Bloquer l'accès aux fichiers sensibles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
