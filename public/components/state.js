@@ -7,9 +7,9 @@
 let currentFilters = {
     ecoOnly: false,
     maxPrice: 50,
-    // NOTE: maxDuration et minRating ne sont pas encore implémentés côté serveur
-    maxDuration: 999999,  // TODO: Implémenter le filtre durée dans l'API
-    minRating: 0,         // TODO: Implémenter le filtre note dans l'API (nécessite table ratings)
+    // NOTE: Tous les filtres sont maintenant implémentés côté serveur
+    maxDuration: 999999,  // ✅ Implémenté côté serveur
+    minRating: 0,         // ✅ Implémenté côté serveur
     petsAllowed: false,
     nonSmoking: false
 };

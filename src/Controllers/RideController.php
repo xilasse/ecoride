@@ -106,6 +106,8 @@ class RideController extends BaseController {
             // Paramètres de filtrage
             $ecoOnly = isset($_GET['eco_only']) && $_GET['eco_only'] === 'true';
             $maxPrice = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+            $maxDuration = isset($_GET['max_duration']) ? intval($_GET['max_duration']) : null;
+            $minRating = isset($_GET['min_rating']) ? floatval($_GET['min_rating']) : null;
             $petsAllowed = isset($_GET['pets_allowed']) && $_GET['pets_allowed'] === 'true';
             $nonSmoking = isset($_GET['non_smoking']) && $_GET['non_smoking'] === 'true';
 
@@ -123,6 +125,16 @@ class RideController extends BaseController {
             if ($maxPrice !== null && $maxPrice > 0) {
                 $whereConditions[] = "r.price_per_seat <= ?";
                 $params[] = $maxPrice;
+            }
+
+            if ($maxDuration !== null && $maxDuration > 0) {
+                $whereConditions[] = "r.duration_minutes <= ?";
+                $params[] = $maxDuration;
+            }
+
+            if ($minRating !== null && $minRating > 0) {
+                $whereConditions[] = "u.rating_average >= ?";
+                $params[] = $minRating;
             }
 
             if ($petsAllowed) {
@@ -264,6 +276,8 @@ class RideController extends BaseController {
             // Paramètres de filtrage
             $ecoOnly = isset($_GET['eco_only']) && $_GET['eco_only'] === 'true';
             $maxPrice = isset($_GET['max_price']) ? floatval($_GET['max_price']) : null;
+            $maxDuration = isset($_GET['max_duration']) ? intval($_GET['max_duration']) : null;
+            $minRating = isset($_GET['min_rating']) ? floatval($_GET['min_rating']) : null;
             $petsAllowed = isset($_GET['pets_allowed']) && $_GET['pets_allowed'] === 'true';
             $nonSmoking = isset($_GET['non_smoking']) && $_GET['non_smoking'] === 'true';
 
@@ -294,6 +308,16 @@ class RideController extends BaseController {
             if ($maxPrice !== null && $maxPrice > 0) {
                 $whereConditions[] = "r.price_per_seat <= ?";
                 $params[] = $maxPrice;
+            }
+
+            if ($maxDuration !== null && $maxDuration > 0) {
+                $whereConditions[] = "r.duration_minutes <= ?";
+                $params[] = $maxDuration;
+            }
+
+            if ($minRating !== null && $minRating > 0) {
+                $whereConditions[] = "u.rating_average >= ?";
+                $params[] = $minRating;
             }
 
             if ($petsAllowed) {
