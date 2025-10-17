@@ -792,7 +792,7 @@ function showPassengersModal(rideId, passengers, stats) {
 // Générer une carte passager
 function generatePassengerCard(passenger) {
     const reservationDate = new Date(passenger.created_at).toLocaleDateString('fr-FR');
-    const statusBadge = getPassengerStatusBadge(passenger.status, passenger.escrow_amount);
+    const statusBadge = getPassengerStatusBadge(passenger.status_id, passenger.escrow_amount);
 
     return `
         <div class="card mb-3">
@@ -837,18 +837,21 @@ function generatePassengerCard(passenger) {
 }
 
 // Obtenir le badge de statut d'un passager
-function getPassengerStatusBadge(status, escrowAmount) {
+function getPassengerStatusBadge(statusId, escrowAmount) {
     if (escrowAmount > 0) {
         return '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Payé</span>';
     }
 
-    const badges = {
-        'confirmed': '<span class="badge bg-primary"><i class="fas fa-check"></i> Confirmé</span>',
-        'pending': '<span class="badge bg-warning"><i class="fas fa-clock"></i> En attente</span>',
-        'cancelled': '<span class="badge bg-danger"><i class="fas fa-times"></i> Annulé</span>'
+    // Mapper les status_id aux labels (selon votre base de données)
+    const statusMap = {
+        1: '<span class="badge bg-warning"><i class="fas fa-clock"></i> En attente</span>',
+        2: '<span class="badge bg-primary"><i class="fas fa-check"></i> Confirmé</span>',
+        3: '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Terminé</span>',
+        4: '<span class="badge bg-secondary"><i class="fas fa-pause"></i> En pause</span>',
+        5: '<span class="badge bg-danger"><i class="fas fa-times"></i> Annulé</span>'
     };
 
-    return badges[status] || '<span class="badge bg-secondary">Inconnu</span>';
+    return statusMap[statusId] || '<span class="badge bg-secondary">Inconnu</span>';
 }
 
 // Exports globaux
