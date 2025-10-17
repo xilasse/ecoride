@@ -409,13 +409,45 @@ function showEmptyUserRides() {
 // Modifier un trajet
 function editUserRide(rideId) {
     console.log('✏️ Modification du trajet:', rideId);
-    showNotification('Fonctionnalité en développement', 'info');
+
+    // Récupérer les données du trajet pour l'édition
+    fetch(`/api/rides/${rideId}/edit`, {
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showEditRideModal(data.ride, data.vehicles, data.can_modify_passengers);
+        } else {
+            showNotification('Erreur: ' + (data.error || 'Impossible de charger les données'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erreur:', error);
+        showNotification('Erreur de réseau', 'error');
+    });
 }
 
 // Gérer les passagers d'un trajet
 function manageRidePassengers(rideId) {
     console.log('👥 Gestion des passagers du trajet:', rideId);
-    showNotification('Fonctionnalité en développement', 'info');
+
+    // Récupérer la liste des passagers
+    fetch(`/api/rides/${rideId}/passengers`, {
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showPassengersModal(rideId, data.passengers, data.stats);
+        } else {
+            showNotification('Erreur: ' + (data.error || 'Impossible de charger les passagers'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erreur:', error);
+        showNotification('Erreur de réseau', 'error');
+    });
 }
 
 // Annuler un trajet
@@ -492,6 +524,333 @@ function initUserRidesTab() {
     }
 }
 
+// Afficher la modale d'édition d'un trajet
+function showEditRideModal(ride, vehicles, canModifyPassengers) {
+    const departureDate = new Date(ride.departure_datetime);
+    const arrivalDate = ride.estimated_arrival_datetime ? new Date(ride.estimated_arrival_datetime) : null;
+
+    const modalHTML = `
+        <div class="modal fade" id="editRideModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-edit me-2"></i>Modifier le trajet
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editRideForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Ville de départ</label>
+                                        <input type="text" class="form-control" id="editFrom" value="${ride.departure_city}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Ville d'arrivée</label>
+                                        <input type="text" class="form-control" id="editTo" value="${ride.arrival_city}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Date de départ</label>
+                                        <input type="date" class="form-control" id="editDate" value="${departureDate.toISOString().split('T')[0]}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Heure de départ</label>
+                                        <input type="time" class="form-control" id="editTime" value="${departureDate.toTimeString().slice(0,5)}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Heure d'arrivée (optionnel)</label>
+                                        <input type="time" class="form-control" id="editArrivalTime" value="${arrivalDate ? arrivalDate.toTimeString().slice(0,5) : ''}">
+                                        <small class="text-muted">Laissez vide pour calcul automatique</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Prix par personne (€)</label>
+                                        <input type="number" class="form-control" id="editPrice" value="${ride.price_per_seat}" min="1" max="200" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Nombre de places ${canModifyPassengers ? '' : '(non modifiable - trajets réservés)'}</label>
+                                        <input type="number" class="form-control" id="editSeats" value="${ride.available_seats}" min="1" max="8" ${canModifyPassengers ? '' : 'readonly'} required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Véhicule</label>
+                                        <select class="form-control" id="editVehicle" required>
+                                            ${vehicles.map(v => `
+                                                <option value="${v.id}" ${v.id == ride.vehicle_id ? 'selected' : ''}>
+                                                    ${v.brand} ${v.model} (${v.color})
+                                                    ${v.is_ecological ? ' - Écologique' : ''}
+                                                </option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Adresse de départ (optionnel)</label>
+                                <input type="text" class="form-control" id="editDepartureAddress" value="${ride.departure_address || ''}" placeholder="Adresse précise de rendez-vous...">
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Description (optionnel)</label>
+                                <textarea class="form-control" id="editDescription" rows="3" placeholder="Informations supplémentaires...">${ride.description || ''}</textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="saveRideChanges(${ride.id})">
+                            <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Supprimer l'ancienne modale si elle existe
+    const existingModal = document.getElementById('editRideModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Ajouter la modale au DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Afficher la modale
+    const modal = new bootstrap.Modal(document.getElementById('editRideModal'));
+    modal.show();
+}
+
+// Sauvegarder les modifications du trajet
+function saveRideChanges(rideId) {
+    const formData = {
+        from: document.getElementById('editFrom').value,
+        to: document.getElementById('editTo').value,
+        date: document.getElementById('editDate').value,
+        time: document.getElementById('editTime').value,
+        arrivalTime: document.getElementById('editArrivalTime').value,
+        price: parseFloat(document.getElementById('editPrice').value),
+        seats: parseInt(document.getElementById('editSeats').value),
+        vehicleId: parseInt(document.getElementById('editVehicle').value),
+        departureAddress: document.getElementById('editDepartureAddress').value,
+        description: document.getElementById('editDescription').value
+    };
+
+    // Validation côté client
+    if (!formData.from || !formData.to || !formData.date || !formData.time || !formData.price || !formData.seats) {
+        showNotification('Veuillez remplir tous les champs obligatoires', 'error');
+        return;
+    }
+
+    // Vérifier que la date n'est pas dans le passé
+    const selectedDateTime = new Date(formData.date + ' ' + formData.time);
+    if (selectedDateTime <= new Date()) {
+        showNotification('La date et l\'heure doivent être dans le futur', 'error');
+        return;
+    }
+
+    // Envoyer la modification
+    fetch(`/api/rides/${rideId}/edit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Trajet modifié avec succès', 'success');
+
+            // Fermer la modale
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editRideModal'));
+            modal.hide();
+
+            // Recharger la liste des trajets
+            loadUserRides();
+        } else {
+            showNotification('Erreur: ' + (data.error || 'Erreur inconnue'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erreur:', error);
+        showNotification('Erreur de réseau', 'error');
+    });
+}
+
+// Afficher la modale des passagers
+function showPassengersModal(rideId, passengers, stats) {
+    const modalHTML = `
+        <div class="modal fade" id="passengersModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-users me-2"></i>Passagers du trajet
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Statistiques -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="text-primary">${stats.total_passengers}</h5>
+                                        <small class="text-muted">Passagers</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="text-info">${stats.total_seats_reserved}</h5>
+                                        <small class="text-muted">Places réservées</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="text-success">${stats.total_revenue.toFixed(2)}€</h5>
+                                        <small class="text-muted">Revenus</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h5 class="text-warning">${stats.escrow_amount.toFixed(2)}€</h5>
+                                        <small class="text-muted">En attente</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Liste des passagers -->
+                        <div class="passengers-list">
+                            ${passengers.length === 0 ? `
+                                <div class="text-center p-4">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h5>Aucun passager</h5>
+                                    <p class="text-muted">Votre trajet n'a pas encore de réservations.</p>
+                                </div>
+                            ` : passengers.map(passenger => generatePassengerCard(passenger)).join('')}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Fermer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Supprimer l'ancienne modale si elle existe
+    const existingModal = document.getElementById('passengersModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Ajouter la modale au DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Afficher la modale
+    const modal = new bootstrap.Modal(document.getElementById('passengersModal'));
+    modal.show();
+}
+
+// Générer une carte passager
+function generatePassengerCard(passenger) {
+    const reservationDate = new Date(passenger.created_at).toLocaleDateString('fr-FR');
+    const statusBadge = getPassengerStatusBadge(passenger.status, passenger.escrow_amount);
+
+    return `
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        ${passenger.profile_picture ?
+                            `<img src="${passenger.profile_picture}" alt="${passenger.pseudo}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">` :
+                            `<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-weight: bold;">${passenger.pseudo.charAt(0).toUpperCase()}</div>`
+                        }
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="mb-1">${passenger.pseudo}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-envelope me-1"></i>${passenger.email}
+                        </small>
+                        ${passenger.phone ? `<br><small class="text-muted"><i class="fas fa-phone me-1"></i>${passenger.phone}</small>` : ''}
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <strong>${passenger.seats_reserved}</strong>
+                        <br><small class="text-muted">place${passenger.seats_reserved > 1 ? 's' : ''}</small>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <strong>${passenger.total_price.toFixed(2)}€</strong>
+                        <br><small class="text-muted">total</small>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        ${statusBadge}
+                        <br><small class="text-muted">Réservé le ${reservationDate}</small>
+                    </div>
+                </div>
+                ${passenger.avg_rating ? `
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-star text-warning"></i> ${passenger.avg_rating}/5
+                        </small>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Obtenir le badge de statut d'un passager
+function getPassengerStatusBadge(status, escrowAmount) {
+    if (escrowAmount > 0) {
+        return '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Payé</span>';
+    }
+
+    const badges = {
+        'confirmed': '<span class="badge bg-primary"><i class="fas fa-check"></i> Confirmé</span>',
+        'pending': '<span class="badge bg-warning"><i class="fas fa-clock"></i> En attente</span>',
+        'cancelled': '<span class="badge bg-danger"><i class="fas fa-times"></i> Annulé</span>'
+    };
+
+    return badges[status] || '<span class="badge bg-secondary">Inconnu</span>';
+}
+
 // Exports globaux
 window.loadUserRides = loadUserRides;
 window.editUserRide = editUserRide;
@@ -500,3 +859,4 @@ window.cancelUserRide = cancelUserRide;
 window.validateRidePayment = validateRidePayment;
 window.toggleArchivedRides = toggleArchivedRides;
 window.initUserRidesTab = initUserRidesTab;
+window.saveRideChanges = saveRideChanges;

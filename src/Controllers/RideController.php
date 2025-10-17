@@ -966,6 +966,358 @@ class RideController extends BaseController {
         }
     }
 
+    public function getRideForEdit($rideId) {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $rideId = intval($rideId);
+            $db = $this->getDatabase();
+
+            // Récupérer le trajet avec les détails du véhicule
+            $sql = "SELECT r.*, v.id as vehicle_id, v.brand, v.model, v.color, v.fuel_type, v.is_ecological,
+                           COUNT(res.id) as reservation_count
+                    FROM rides r
+                    LEFT JOIN vehicles v ON r.vehicle_id = v.id
+                    LEFT JOIN reservations res ON r.id = res.ride_id AND res.status != 'cancelled'
+                    WHERE r.id = ? AND r.driver_id = ?
+                    GROUP BY r.id";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId, $userId]);
+            $ride = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$ride) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
+                ]);
+                return;
+            }
+
+            // Vérifier que le trajet peut être modifié (pas de réservations ou pas encore parti)
+            $departureDate = new DateTime($ride['departure_datetime']);
+            $now = new DateTime();
+
+            if ($ride['reservation_count'] > 0 && $departureDate <= $now) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Ce trajet ne peut plus être modifié (déjà parti ou a des réservations)'
+                ]);
+                return;
+            }
+
+            // Récupérer les véhicules de l'utilisateur pour le sélecteur
+            $sqlVehicles = "SELECT id, brand, model, color, fuel_type, is_ecological
+                           FROM vehicles
+                           WHERE user_id = ?
+                           ORDER BY brand, model";
+            $stmtVehicles = $db->prepare($sqlVehicles);
+            $stmtVehicles->execute([$userId]);
+            $vehicles = $stmtVehicles->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'ride' => $ride,
+                'vehicles' => $vehicles,
+                'can_modify_passengers' => $ride['reservation_count'] == 0
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la récupération des données',
+                'details' => $e->getMessage()
+            ]);
+            error_log('Erreur getRideForEdit: ' . $e->getMessage());
+        }
+    }
+
+    public function updateRide($rideId) {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            // Vérifier que c'est une requête PUT ou POST
+            if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'POST'])) {
+                http_response_code(405);
+                echo json_encode(['error' => 'Méthode non autorisée']);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $rideId = intval($rideId);
+
+            // Récupérer les données JSON
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données JSON invalides']);
+                return;
+            }
+
+            $db = $this->getDatabase();
+
+            // Vérifier que le trajet appartient à l'utilisateur et peut être modifié
+            $sql = "SELECT r.*, COUNT(res.id) as reservation_count
+                    FROM rides r
+                    LEFT JOIN reservations res ON r.id = res.ride_id AND res.status != 'cancelled'
+                    WHERE r.id = ? AND r.driver_id = ?
+                    GROUP BY r.id";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId, $userId]);
+            $ride = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$ride) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
+                ]);
+                return;
+            }
+
+            // Valider les données de modification
+            if (!$this->validateRideUpdateData($input, $ride)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données invalides']);
+                return;
+            }
+
+            // Recalculer l'heure d'arrivée si nécessaire
+            if (!empty($input['from']) && !empty($input['to']) && !empty($input['date']) && !empty($input['time'])) {
+                if (empty($input['arrivalTime'])) {
+                    $routeService = new RouteService();
+                    $arrivalData = $routeService->calculateArrivalTime(
+                        $input['from'],
+                        $input['to'],
+                        $input['date'],
+                        $input['time']
+                    );
+                    $input['estimated_arrival_datetime'] = $arrivalData['arrival_datetime'];
+                    $input['duration_minutes'] = $arrivalData['duration_minutes'];
+                } else {
+                    $input['estimated_arrival_datetime'] = $input['date'] . ' ' . $input['arrivalTime'] . ':00';
+
+                    $departure = new DateTime($input['date'] . ' ' . $input['time']);
+                    $arrival = new DateTime($input['estimated_arrival_datetime']);
+                    $interval = $departure->diff($arrival);
+                    $input['duration_minutes'] = ($interval->h * 60) + $interval->i;
+                }
+            }
+
+            // Mettre à jour le trajet
+            $this->performRideUpdate($rideId, $input);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Trajet modifié avec succès'
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la modification',
+                'details' => $e->getMessage()
+            ]);
+            error_log('Erreur updateRide: ' . $e->getMessage());
+        }
+    }
+
+    public function getRidePassengers($rideId) {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $rideId = intval($rideId);
+            $db = $this->getDatabase();
+
+            // Vérifier que le trajet appartient à l'utilisateur
+            $sql = "SELECT id FROM rides WHERE id = ? AND driver_id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId, $userId]);
+
+            if (!$stmt->fetch()) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
+                ]);
+                return;
+            }
+
+            // Récupérer les passagers avec leurs détails
+            $sql = "SELECT
+                        res.id as reservation_id,
+                        res.user_id,
+                        res.status,
+                        res.seats_reserved,
+                        res.total_price,
+                        res.created_at,
+                        res.escrow_amount,
+                        u.pseudo,
+                        u.email,
+                        u.profile_picture,
+                        u.phone,
+                        u.avg_rating
+                    FROM reservations res
+                    JOIN users u ON res.user_id = u.id
+                    WHERE res.ride_id = ? AND res.status != 'cancelled'
+                    ORDER BY res.created_at ASC";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+            $passengers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Calculer les statistiques
+            $stats = [
+                'total_passengers' => count($passengers),
+                'total_seats_reserved' => array_sum(array_column($passengers, 'seats_reserved')),
+                'total_revenue' => array_sum(array_column($passengers, 'total_price')),
+                'escrow_amount' => array_sum(array_column($passengers, 'escrow_amount'))
+            ];
+
+            echo json_encode([
+                'success' => true,
+                'passengers' => $passengers,
+                'stats' => $stats
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la récupération des passagers',
+                'details' => $e->getMessage()
+            ]);
+            error_log('Erreur getRidePassengers: ' . $e->getMessage());
+        }
+    }
+
+    private function validateRideUpdateData($input, $existingRide) {
+        // Validation basique des champs modifiables
+        if (isset($input['seats']) && ($input['seats'] < 1 || $input['seats'] > 8)) {
+            return false;
+        }
+
+        if (isset($input['price']) && ($input['price'] < 1 || $input['price'] > 200)) {
+            return false;
+        }
+
+        // Vérifier que la date n'est pas dans le passé
+        if (isset($input['date']) && isset($input['time'])) {
+            $newDeparture = new DateTime($input['date'] . ' ' . $input['time']);
+            $now = new DateTime();
+            if ($newDeparture <= $now) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function performRideUpdate($rideId, $input) {
+        $db = $this->getDatabase();
+
+        $updateFields = [];
+        $values = [];
+
+        // Construire dynamiquement la requête UPDATE
+        if (isset($input['from'])) {
+            $updateFields[] = "departure_city = ?";
+            $values[] = $input['from'];
+        }
+
+        if (isset($input['to'])) {
+            $updateFields[] = "arrival_city = ?";
+            $values[] = $input['to'];
+        }
+
+        if (isset($input['date']) && isset($input['time'])) {
+            $updateFields[] = "departure_datetime = ?";
+            $values[] = $input['date'] . ' ' . $input['time'] . ':00';
+        }
+
+        if (isset($input['estimated_arrival_datetime'])) {
+            $updateFields[] = "estimated_arrival_datetime = ?";
+            $values[] = $input['estimated_arrival_datetime'];
+        }
+
+        if (isset($input['duration_minutes'])) {
+            $updateFields[] = "duration_minutes = ?";
+            $values[] = $input['duration_minutes'];
+        }
+
+        if (isset($input['seats'])) {
+            $updateFields[] = "available_seats = ?";
+            $values[] = $input['seats'];
+        }
+
+        if (isset($input['price'])) {
+            $updateFields[] = "price_per_seat = ?";
+            $values[] = $input['price'];
+        }
+
+        if (isset($input['vehicleId'])) {
+            $updateFields[] = "vehicle_id = ?";
+            $values[] = $input['vehicleId'];
+        }
+
+        if (isset($input['description'])) {
+            $updateFields[] = "description = ?";
+            $values[] = $input['description'];
+        }
+
+        if (isset($input['departureAddress'])) {
+            $updateFields[] = "departure_address = ?";
+            $values[] = $input['departureAddress'];
+        }
+
+        if (empty($updateFields)) {
+            return; // Rien à mettre à jour
+        }
+
+        $values[] = $rideId;
+
+        $sql = "UPDATE rides SET " . implode(", ", $updateFields) . " WHERE id = ?";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($values);
+    }
+
     private function buildOrderClause($sortBy) {
         switch ($sortBy) {
             case 'price':

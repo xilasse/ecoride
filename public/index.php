@@ -43,6 +43,24 @@ if (preg_match('/^\/api\/rides\/(\d+)\/validate-payments$/', $path, $matches)) {
     exit;
 }
 
+// Check for ride edit endpoint
+if (preg_match('/^\/api\/rides\/(\d+)\/edit$/', $path, $matches)) {
+    $controller = new RideController($db);
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        $controller->getRideForEdit($matches[1]);
+    } else {
+        $controller->updateRide($matches[1]);
+    }
+    exit;
+}
+
+// Check for ride passengers endpoint
+if (preg_match('/^\/api\/rides\/(\d+)\/passengers$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->getRidePassengers($matches[1]);
+    exit;
+}
+
 // Check for vehicle endpoints
 if (preg_match('/^\/api\/vehicles\/(\d+)$/', $path, $matches)) {
     $controller = new \EcoRide\Controllers\VehicleController($db);
