@@ -154,6 +154,14 @@ switch ($path) {
         $controller = new AuthController($db);
         $controller->uploadAvatar();
         break;
+    case '/api/auth/credits/transactions':
+        $controller = new AuthController($db);
+        $controller->getCreditsTransactions();
+        break;
+    case '/api/auth/credits/purchase':
+        $controller = new AuthController($db);
+        $controller->purchaseCredits();
+        break;
 
     default:
         http_response_code(404);

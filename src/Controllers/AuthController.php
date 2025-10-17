@@ -586,4 +586,115 @@ class AuthController extends BaseController {
             // Ignore silencieusement, car non critique
         }
     }
+
+    public function getCreditsTransactions() {
+        header('Content-Type: application/json');
+        try {
+            if (!$this->ensureAuthenticated()) return;
+            $db = $this->getDatabase();
+            $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 20;
+            $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+            $type = isset($_GET['type']) ? $_GET['type'] : null;
+
+            // Construire la requête sans LIMIT/OFFSET dans les paramètres préparés
+            $sql = "SELECT ct.*, r.departure_city, r.arrival_city, r.departure_datetime
+                    FROM credit_transactions ct
+                    LEFT JOIN rides r ON ct.related_ride_id = r.id
+                    WHERE ct.user_id = ?";
+            $params = [$_SESSION['user_id']];
+
+            if ($type && in_array($type, ['reservation', 'refund', 'payout', 'compensation', 'purchase'])) {
+                $sql .= " AND ct.type = ?";
+                $params[] = $type;
+            }
+
+            // Ajouter LIMIT et OFFSET directement dans la requête (sécurisé car intval())
+            $sql .= " ORDER BY ct.created_at DESC LIMIT {$limit} OFFSET {$offset}";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            $transactions = $stmt->fetchAll();
+
+            // Compter le total
+            $sqlCount = "SELECT COUNT(*) as total FROM credit_transactions WHERE user_id = ?";
+            $paramsCount = [$_SESSION['user_id']];
+            if ($type) {
+                $sqlCount .= " AND type = ?";
+                $paramsCount[] = $type;
+            }
+            $stmtCount = $db->prepare($sqlCount);
+            $stmtCount->execute($paramsCount);
+            $total = $stmtCount->fetch()['total'];
+
+            // Convertir les montants en float
+            foreach ($transactions as &$transaction) {
+                $transaction['amount'] = floatval($transaction['amount']);
+                $transaction['balance_before'] = floatval($transaction['balance_before']);
+                $transaction['balance_after'] = floatval($transaction['balance_after']);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'transactions' => $transactions,
+                'pagination' => [
+                    'total' => intval($total),
+                    'limit' => $limit,
+                    'offset' => $offset,
+                    'has_more' => ($offset + $limit) < $total
+                ]
+            ]);
+        } catch (Exception $e) {
+            $this->handleError($e, 'GetCreditsTransactions');
+        }
+    }
+
+    public function purchaseCredits() {
+        header('Content-Type: application/json');
+        try {
+            if (!$this->ensurePostMethod()) return;
+            if (!$this->ensureAuthenticated()) return;
+            $input = $this->parseJsonInput();
+            if ($input === false) return;
+            $amount = isset($input['amount']) ? floatval($input['amount']) : 0;
+            if ($amount <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Le montant doit être supérieur à 0']);
+                return;
+            }
+            if ($amount > 500) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Le montant maximum est de 500 crédits']);
+                return;
+            }
+            $db = $this->getDatabase();
+            $sql = "SELECT credits FROM users WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch();
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Utilisateur non trouvé']);
+                return;
+            }
+            $db->beginTransaction();
+            try {
+                $sql = "UPDATE users SET credits = credits + ? WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$amount, $_SESSION['user_id']]);
+                $sql = "INSERT INTO credit_transactions (user_id, amount, type, status, description, escrow_related, balance_before, balance_after, completed_at) VALUES (?, ?, 'purchase', 'completed', ?, FALSE, ?, ?, NOW())";
+                $stmt = $db->prepare($sql);
+                $description = "Simulation achat de {$amount} crédits";
+                $balanceBefore = floatval($user['credits']);
+                $balanceAfter = $balanceBefore + $amount;
+                $stmt->execute([$_SESSION['user_id'], $amount, $description, $balanceBefore, $balanceAfter]);
+                $db->commit();
+                echo json_encode(['success' => true, 'message' => 'Crédits ajoutés avec succès', 'amount' => $amount, 'new_balance' => $balanceAfter]);
+            } catch (Exception $e) {
+                $db->rollBack();
+                throw $e;
+            }
+        } catch (Exception $e) {
+            $this->handleError($e, 'PurchaseCredits');
+        }
+    }
 }

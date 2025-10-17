@@ -76,21 +76,16 @@ class ReservationController extends BaseController {
         header('Content-Type: application/json');
 
         try {
-            // Vérifier que l'utilisateur est connecté
             if (!isset($_SESSION['user_id'])) {
                 http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Vous devez être connecté'
-                ]);
+                echo json_encode(['success' => false, 'error' => 'Vous devez être connecté']);
                 return;
             }
 
             $userId = $_SESSION['user_id'];
             $reservationId = intval($reservationId);
 
-            // Vérifier que la réservation appartient à l'utilisateur
-            $sql = "SELECT res.*, r.departure_datetime
+            $sql = "SELECT res.*, r.departure_datetime, r.driver_id, r.departure_city, r.arrival_city
                     FROM reservations res
                     JOIN rides r ON res.ride_id = r.id
                     WHERE res.id = ? AND res.user_id = ?";
@@ -101,52 +96,113 @@ class ReservationController extends BaseController {
 
             if (!$reservation) {
                 http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Réservation non trouvée'
-                ]);
+                echo json_encode(['success' => false, 'error' => 'Réservation non trouvée']);
                 return;
             }
 
-            // Vérifier que le trajet n'est pas déjà passé
+            if (in_array($reservation['status_id'], [4, 5])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Cette réservation ne peut plus être annulée']);
+                return;
+            }
+
+            if ($reservation['escrow_status'] !== 'blocked') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Le paiement a déjà été traité']);
+                return;
+            }
+
             $now = new \DateTime();
             $departureDate = new \DateTime($reservation['departure_datetime']);
             if ($departureDate < $now) {
                 http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Impossible d\'annuler une réservation pour un trajet déjà passé'
-                ]);
+                echo json_encode(['success' => false, 'error' => 'Impossible d\'annuler un trajet passé']);
                 return;
             }
 
-            // Mettre à jour le statut à "annulé" (status_id = 4)
-            $sql = "UPDATE reservations SET status_id = 4 WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$reservationId]);
+            $hoursBeforeDeparture = ($departureDate->getTimestamp() - $now->getTimestamp()) / 3600;
+            $escrowAmount = floatval($reservation['escrow_amount']);
 
-            // Incrémenter le nombre de places disponibles dans le trajet
-            $sql = "UPDATE rides
-                    SET available_seats = available_seats + ?
-                    WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([
-                $reservation['seats_reserved'],
-                $reservation['ride_id']
-            ]);
+            if ($hoursBeforeDeparture > 168) {
+                $refundPercent = 100;
+                $conductorCompensation = 0;
+            } elseif ($hoursBeforeDeparture > 72) {
+                $refundPercent = 75;
+                $conductorCompensation = 25;
+            } elseif ($hoursBeforeDeparture > 24) {
+                $refundPercent = 50;
+                $conductorCompensation = 50;
+            } elseif ($hoursBeforeDeparture > 6) {
+                $refundPercent = 25;
+                $conductorCompensation = 75;
+            } else {
+                $refundPercent = 0;
+                $conductorCompensation = 100;
+            }
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Réservation annulée avec succès'
-            ]);
+            $refundAmount = ($escrowAmount * $refundPercent) / 100;
+            $compensationAmount = ($escrowAmount * $conductorCompensation) / 100;
+
+            $sql = "SELECT credits, credits_blocked FROM users WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$userId]);
+            $passenger = $stmt->fetch();
+
+            $db->beginTransaction();
+
+            try {
+                $sql = "UPDATE users SET credits = credits + ?, credits_blocked = credits_blocked - ? WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$refundAmount, $escrowAmount, $userId]);
+
+                if ($compensationAmount > 0) {
+                    $sql = "SELECT credits FROM users WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$reservation['driver_id']]);
+                    $driver = $stmt->fetch();
+
+                    $sql = "UPDATE users SET credits = credits + ?, total_credits_earned = total_credits_earned + ? WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$compensationAmount, $compensationAmount, $reservation['driver_id']]);
+
+                    $sql = "INSERT INTO credit_transactions (user_id, amount, type, status, related_reservation_id, related_ride_id, description, escrow_related, balance_before, balance_after, completed_at) VALUES (?, ?, 'compensation', 'completed', ?, ?, ?, TRUE, ?, ?, NOW())";
+                    $stmt = $db->prepare($sql);
+                    $description = "Compensation annulation trajet {$reservation['departure_city']} → {$reservation['arrival_city']} ({$conductorCompensation}%)";
+                    $stmt->execute([$reservation['driver_id'], $compensationAmount, $reservationId, $reservation['ride_id'], $description, $driver['credits'], $driver['credits'] + $compensationAmount]);
+                }
+
+                $sql = "UPDATE reservations SET status_id = 4, escrow_status = 'refunded', cancelled_at = NOW(), refund_amount = ?, refund_percentage = ? WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$refundAmount, $refundPercent, $reservationId]);
+
+                $sql = "UPDATE rides SET available_seats = available_seats + ? WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$reservation['seats_reserved'], $reservation['ride_id']]);
+
+                $sql = "INSERT INTO credit_transactions (user_id, amount, type, status, related_reservation_id, related_ride_id, description, escrow_related, balance_before, balance_after, completed_at) VALUES (?, ?, 'refund', 'completed', ?, ?, ?, TRUE, ?, ?, NOW())";
+                $stmt = $db->prepare($sql);
+                $description = "Remboursement annulation trajet {$reservation['departure_city']} → {$reservation['arrival_city']} ({$refundPercent}%)";
+                $stmt->execute([$userId, $refundAmount, $reservationId, $reservation['ride_id'], $description, $passenger['credits'], $passenger['credits'] + $refundAmount]);
+
+                $db->commit();
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Réservation annulée avec succès',
+                    'refund' => ['amount' => $refundAmount, 'percentage' => $refundPercent, 'original_amount' => $escrowAmount],
+                    'compensation' => ['amount' => $compensationAmount, 'percentage' => $conductorCompensation],
+                    'new_balance' => floatval($passenger['credits']) + $refundAmount,
+                    'hours_before_departure' => round($hoursBeforeDeparture, 1)
+                ]);
+
+            } catch (Exception $e) {
+                $db->rollBack();
+                throw $e;
+            }
 
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Erreur lors de l\'annulation',
-                'details' => $e->getMessage()
-            ]);
+            echo json_encode(['success' => false, 'error' => 'Erreur lors de l\'annulation', 'details' => $e->getMessage()]);
             error_log($e->getMessage());
         }
     }

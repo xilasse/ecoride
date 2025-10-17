@@ -195,7 +195,6 @@ CREATE TABLE reservations (
     FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (status_id) REFERENCES reservation_statuses(id),
-    UNIQUE KEY unique_user_ride (ride_id, user_id),
     INDEX idx_ride (ride_id),
     INDEX idx_user (user_id),
     INDEX idx_status (status_id),
@@ -333,7 +332,7 @@ CREATE TABLE credit_transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     amount DECIMAL(10,2) NOT NULL, -- Montant (positif = crédit, négatif = débit)
-    type ENUM('purchase', 'reservation', 'refund', 'payout', 'commission', 'penalty', 'bonus', 'adjustment') NOT NULL,
+    type ENUM('purchase', 'reservation', 'refund', 'payout', 'commission', 'penalty', 'bonus', 'adjustment', 'compensation') NOT NULL,
     status ENUM('pending', 'completed', 'failed', 'cancelled') DEFAULT 'pending',
 
     -- Informations de transaction

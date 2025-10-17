@@ -637,10 +637,10 @@ class RideController extends BaseController {
 
             $userId = $_SESSION['user_id'];
             $rideId = intval($rideId);
+            $db = $this->getDatabase();
 
             // Vérifier que le trajet appartient à l'utilisateur
-            $sql = "SELECT id FROM rides WHERE id = ? AND driver_id = ?";
-            $db = $this->getDatabase();
+            $sql = "SELECT r.*, r.departure_city, r.arrival_city FROM rides r WHERE r.id = ? AND r.driver_id = ?";
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId, $userId]);
             $ride = $stmt->fetch();
@@ -654,15 +654,106 @@ class RideController extends BaseController {
                 return;
             }
 
-            // Mettre à jour le statut à "annulé" (status_id = 4)
-            $sql = "UPDATE rides SET status_id = 4 WHERE id = ?";
+            // Vérifier que le trajet n'est pas déjà annulé
+            if ($ride['status_id'] == 5) { // 5 = cancelled
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Ce trajet est déjà annulé'
+                ]);
+                return;
+            }
+
+            // Récupérer toutes les réservations actives avec escrow bloqué
+            $sql = "SELECT id, user_id, escrow_amount, seats_reserved
+                    FROM reservations
+                    WHERE ride_id = ? AND status_id IN (1, 2) AND escrow_status = 'blocked'";
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId]);
+            $reservations = $stmt->fetchAll();
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Trajet annulé avec succès'
-            ]);
+            $db->beginTransaction();
+
+            try {
+                $totalRefunded = 0;
+                $passengersRefunded = 0;
+
+                // Rembourser 100% à tous les passagers (conducteur annule = remboursement total)
+                foreach ($reservations as $reservation) {
+                    $escrowAmount = floatval($reservation['escrow_amount']);
+                    $passengerId = $reservation['user_id'];
+
+                    // Récupérer le solde actuel du passager
+                    $sql = "SELECT credits, credits_blocked FROM users WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$passengerId]);
+                    $passenger = $stmt->fetch();
+
+                    // Rembourser 100% et débloquer les crédits
+                    $sql = "UPDATE users
+                            SET credits = credits + ?,
+                                credits_blocked = credits_blocked - ?
+                            WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$escrowAmount, $escrowAmount, $passengerId]);
+
+                    // Mettre à jour la réservation
+                    $sql = "UPDATE reservations
+                            SET status_id = 4,
+                                escrow_status = 'refunded',
+                                cancelled_at = NOW(),
+                                refund_amount = ?,
+                                refund_percentage = 100
+                            WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$escrowAmount, $reservation['id']]);
+
+                    // Enregistrer la transaction de remboursement
+                    $sql = "INSERT INTO credit_transactions (
+                                user_id, amount, type, status, related_reservation_id, related_ride_id,
+                                description, escrow_related, balance_before, balance_after, completed_at
+                            ) VALUES (?, ?, 'refund', 'completed', ?, ?, ?, TRUE, ?, ?, NOW())";
+                    $stmt = $db->prepare($sql);
+                    $description = "Remboursement intégral - Trajet {$ride['departure_city']} → {$ride['arrival_city']} annulé par le conducteur";
+                    $stmt->execute([
+                        $passengerId,
+                        $escrowAmount,
+                        $reservation['id'],
+                        $rideId,
+                        $description,
+                        $passenger['credits'],
+                        $passenger['credits'] + $escrowAmount
+                    ]);
+
+                    // Remettre les places disponibles
+                    $sql = "UPDATE rides
+                            SET available_seats = available_seats + ?
+                            WHERE id = ?";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$reservation['seats_reserved'], $rideId]);
+
+                    $totalRefunded += $escrowAmount;
+                    $passengersRefunded++;
+                }
+
+                // Mettre à jour le statut du trajet à "annulé" (status_id = 5 dans ride_statuses)
+                $sql = "UPDATE rides SET status_id = 5 WHERE id = ?";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$rideId]);
+
+                $db->commit();
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Trajet annulé avec succès',
+                    'passengers_refunded' => $passengersRefunded,
+                    'total_refunded' => $totalRefunded
+                ]);
+
+            } catch (Exception $e) {
+                $db->rollBack();
+                throw $e;
+            }
 
         } catch (Exception $e) {
             http_response_code(500);

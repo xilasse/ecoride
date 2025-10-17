@@ -57,8 +57,12 @@ function classifyRides(rides, now) {
         const departureDate = new Date(ride.departure_datetime);
         const hoursSinceDeparture = (now - departureDate) / (1000 * 60 * 60);
         const pendingEscrow = parseFloat(ride.pending_escrow_amount) || 0;
+        const isCancelled = ride.status_id === 5 || ride.status === 'cancelled';
 
-        if (hoursSinceDeparture >= 0 && pendingEscrow > 0) {
+        // Les trajets annulés vont toujours dans "archived"
+        if (isCancelled) {
+            categorized.archived.push(ride);
+        } else if (hoursSinceDeparture >= 0 && pendingEscrow > 0) {
             categorized.paymentPending.push(ride);
         } else if (departureDate > now) {
             categorized.upcoming.push(ride);
@@ -149,14 +153,19 @@ function generateUserRideCard(ride) {
     const now = new Date();
     const hoursSinceDeparture = (now - departureDate) / (1000 * 60 * 60);
     const pendingEscrow = parseFloat(ride.pending_escrow_amount) || 0;
-    const isArchived = hoursSinceDeparture >= 0 && pendingEscrow === 0;
+    const isCancelled = ride.status_id === 5 || ride.status === 'cancelled';
+    const isArchived = (hoursSinceDeparture >= 0 && pendingEscrow === 0) || isCancelled;
 
-    const statusBadge = getStatusBadge(ride.status, isArchived);
-    const canValidatePayment = hoursSinceDeparture >= 24 && ride.pending_escrow_count > 0 && pendingEscrow > 0;
+    const statusBadge = getStatusBadge(ride.status, isArchived, isCancelled);
+    const canValidatePayment = hoursSinceDeparture >= 24 && ride.pending_escrow_count > 0 && pendingEscrow > 0 && !isCancelled;
+
+    // Ajouter une classe et un style de bordure pour les trajets annulés
+    const cardClasses = isCancelled ? 'card border-danger' : 'card';
+    const cardStyle = isCancelled ? 'border-left: 4px solid #dc3545;' : '';
 
     return `
         <div class="user-ride-card mb-3">
-            <div class="card">
+            <div class="${cardClasses}" style="${cardStyle}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
@@ -187,9 +196,9 @@ function generateUserRideCard(ride) {
                         </small>
                     </div>
 
-                    ${generateStatsHTML(ride, isArchived, pendingEscrow)}
-                    ${generateAlertsHTML(canValidatePayment, pendingEscrow, hoursSinceDeparture)}
-                    ${generateActionsHTML(ride.id, isArchived, canValidatePayment, pendingEscrow)}
+                    ${generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled)}
+                    ${generateAlertsHTML(canValidatePayment, pendingEscrow, hoursSinceDeparture, isCancelled)}
+                    ${generateActionsHTML(ride.id, isArchived, canValidatePayment, pendingEscrow, isCancelled)}
                 </div>
             </div>
         </div>
@@ -205,7 +214,11 @@ function formatDuration(minutes) {
 }
 
 // Obtenir le badge de statut
-function getStatusBadge(status, isArchived) {
+function getStatusBadge(status, isArchived, isCancelled) {
+    if (isCancelled) {
+        return '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Annulé</span>';
+    }
+
     if (isArchived) {
         return '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Terminé</span>';
     }
@@ -214,13 +227,24 @@ function getStatusBadge(status, isArchived) {
         'pending': '<span class="badge bg-warning">En attente</span>',
         'confirmed': '<span class="badge bg-success">Confirmé</span>',
         'completed': '<span class="badge bg-secondary">Terminé</span>',
-        'cancelled': '<span class="badge bg-danger">Annulé</span>'
+        'cancelled': '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> Annulé</span>'
     };
     return badges[status] || '<span class="badge bg-info">Inconnu</span>';
 }
 
 // Générer le HTML des statistiques
-function generateStatsHTML(ride, isArchived, pendingEscrow) {
+function generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled) {
+    if (isCancelled) {
+        return `
+            <div class="ride-stats mb-3">
+                <span class="me-3 text-danger">
+                    <i class="fas fa-ban me-1"></i>
+                    Trajet annulé - Tous les passagers ont été remboursés
+                </span>
+            </div>
+        `;
+    }
+
     if (isArchived) {
         const totalSeats = ride.total_seats || ride.available_seats;
         const seatsBooked = totalSeats - ride.available_seats;
@@ -267,7 +291,11 @@ function generateStatsHTML(ride, isArchived, pendingEscrow) {
 }
 
 // Générer le HTML des alertes
-function generateAlertsHTML(canValidate, pendingEscrow, hoursSince) {
+function generateAlertsHTML(canValidate, pendingEscrow, hoursSince, isCancelled) {
+    if (isCancelled) {
+        return ''; // Pas d'alertes pour les trajets annulés
+    }
+
     if (canValidate) {
         return `
             <div class="alert alert-info mb-3">
@@ -290,8 +318,8 @@ function generateAlertsHTML(canValidate, pendingEscrow, hoursSince) {
 }
 
 // Générer le HTML des boutons d'action
-function generateActionsHTML(rideId, isArchived, canValidate, pendingEscrow) {
-    if (isArchived) return '';
+function generateActionsHTML(rideId, isArchived, canValidate, pendingEscrow, isCancelled) {
+    if (isArchived || isCancelled) return ''; // Pas d'actions pour les trajets archivés ou annulés
 
     return `
         <div class="ride-actions d-flex gap-2 flex-wrap">
