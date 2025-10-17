@@ -984,18 +984,8 @@ class RideController extends BaseController {
             $rideId = intval($rideId);
             $db = $this->getDatabase();
 
-            // Récupérer le trajet avec les détails du véhicule
-            $sql = "SELECT r.*, v.id as vehicle_id, v.brand, v.model, v.color, v.fuel_type, v.is_ecological,
-                           COUNT(res.id) as reservation_count
-                    FROM rides r
-                    LEFT JOIN vehicles v ON r.vehicle_id = v.id
-                    LEFT JOIN reservations res ON r.id = res.ride_id AND res.status != 'cancelled'
-                    WHERE r.id = ? AND r.driver_id = ?
-                    GROUP BY r.id, r.departure_city, r.arrival_city, r.departure_datetime, r.estimated_arrival_datetime,
-                             r.duration_minutes, r.price_per_seat, r.available_seats, r.description, r.departure_address,
-                             r.driver_id, r.vehicle_id, r.status_id, r.created_at, r.updated_at,
-                             v.id, v.brand, v.model, v.color, v.fuel_type, v.is_ecological";
-
+            // Récupérer le trajet d'abord
+            $sql = "SELECT r.* FROM rides r WHERE r.id = ? AND r.driver_id = ?";
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId, $userId]);
             $ride = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -1008,6 +998,29 @@ class RideController extends BaseController {
                 ]);
                 return;
             }
+
+            // Récupérer les infos du véhicule
+            $sql = "SELECT * FROM vehicles WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$ride['vehicle_id']]);
+            $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Compter les réservations
+            $sql = "SELECT COUNT(*) as reservation_count FROM reservations WHERE ride_id = ? AND status != 'cancelled'";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+            $reservationCount = $stmt->fetch(PDO::FETCH_ASSOC)['reservation_count'];
+
+            // Ajouter les infos véhicule au trajet
+            if ($vehicle) {
+                $ride['vehicle_id'] = $vehicle['id'];
+                $ride['brand'] = $vehicle['brand'];
+                $ride['model'] = $vehicle['model'];
+                $ride['color'] = $vehicle['color'];
+                $ride['fuel_type'] = $vehicle['fuel_type'];
+                $ride['is_ecological'] = $vehicle['is_ecological'];
+            }
+            $ride['reservation_count'] = $reservationCount;
 
             // Vérifier que le trajet peut être modifié (pas de réservations ou pas encore parti)
             $departureDate = new DateTime($ride['departure_datetime']);
@@ -1083,15 +1096,8 @@ class RideController extends BaseController {
 
             $db = $this->getDatabase();
 
-            // Vérifier que le trajet appartient à l'utilisateur et peut être modifié
-            $sql = "SELECT r.*, COUNT(res.id) as reservation_count
-                    FROM rides r
-                    LEFT JOIN reservations res ON r.id = res.ride_id AND res.status != 'cancelled'
-                    WHERE r.id = ? AND r.driver_id = ?
-                    GROUP BY r.id, r.departure_city, r.arrival_city, r.departure_datetime, r.estimated_arrival_datetime,
-                             r.duration_minutes, r.price_per_seat, r.available_seats, r.description, r.departure_address,
-                             r.driver_id, r.vehicle_id, r.status_id, r.created_at, r.updated_at";
-
+            // Vérifier que le trajet appartient à l'utilisateur
+            $sql = "SELECT r.* FROM rides r WHERE r.id = ? AND r.driver_id = ?";
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId, $userId]);
             $ride = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -1104,6 +1110,13 @@ class RideController extends BaseController {
                 ]);
                 return;
             }
+
+            // Compter les réservations
+            $sql = "SELECT COUNT(*) as reservation_count FROM reservations WHERE ride_id = ? AND status != 'cancelled'";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$rideId]);
+            $reservationCount = $stmt->fetch(PDO::FETCH_ASSOC)['reservation_count'];
+            $ride['reservation_count'] = $reservationCount;
 
             // Valider les données de modification
             if (!$this->validateRideUpdateData($input, $ride)) {
