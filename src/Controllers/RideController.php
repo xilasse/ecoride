@@ -968,107 +968,23 @@ class RideController extends BaseController {
 
     public function getRideForEdit($rideId) {
         header('Content-Type: application/json');
-
-        // Debug temporaire
         error_log("DEBUG: getRideForEdit appelée avec ID: " . $rideId);
 
         try {
-            // Vérifier que l'utilisateur est connecté
-            if (!isset($_SESSION['user_id'])) {
-                error_log("DEBUG: Utilisateur non connecté");
-                http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Vous devez être connecté'
-                ]);
-                return;
-            }
-
-            $userId = $_SESSION['user_id'];
-            $rideId = intval($rideId);
-            error_log("DEBUG: User ID: $userId, Ride ID: $rideId");
-
-            $db = $this->getDatabase();
-            error_log("DEBUG: Database connectée");
-
-            // Récupérer le trajet d'abord
-            $sql = "SELECT r.* FROM rides r WHERE r.id = ? AND r.driver_id = ?";
-            error_log("DEBUG: Exécution requête rides: $sql avec params [$rideId, $userId]");
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$rideId, $userId]);
-            $ride = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$ride) {
-                error_log("DEBUG: Aucun trajet trouvé pour ID $rideId et user $userId");
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
-                ]);
-                return;
-            }
-            error_log("DEBUG: Trajet trouvé: " . json_encode($ride));
-
-            // Récupérer les infos du véhicule
-            $sql = "SELECT * FROM vehicles WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$ride['vehicle_id']]);
-            $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            // Compter les réservations
-            $sql = "SELECT COUNT(*) as reservation_count FROM reservations WHERE ride_id = ? AND status != 'cancelled'";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$rideId]);
-            $reservationCount = $stmt->fetch(PDO::FETCH_ASSOC)['reservation_count'];
-
-            // Ajouter les infos véhicule au trajet
-            if ($vehicle) {
-                $ride['vehicle_id'] = $vehicle['id'];
-                $ride['brand'] = $vehicle['brand'];
-                $ride['model'] = $vehicle['model'];
-                $ride['color'] = $vehicle['color'];
-                $ride['fuel_type'] = $vehicle['fuel_type'];
-                $ride['is_ecological'] = $vehicle['is_ecological'];
-            }
-            $ride['reservation_count'] = $reservationCount;
-
-            // Vérifier que le trajet peut être modifié (pas de réservations ou pas encore parti)
-            $departureDate = new DateTime($ride['departure_datetime']);
-            $now = new DateTime();
-
-            if ($ride['reservation_count'] > 0 && $departureDate <= $now) {
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Ce trajet ne peut plus être modifié (déjà parti ou a des réservations)'
-                ]);
-                return;
-            }
-
-            // Récupérer les véhicules de l'utilisateur pour le sélecteur
-            $sqlVehicles = "SELECT id, brand, model, color, fuel_type, is_ecological
-                           FROM vehicles
-                           WHERE user_id = ?
-                           ORDER BY brand, model";
-            $stmtVehicles = $db->prepare($sqlVehicles);
-            $stmtVehicles->execute([$userId]);
-            $vehicles = $stmtVehicles->fetchAll(PDO::FETCH_ASSOC);
-
+            // Test simple pour vérifier que la méthode est appelée
             echo json_encode([
                 'success' => true,
-                'ride' => $ride,
-                'vehicles' => $vehicles,
-                'can_modify_passengers' => $ride['reservation_count'] == 0
+                'message' => 'Méthode getRideForEdit appelée avec succès',
+                'rideId' => $rideId,
+                'sessionUserId' => $_SESSION['user_id'] ?? 'non défini'
             ]);
 
         } catch (Exception $e) {
-            http_response_code(500);
+            error_log('Erreur getRideForEdit: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
-                'error' => 'Erreur lors de la récupération des données',
-                'details' => $e->getMessage()
+                'error' => 'Erreur: ' . $e->getMessage()
             ]);
-            error_log('Erreur getRideForEdit: ' . $e->getMessage());
         }
     }
 
@@ -1175,88 +1091,30 @@ class RideController extends BaseController {
 
     public function getRidePassengers($rideId) {
         header('Content-Type: application/json');
-
-        // Debug temporaire
         error_log("DEBUG: getRidePassengers appelée avec ID: " . $rideId);
 
         try {
-            // Vérifier que l'utilisateur est connecté
-            if (!isset($_SESSION['user_id'])) {
-                error_log("DEBUG: Utilisateur non connecté pour getRidePassengers");
-                http_response_code(401);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Vous devez être connecté'
-                ]);
-                return;
-            }
-
-            $userId = $_SESSION['user_id'];
-            $rideId = intval($rideId);
-            error_log("DEBUG: getRidePassengers - User ID: $userId, Ride ID: $rideId");
-
-            $db = $this->getDatabase();
-            error_log("DEBUG: getRidePassengers - Database connectée");
-
-            // Vérifier que le trajet appartient à l'utilisateur
-            $sql = "SELECT id FROM rides WHERE id = ? AND driver_id = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$rideId, $userId]);
-
-            if (!$stmt->fetch()) {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'Trajet non trouvé ou vous n\'êtes pas le conducteur'
-                ]);
-                return;
-            }
-
-            // Récupérer les passagers avec leurs détails
-            $sql = "SELECT
-                        res.id as reservation_id,
-                        res.user_id,
-                        res.status,
-                        res.seats_reserved,
-                        res.total_price,
-                        res.created_at,
-                        res.escrow_amount,
-                        u.pseudo,
-                        u.email,
-                        u.profile_picture,
-                        u.phone,
-                        u.avg_rating
-                    FROM reservations res
-                    JOIN users u ON res.user_id = u.id
-                    WHERE res.ride_id = ? AND res.status != 'cancelled'
-                    ORDER BY res.created_at ASC";
-
-            $stmt = $db->prepare($sql);
-            $stmt->execute([$rideId]);
-            $passengers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Calculer les statistiques
-            $stats = [
-                'total_passengers' => count($passengers),
-                'total_seats_reserved' => array_sum(array_column($passengers, 'seats_reserved')),
-                'total_revenue' => array_sum(array_column($passengers, 'total_price')),
-                'escrow_amount' => array_sum(array_column($passengers, 'escrow_amount'))
-            ];
-
+            // Test simple pour vérifier que la méthode est appelée
             echo json_encode([
                 'success' => true,
-                'passengers' => $passengers,
-                'stats' => $stats
+                'message' => 'Méthode getRidePassengers appelée avec succès',
+                'rideId' => $rideId,
+                'sessionUserId' => $_SESSION['user_id'] ?? 'non défini',
+                'passengers' => [],
+                'stats' => [
+                    'total_passengers' => 0,
+                    'total_seats_reserved' => 0,
+                    'total_revenue' => 0,
+                    'escrow_amount' => 0
+                ]
             ]);
 
         } catch (Exception $e) {
-            http_response_code(500);
+            error_log('Erreur getRidePassengers: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
-                'error' => 'Erreur lors de la récupération des passagers',
-                'details' => $e->getMessage()
+                'error' => 'Erreur: ' . $e->getMessage()
             ]);
-            error_log('Erreur getRidePassengers: ' . $e->getMessage());
         }
     }
 
