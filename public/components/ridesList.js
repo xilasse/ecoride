@@ -157,8 +157,11 @@ function generateRideCardFromAPI(ride) {
     const petsInfo = ride.pets_allowed ? 'Animaux OK' : 'Pas d\'animaux';
     const smokingInfo = ride.smoking_allowed ? 'Fumeur OK' : 'Non-fumeur';
 
+    // Ajouter classe eco-ride si écologique
+    const ecoClass = (ride.is_ecological || ride.fuel_type === 'electrique') ? ' eco-ride' : '';
+
     return `
-        <div class="ride-card" data-price="${ride.price_per_seat}" data-rating="0" data-ecological="${ride.is_ecological}" data-duration="${ride.duration_minutes || 0}" data-ride-id="${ride.id}">
+        <div class="ride-card${ecoClass}" data-price="${ride.price_per_seat}" data-rating="0" data-ecological="${ride.is_ecological}" data-duration="${ride.duration_minutes || 0}" data-ride-id="${ride.id}">
             <div class="row">
                 <div class="col-md-8">
                     <div class="driver-info">

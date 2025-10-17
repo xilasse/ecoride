@@ -78,12 +78,15 @@ function generateReservationSectionsHTML(categorized) {
     if (categorized.upcoming.length > 0) {
         html += `
             <div class="reservations-section mb-4">
-                <h5 class="section-title text-primary">
-                    <i class="fas fa-calendar-alt me-2"></i>
-                    Trajets à venir (${categorized.upcoming.length})
-                </h5>
-                <div class="reservations-container">
-                    ${categorized.upcoming.map(reservation => generateJoinedRideCard(reservation)).join('')}
+                <div class="section-wrapper">
+                    <h5 class="section-title section-upcoming-reservations">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Trajets à venir
+                        <span class="badge" style="background: var(--eco-accent);">${categorized.upcoming.length}</span>
+                    </h5>
+                    <div class="reservations-container">
+                        ${categorized.upcoming.map(reservation => generateJoinedRideCard(reservation)).join('')}
+                    </div>
                 </div>
             </div>
         `;
@@ -93,15 +96,18 @@ function generateReservationSectionsHTML(categorized) {
     if (categorized.archived.length > 0) {
         html += `
             <div class="reservations-section mb-4">
-                <h5 class="section-title text-secondary">
-                    <i class="fas fa-archive me-2"></i>
-                    Trajets terminés (${categorized.archived.length})
-                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleArchivedReservations()" id="toggleArchivedReservationsBtn">
-                        <i class="fas fa-chevron-down"></i> Afficher
-                    </button>
-                </h5>
-                <div class="reservations-container" id="archivedReservationsContainer" style="display: none;">
-                    ${categorized.archived.map(reservation => generateJoinedRideCard(reservation)).join('')}
+                <div class="section-wrapper">
+                    <h5 class="section-title section-archived">
+                        <i class="fas fa-archive me-2"></i>
+                        Trajets terminés
+                        <span class="badge bg-secondary">${categorized.archived.length}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleArchivedReservations()" id="toggleArchivedReservationsBtn">
+                            <i class="fas fa-chevron-down"></i> Afficher
+                        </button>
+                    </h5>
+                    <div class="reservations-container" id="archivedReservationsContainer" style="display: none;">
+                        ${categorized.archived.map(reservation => generateJoinedRideCard(reservation)).join('')}
+                    </div>
                 </div>
             </div>
         `;

@@ -1,23 +1,41 @@
 /* ========================================
-   EcoRide - Styles CSS Principaux
+   EcoRide - Styles CSS Principaux (Nettoyé et Optimisé)
    ======================================== */
 
-/* Variables CSS */
+/* ========================================
+   VARIABLES CSS
+   ======================================== */
 :root {
     --eco-primary: #2d5016;
     --eco-secondary: #4a7c59;
     --eco-accent: #7fb069;
     --eco-light: #d6efc7;
     --eco-white: #f8fff4;
+
+    /* Variables pour réutilisation */
+    --border-radius-sm: 10px;
+    --border-radius-md: 15px;
+    --border-radius-lg: 25px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+    --transition-base: all 0.3s ease;
 }
 
-/* Reset et base */
+/* ========================================
+   RESET ET BASE
+   ======================================== */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
     min-height: 100vh;
     margin: 0;
-    padding: 0;
+    padding: 56px 0 0 0;
+}
+
+.text-muted {
+    color: var(--eco-secondary) !important;
+    font-weight: 500;
 }
 
 /* ========================================
@@ -37,7 +55,7 @@ body {
 .nav-link {
     color: var(--eco-light) !important;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
     margin: 0 10px;
     border-radius: 20px;
     padding: 8px 16px !important;
@@ -55,9 +73,11 @@ body {
 }
 
 /* ========================================
-   PAGE D'ACCUEIL - HERO SECTION
+   HEADERS (Hero, Login, Contact partagés)
    ======================================== */
-.hero-section {
+.hero-section,
+.login-header,
+.contact-header {
     background: linear-gradient(135deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
     color: white;
     padding: 80px 0;
@@ -65,7 +85,13 @@ body {
     overflow: hidden;
 }
 
-.hero-section::before {
+.login-header {
+    padding: 60px 0;
+}
+
+.hero-section::before,
+.login-header::before,
+.contact-header::before {
     content: '';
     position: absolute;
     top: 0;
@@ -74,11 +100,17 @@ body {
     bottom: 0;
     background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><path d="M0,20 C150,100 350,0 500,50 C650,100 850,0 1000,20 L1000,00 L0,0 Z"></path></svg>');
     background-size: cover;
+    pointer-events: none;
+    z-index: 1;
 }
 
-.hero-content {
+.hero-content,
+.login-header h1,
+.contact-header h1,
+.contact-header p {
     position: relative;
     z-index: 2;
+    pointer-events: auto;
 }
 
 .hero-title {
@@ -94,8 +126,24 @@ body {
     opacity: 0.95;
 }
 
+.login-header h1,
+.contact-header h1 {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    text-align: center;
+    font-weight: bold;
+}
+
+.contact-header h1 {
+    font-size: 3rem;
+}
+
+.contact-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
 /* ========================================
-   BARRE DE RECHERCHE
+   BARRE DE RECHERCHE (Unifiée)
    ======================================== */
 .search-container {
     background: white;
@@ -103,6 +151,8 @@ body {
     padding: 20px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     margin-top: 50px;
+    position: relative;
+    z-index: 5;
 }
 
 .search-form {
@@ -110,33 +160,59 @@ body {
     align-items: center;
     gap: 15px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 6;
+}
+
+.search-form .flex-fill {
+    position: relative;
+    z-index: 7;
+    pointer-events: auto;
 }
 
 .search-input {
     flex: 1;
     min-width: 200px;
     border: 2px solid var(--eco-light);
-    border-radius: 25px;
+    border-radius: var(--border-radius-lg);
     padding: 12px 20px;
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
+    background: white !important;
+    cursor: text !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+    user-select: text !important;
 }
 
 .search-input:focus {
     border-color: var(--eco-accent);
     box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.2);
     outline: none;
+    z-index: 15 !important;
+}
+
+.search-input:-webkit-autofill,
+.search-input:-webkit-autofill:hover,
+.search-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: var(--eco-primary) !important;
 }
 
 .btn-search {
     background: linear-gradient(135deg, var(--eco-accent) 0%, var(--eco-secondary) 100%);
     border: none;
-    border-radius: 25px;
+    border-radius: var(--border-radius-lg);
     padding: 12px 30px;
     color: white;
     font-weight: bold;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
     box-shadow: 0 4px 15px rgba(127, 176, 105, 0.3);
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 10 !important;
+    position: relative;
 }
 
 .btn-search:hover {
@@ -145,9 +221,7 @@ body {
     color: white;
 }
 
-/* ========================================
-   PAGE RECHERCHE - HEADER ET FORMULAIRE
-   ======================================== */
+/* Page recherche - formulaire */
 .search-header {
     background: var(--eco-primary);
     color: white;
@@ -156,9 +230,9 @@ body {
 
 .search-form-container {
     background: white;
-    border-radius: 15px;
+    border-radius: var(--border-radius-md);
     padding: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
     margin-bottom: 30px;
 }
 
@@ -179,9 +253,9 @@ body {
    ======================================== */
 .filters-sidebar {
     background: white;
-    border-radius: 15px;
+    border-radius: var(--border-radius-md);
     padding: 25px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
     margin-bottom: 30px;
     position: sticky;
     top: 100px;
@@ -212,30 +286,98 @@ body {
     background: var(--eco-accent);
 }
 
+.filters-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.filters-sidebar::-webkit-scrollbar-track {
+    background: var(--eco-light);
+    border-radius: 4px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb {
+    background: var(--eco-accent);
+    border-radius: 4px;
+}
+
+.filters-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--eco-secondary);
+}
+
 /* ========================================
-   CARTES DE COVOITURAGE
+   CARTES DE COVOITURAGE (Page publique)
    ======================================== */
 .results-container {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    overflow: hidden;
+    background: transparent;
+    padding: 10px 0;
 }
 
 .ride-card {
     border: none;
-    border-bottom: 1px solid #eee;
+    border-radius: 12px;
     padding: 25px;
-    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    transition: var(--transition-base);
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    background: linear-gradient(90deg, rgba(127, 176, 105, 0.04) 0%, rgba(127, 176, 105, 0.015) 15%, white 30%);
+    animation: slideInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.ride-card:nth-child(1) { animation-delay: 0.1s; }
+.ride-card:nth-child(2) { animation-delay: 0.2s; }
+.ride-card:nth-child(3) { animation-delay: 0.3s; }
+.ride-card:nth-child(4) { animation-delay: 0.4s; }
+.ride-card:nth-child(5) { animation-delay: 0.5s; }
+
+.ride-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--eco-accent), var(--eco-secondary));
+    border-radius: 12px 0 0 12px;
+    transition: var(--transition-base);
 }
 
 .ride-card:hover {
-    background: var(--eco-white);
-    transform: translateX(5px);
+    background: linear-gradient(90deg, rgba(127, 176, 105, 0.08) 0%, rgba(127, 176, 105, 0.03) 15%, white 30%);
+    transform: translateX(8px) translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.ride-card:hover::before {
+    width: 6px;
+    background: linear-gradient(to bottom, var(--eco-primary), var(--eco-accent));
 }
 
 .ride-card:last-child {
-    border-bottom: none;
+    margin-bottom: 10px;
+}
+
+/* Trajets écologiques */
+.ride-card.eco-ride {
+    background: linear-gradient(90deg, rgba(76, 175, 80, 0.06) 0%, rgba(76, 175, 80, 0.02) 15%, white 30%);
+    border: 1px solid rgba(76, 175, 80, 0.1);
+}
+
+.ride-card.eco-ride::before {
+    background: linear-gradient(to bottom, #4CAF50, #8BC34A);
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+.ride-card.eco-ride:hover {
+    background: linear-gradient(90deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.03) 15%, white 30%);
+    box-shadow: 0 8px 24px rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.2);
+}
+
+.ride-card.eco-ride:hover::before {
+    background: linear-gradient(to bottom, #43A047, #7CB342);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
 }
 
 .driver-info {
@@ -265,10 +407,24 @@ body {
 .eco-badge {
     background: linear-gradient(135deg, #4CAF50, #8BC34A);
     color: white;
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: bold;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    transition: var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.eco-badge:hover {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+    transform: scale(1.05);
+}
+
+.ride-card.eco-ride .eco-badge {
+    animation: pulse-eco 2s ease-in-out infinite;
 }
 
 .price-highlight {
@@ -281,15 +437,33 @@ body {
     background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
     border: none;
     color: white;
-    padding: 10px 25px;
-    border-radius: 25px;
-    transition: all 0.3s ease;
+    padding: 12px 28px;
+    border-radius: var(--border-radius-lg);
+    transition: var(--transition-base);
+    font-weight: 600;
+    box-shadow: 0 3px 10px rgba(127, 176, 105, 0.2);
 }
 
 .btn-detail:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(127, 176, 105, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(127, 176, 105, 0.4);
     color: white;
+    background: linear-gradient(135deg, var(--eco-primary), var(--eco-accent));
+}
+
+.btn-detail:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(127, 176, 105, 0.3);
+}
+
+.ride-card.eco-ride .btn-detail {
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+}
+
+.ride-card.eco-ride .btn-detail:hover {
+    background: linear-gradient(135deg, #43A047, #4CAF50);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
 }
 
 /* ========================================
@@ -305,7 +479,7 @@ body {
     padding: 40px 30px;
     text-align: center;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
     margin-bottom: 30px;
     height: 100%;
 }
@@ -329,7 +503,7 @@ body {
 }
 
 /* ========================================
-   SECTION STATISTIQUES
+   STATISTIQUES
    ======================================== */
 .stats-section {
     background: var(--eco-primary);
@@ -420,7 +594,7 @@ body {
     margin-bottom: 10px;
     padding: 8px 15px;
     background: rgba(255, 255, 255, 0.7);
-    border-radius: 10px;
+    border-radius: var(--border-radius-sm);
     display: inline-block;
     margin-right: 10px;
 }
@@ -446,11 +620,10 @@ body {
     font-size: 1.1rem;
 }
 
-/* Toast notifications (pour les notifications) */
 .toast-notification {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(127, 176, 105, 0.3);
-    border-radius: 15px !important;
+    border-radius: var(--border-radius-md) !important;
     font-weight: 500;
 }
 
@@ -458,774 +631,385 @@ body {
     font-size: 1.2rem;
 }
 
-/* Padding pour navbar fixe - ajustement pour la page covoiturages */
-body {
-    padding-top: 56px;
-    background: linear-gradient(135deg, var(--eco-white) 0%, var(--eco-light) 100%);
-    min-height: 100vh;
-}
-
-/* Animations d'entrée pour les cartes */
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ride-card {
-    animation: slideInUp 0.6s ease-out;
-    animation-fill-mode: both;
-}
-
-.ride-card:nth-child(1) { animation-delay: 0.1s; }
-.ride-card:nth-child(2) { animation-delay: 0.2s; }
-.ride-card:nth-child(3) { animation-delay: 0.3s; }
-.ride-card:nth-child(4) { animation-delay: 0.4s; }
-.ride-card:nth-child(5) { animation-delay: 0.5s; }
-
-/* Amélioration du contraste et de la lisibilité */
-.text-muted {
-    color: var(--eco-secondary) !important;
-    font-weight: 500;
-}
-
-/* Scrollbar personnalisée pour la sidebar */
-.filters-sidebar::-webkit-scrollbar {
-    width: 8px;
-}
-
-.filters-sidebar::-webkit-scrollbar-track {
-    background: var(--eco-light);
-    border-radius: 4px;
-}
-
-.filters-sidebar::-webkit-scrollbar-thumb {
-    background: var(--eco-accent);
-    border-radius: 4px;
-}
-
-.filters-sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--eco-secondary);
-}
-
 /* ========================================
-   RESPONSIVE DESIGN
+   FORMULAIRES PARTAGÉS
    ======================================== */
-@media (max-width: 768px) {
-    body {
-        padding-top: 56px;
-    }
-    
-    .hero-title {
-        font-size: 2.5rem;
-    }
-    
-    .search-form {
-        flex-direction: column;
-    }
-    
-    .search-input {
-        min-width: 100%;
-    }
-    
-    .filters-sidebar {
-        position: relative;
-        top: auto;
-        max-height: none;
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-    }
+.form-group {
+    margin-bottom: 20px;
 }
 
-@media (max-width: 576px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.1rem;
-    }
-    
-    .feature-card {
-        padding: 30px 20px;
-    }
-    
-    .ride-card {
-        padding: 15px;
-    }
-    
-    .price-highlight {
-        font-size: 1.4rem;
-    }
+.form-label {
+    color: var(--eco-primary);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
 }
-/* Fix pour les inputs non-cliquables */
-.search-input {
-    flex: 1;
-    min-width: 200px;
+
+.form-control {
     border: 2px solid var(--eco-light);
-    border-radius: 25px;
-    padding: 12px 20px;
+    border-radius: 12px;
+    padding: 15px 20px;
     font-size: 16px;
-    transition: all 0.3s ease;
-    
-    /* FIXES CRITIQUES */
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 10 !important;
-    background: white !important;
-    cursor: text !important;
-    user-select: text !important;
-    -webkit-user-select: text !important;
-    -moz-user-select: text !important;
-    -ms-user-select: text !important;
+    transition: var(--transition-base);
+    background: var(--eco-white);
+    width: 100%;
 }
 
-.search-input:focus {
+.form-control:focus {
     border-color: var(--eco-accent);
     box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.2);
     outline: none;
-    z-index: 15 !important;
+    transform: translateY(-2px);
 }
 
-/* S'assurer que le container n'interfère pas */
-.search-container {
-    background: white;
-    border-radius: 50px;
-    padding: 20px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-    margin-top: 50px;
+.form-select {
+    border: 2px solid var(--eco-light);
+    border-radius: 12px;
+    padding: 15px 20px;
+    background: var(--eco-white);
+    color: var(--eco-primary);
+    font-weight: 500;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* ========================================
+   PAGE CONNEXION
+   ======================================== */
+.login-container {
+    max-width: 500px;
+    margin: -50px auto 50px;
     position: relative;
-    z-index: 5;
+    z-index: 3;
 }
 
-.search-form {
+.login-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 40px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border: 1px solid var(--eco-light);
+}
+
+.login-tabs {
+    display: flex;
+    margin-bottom: 30px;
+    background: var(--eco-light);
+    border-radius: var(--border-radius-md);
+    padding: 5px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    color: var(--eco-secondary);
+    transition: var(--transition-base);
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    background: white;
+    color: var(--eco-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-login {
+    background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    border-radius: var(--border-radius-lg);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.4s ease;
+    box-shadow: 0 6px 20px rgba(127, 176, 105, 0.3);
+    width: 100%;
+    margin-top: 20px;
+}
+
+.btn-login:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(127, 176, 105, 0.4);
+    color: white;
+}
+
+.forgot-password {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.forgot-password a {
+    color: var(--eco-secondary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.forgot-password a:hover {
+    color: var(--eco-primary);
+}
+
+.demo-accounts {
+    background: linear-gradient(135deg, var(--eco-white) 0%, rgba(215, 239, 199, 0.3) 100%);
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    margin-top: 30px;
+    border: 2px solid var(--eco-light);
+}
+
+.demo-accounts h6 {
+    color: var(--eco-primary);
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.demo-account {
+    background: white;
+    border-radius: var(--border-radius-sm);
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border: 1px solid var(--eco-accent);
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.demo-account:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(127, 176, 105, 0.2);
+}
+
+.demo-account strong {
+    color: var(--eco-primary);
+}
+
+.demo-account small {
+    color: var(--eco-secondary);
+}
+
+.login-card .tab-content {
+    display: none;
+}
+
+.login-card .tab-content.active {
+    display: block;
+}
+
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 5px;
+    transition: var(--transition-base);
+}
+
+.strength-weak { background: #ff4444; width: 25%; }
+.strength-medium { background: #ffaa00; width: 50%; }
+.strength-good { background: #44ff44; width: 75%; }
+.strength-strong { background: var(--eco-accent); width: 100%; }
+
+/* ========================================
+   PAGE CONTACT
+   ======================================== */
+.contact-section {
+    padding: 80px 0;
+}
+
+.contact-card {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 40px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border: 1px solid var(--eco-light);
+    margin-bottom: 30px;
+    transition: var(--transition-base);
+    height: 100%;
+}
+
+.contact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.contact-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-    position: relative;
-    z-index: 6;
-}
-
-/* Fix pour les flex-fill divs */
-.search-form .flex-fill {
-    position: relative;
-    z-index: 7;
-    pointer-events: auto;
-}
-
-/* Fix pour le bouton */
-.btn-search {
-    background: linear-gradient(135deg, var(--eco-accent) 0%, var(--eco-secondary) 100%);
-    border: none;
-    border-radius: 25px;
-    padding: 12px 30px;
+    justify-content: center;
     color: white;
+    font-size: 2rem;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 25px rgba(127, 176, 105, 0.3);
+}
+
+.contact-card h4 {
+    color: var(--eco-primary);
     font-weight: bold;
-    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.contact-card p {
+    color: var(--eco-secondary);
+    text-align: center;
+    font-weight: 500;
+}
+
+.contact-card a {
+    color: var(--eco-accent);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.contact-card a:hover {
+    color: var(--eco-primary);
+}
+
+.contact-form-container {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: 50px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border: 1px solid var(--eco-light);
+    margin-top: -60px;
+    position: relative;
+    z-index: 3;
+}
+
+.contact-form-container h3 {
+    color: var(--eco-primary);
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.btn-send {
+    background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    border-radius: var(--border-radius-lg);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.4s ease;
+    box-shadow: 0 6px 20px rgba(127, 176, 105, 0.3);
+    width: 100%;
+}
+
+.btn-send:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(127, 176, 105, 0.4);
+    color: white;
+}
+
+.faq-section {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: var(--border-radius-lg);
+    padding: 40px;
+    margin-top: 50px;
+    border: 1px solid var(--eco-light);
+}
+
+.faq-section h3 {
+    color: var(--eco-primary);
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.faq-item {
+    background: white;
+    border-radius: var(--border-radius-md);
+    margin-bottom: 15px;
+    border: 1px solid var(--eco-light);
+    overflow: hidden;
+}
+
+.faq-question {
+    background: var(--eco-light);
+    padding: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--eco-primary);
+    transition: background-color 0.3s ease;
+    border: none;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.faq-question:hover {
+    background: var(--eco-accent);
+    color: white;
+}
+
+.faq-answer {
+    padding: 20px;
+    color: var(--eco-secondary);
+    display: none;
+    border-top: 1px solid var(--eco-light);
+}
+
+.faq-answer.active {
+    display: block;
+}
+
+.social-links {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.social-links a {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
+    color: white;
+    border-radius: 50%;
+    text-decoration: none;
+    margin: 0 10px;
+    font-size: 1.5rem;
+    line-height: 60px;
+    transition: var(--transition-base);
     box-shadow: 0 4px 15px rgba(127, 176, 105, 0.3);
-    cursor: pointer !important;
-    pointer-events: auto !important;
-    z-index: 10 !important;
-    position: relative;
 }
 
-/* Fix pour la hero section overlay */
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><path d="M0,20 C150,100 350,0 500,50 C650,100 850,0 1000,20 L1000,00 L0,0 Z"></path></svg>');
-    background-size: cover;
-    pointer-events: none; /* CRITIQUE : empêcher l'overlay de bloquer les clics */
-    z-index: 1;
+.social-links a:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(127, 176, 105, 0.4);
+    color: white;
 }
 
-.hero-content {
-    position: relative;
-    z-index: 2;
-    pointer-events: auto; /* Permettre les interactions dans le contenu */
+.alert-success {
+    background: linear-gradient(135deg, var(--eco-light), var(--eco-white));
+    border: 2px solid var(--eco-accent);
+    color: var(--eco-primary);
+    border-radius: var(--border-radius-md);
 }
-
-/* Fix mobile */
-@media (max-width: 768px) {
-    .search-form {
-        flex-direction: column;
-    }
-    
-    .search-input {
-        min-width: 100%;
-        margin-bottom: 10px;
-    }
-}
-
-/* Fix pour autocomplete des navigateurs */
-.search-input:-webkit-autofill,
-.search-input:-webkit-autofill:hover,
-.search-input:-webkit-autofill:focus,
-.search-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px white inset !important;
-    -webkit-text-fill-color: var(--eco-primary) !important;
-}
-
-/* Debug : bordure rouge temporaire pour identifier les zones cliquables */
-/*.search-input:hover {
-    border-color: red !important;
-}*/
-.search-input {
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 10 !important;
-    cursor: text !important;
-}
-
-.hero-section::before {
-    pointer-events: none !important;
-}
-
-.hero-content {
-    pointer-events: auto !important;
-}
-
-/* style page connexion */
-
-        .navbar {
-            background: linear-gradient(90deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
-            box-shadow: 0 2px 20px rgba(45, 80, 22, 0.3);
-        }
-
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.8rem;
-            color: var(--eco-white) !important;
-        }
-
-        .nav-link {
-            color: var(--eco-light) !important;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-            border-radius: 20px;
-            padding: 8px 16px !important;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white !important;
-            transform: translateY(-2px);
-        }
-
-        .nav-link.active {
-            background: rgba(255, 255, 255, 0.3);
-            color: white !important;
-        }
-
-        .login-header {
-            background: linear-gradient(135deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
-            color: white;
-            padding: 60px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><path d="M0,20 C150,100 350,0 500,50 C650,100 850,0 1000,20 L1000,00 L0,0 Z"></path></svg>');
-            background-size: cover;
-            pointer-events: none;
-        }
-
-        .login-header h1 {
-            position: relative;
-            z-index: 2;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        .login-container {
-            max-width: 500px;
-            margin: -50px auto 50px;
-            position: relative;
-            z-index: 3;
-        }
-
-        .login-card {
-            background: white;
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            border: 1px solid var(--eco-light);
-        }
-
-        .login-tabs {
-            display: flex;
-            margin-bottom: 30px;
-            background: var(--eco-light);
-            border-radius: 15px;
-            padding: 5px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: transparent;
-            border-radius: 10px;
-            font-weight: 600;
-            color: var(--eco-secondary);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .tab-btn.active {
-            background: white;
-            color: var(--eco-primary);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            color: var(--eco-primary);
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .form-control {
-            border: 2px solid var(--eco-light);
-            border-radius: 12px;
-            padding: 15px 20px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: var(--eco-white);
-            width: 100%;
-        }
-
-        .form-control:focus {
-            border-color: var(--eco-accent);
-            box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.2);
-            outline: none;
-            transform: translateY(-2px);
-        }
-
-        .btn-login {
-            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(127, 176, 105, 0.3);
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .btn-login:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(127, 176, 105, 0.4);
-            color: white;
-        }
-
-        .forgot-password {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .forgot-password a {
-            color: var(--eco-secondary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .forgot-password a:hover {
-            color: var(--eco-primary);
-        }
-
-        .demo-accounts {
-            background: linear-gradient(135deg, var(--eco-white) 0%, rgba(215, 239, 199, 0.3) 100%);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 30px;
-            border: 2px solid var(--eco-light);
-        }
-
-        .demo-accounts h6 {
-            color: var(--eco-primary);
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .demo-account {
-            background: white;
-            border-radius: 10px;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            border: 1px solid var(--eco-accent);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .demo-account:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(127, 176, 105, 0.2);
-        }
-
-        .demo-account strong {
-            color: var(--eco-primary);
-        }
-
-        .demo-account small {
-            color: var(--eco-secondary);
-        }
-
-        /* Onglets personnalisés pour la page connexion UNIQUEMENT */
-        .login-card .tab-content {
-            display: none;
-        }
-
-        .login-card .tab-content.active {
-            display: block;
-        }
-
-        .password-strength {
-            height: 4px;
-            border-radius: 2px;
-            margin-top: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .strength-weak { background: #ff4444; width: 25%; }
-        .strength-medium { background: #ffaa00; width: 50%; }
-        .strength-good { background: #44ff44; width: 75%; }
-        .strength-strong { background: var(--eco-accent); width: 100%; }
-    
-        /* style page contact */
-
-        .navbar {
-            background: linear-gradient(90deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
-            box-shadow: 0 2px 20px rgba(45, 80, 22, 0.3);
-        }
-
-        .navbar-brand {
-            font-weight: bold;
-            font-size: 1.8rem;
-            color: var(--eco-white) !important;
-        }
-
-        .nav-link {
-            color: var(--eco-light) !important;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            margin: 0 10px;
-            border-radius: 20px;
-            padding: 8px 16px !important;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white !important;
-            transform: translateY(-2px);
-        }
-
-        .nav-link.active {
-            background: rgba(255, 255, 255, 0.3);
-            color: white !important;
-        }
-
-        .contact-header {
-            background: linear-gradient(135deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
-            color: white;
-            padding: 80px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .contact-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><path d="M0,20 C150,100 350,0 500,50 C650,100 850,0 1000,20 L1000,00 L0,0 Z"></path></svg>');
-            background-size: cover;
-            pointer-events: none;
-        }
-
-        .contact-header h1 {
-            position: relative;
-            z-index: 2;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            font-size: 3rem;
-            font-weight: bold;
-        }
-
-        .contact-header p {
-            position: relative;
-            z-index: 2;
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .contact-section {
-            padding: 80px 0;
-        }
-
-        .contact-card {
-            background: white;
-            border-radius: 25px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            border: 1px solid var(--eco-light);
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-
-        .contact-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-
-        .contact-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 25px rgba(127, 176, 105, 0.3);
-        }
-
-        .contact-card h4 {
-            color: var(--eco-primary);
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .contact-card p {
-            color: var(--eco-secondary);
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .contact-card a {
-            color: var(--eco-accent);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .contact-card a:hover {
-            color: var(--eco-primary);
-        }
-
-        .contact-form-container {
-            background: white;
-            border-radius: 25px;
-            padding: 50px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            border: 1px solid var(--eco-light);
-            margin-top: -60px;
-            position: relative;
-            z-index: 3;
-        }
-
-        .contact-form-container h3 {
-            color: var(--eco-primary);
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-label {
-            color: var(--eco-primary);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .form-control {
-            border: 2px solid var(--eco-light);
-            border-radius: 12px;
-            padding: 15px 20px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: var(--eco-white);
-        }
-
-        .form-control:focus {
-            border-color: var(--eco-accent);
-            box-shadow: 0 0 0 3px rgba(127, 176, 105, 0.2);
-            outline: none;
-            transform: translateY(-2px);
-        }
-
-        .form-select {
-            border: 2px solid var(--eco-light);
-            border-radius: 12px;
-            padding: 15px 20px;
-            background: var(--eco-white);
-            color: var(--eco-primary);
-            font-weight: 500;
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .btn-send {
-            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
-            border: none;
-            color: white;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.4s ease;
-            box-shadow: 0 6px 20px rgba(127, 176, 105, 0.3);
-            width: 100%;
-        }
-
-        .btn-send:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(127, 176, 105, 0.4);
-            color: white;
-        }
-
-        .faq-section {
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 25px;
-            padding: 40px;
-            margin-top: 50px;
-            border: 1px solid var(--eco-light);
-        }
-
-        .faq-section h3 {
-            color: var(--eco-primary);
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .faq-item {
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            border: 1px solid var(--eco-light);
-            overflow: hidden;
-        }
-
-        .faq-question {
-            background: var(--eco-light);
-            padding: 20px;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--eco-primary);
-            transition: background-color 0.3s ease;
-            border: none;
-            width: 100%;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .faq-question:hover {
-            background: var(--eco-accent);
-            color: white;
-        }
-
-        .faq-answer {
-            padding: 20px;
-            color: var(--eco-secondary);
-            display: none;
-            border-top: 1px solid var(--eco-light);
-        }
-
-        .faq-answer.active {
-            display: block;
-        }
-
-        .social-links {
-            text-align: center;
-            margin-top: 40px;
-        }
-
-        .social-links a {
-            display: inline-block;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
-            color: white;
-            border-radius: 50%;
-            text-decoration: none;
-            margin: 0 10px;
-            font-size: 1.5rem;
-            line-height: 60px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(127, 176, 105, 0.3);
-        }
-
-        .social-links a:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(127, 176, 105, 0.4);
-            color: white;
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, var(--eco-light), var(--eco-white));
-            border: 2px solid var(--eco-accent);
-            color: var(--eco-primary);
-            border-radius: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .contact-header h1 {
-                font-size: 2.2rem;
-            }
-
-            .contact-form-container {
-                padding: 30px 20px;
-                margin-top: -40px;
-            }
-
-            .contact-card {
-                padding: 30px 20px;
-            }
-        }
 
 /* ========================================
    MODAL CRÉATION DE TRAJET
@@ -1267,9 +1051,9 @@ body {
 #createRideModal .form-control,
 #createRideModal .form-select {
     border: 2px solid #e9ecef;
-    border-radius: 10px;
+    border-radius: var(--border-radius-sm);
     padding: 12px 16px;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
 }
 
 #createRideModal .form-control:focus,
@@ -1305,10 +1089,10 @@ body {
 #createRideModal .btn-success {
     background: linear-gradient(135deg, var(--eco-accent), var(--eco-secondary));
     border: none;
-    border-radius: 25px;
+    border-radius: var(--border-radius-lg);
     padding: 12px 30px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
     box-shadow: 0 4px 15px rgba(127, 176, 105, 0.3);
 }
 
@@ -1319,12 +1103,12 @@ body {
 
 #createRideModal .btn-secondary {
     border: 2px solid #dee2e6;
-    border-radius: 25px;
+    border-radius: var(--border-radius-lg);
     padding: 12px 30px;
     font-weight: 600;
     color: #6c757d;
     background: white;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
 }
 
 #createRideModal .btn-secondary:hover {
@@ -1332,39 +1116,9 @@ body {
     color: var(--eco-primary);
 }
 
-/* Styles pour les erreurs de validation */
-.is-invalid {
-    border-color: #dc3545 !important;
-}
-
-.invalid-feedback {
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 5px;
-    font-weight: 500;
-}
-
-/* Animation pour les nouvelles cartes de trajet */
-@keyframes slideInFromTop {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ride-card.new-ride {
-    animation: slideInFromTop 0.5s ease-out;
-}
-
 /* ========================================
-   PAGE PROFIL - DESIGN SIMPLE ET PROPRE
+   PAGE PROFIL
    ======================================== */
-
-/* En-tête profil simple */
 .profile-header-simple {
     background: linear-gradient(135deg, var(--eco-primary) 0%, var(--eco-secondary) 100%);
     color: white;
@@ -1429,7 +1183,6 @@ body {
     font-weight: 600;
 }
 
-/* Navigation onglets propre */
 .profile-tabs {
     margin: 30px 0;
 }
@@ -1447,7 +1200,7 @@ body {
     padding: 15px 25px;
     margin: 0 5px;
     border-radius: 15px 15px 0 0;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
     font-size: 1.1rem;
 }
 
@@ -1464,16 +1217,15 @@ body {
     border-bottom: 3px solid var(--eco-accent);
 }
 
-/* Cartes de contenu */
 .profile-content-card {
     background: white;
-    border-radius: 15px;
+    border-radius: var(--border-radius-md);
     padding: 40px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
     margin-bottom: 30px;
     border: 1px solid var(--eco-light);
-    min-height: 200px; /* Forcer une hauteur minimale */
-    overflow: visible; /* S'assurer que le contenu n'est pas coupé */
+    min-height: 200px;
+    overflow: visible;
 }
 
 .profile-content-card h3 {
@@ -1483,7 +1235,6 @@ body {
     font-size: 1.8rem;
 }
 
-/* Formulaires */
 .profile-form .form-group {
     margin-bottom: 20px;
 }
@@ -1497,10 +1248,10 @@ body {
 
 .profile-form .form-control {
     border: 2px solid #e0e0e0;
-    border-radius: 10px;
+    border-radius: var(--border-radius-sm);
     padding: 12px 15px;
     font-size: 1rem;
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
 }
 
 .profile-form .form-control:focus {
@@ -1508,7 +1259,6 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(127, 176, 105, 0.25);
 }
 
-/* États vides */
 .empty-state {
     text-align: center;
     padding: 60px 40px;
@@ -1526,7 +1276,6 @@ body {
     font-size: 1.1rem;
 }
 
-/* Cartes de trajet utilisateur dans le profil */
 #myRidesList {
     min-height: 100px;
     overflow: visible;
@@ -1537,20 +1286,6 @@ body {
     margin-bottom: 20px;
     display: block;
     min-height: 50px;
-}
-
-.user-ride-card .card {
-    border: 1px solid #e0e0e0;
-    border-radius: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    background: white;
-    display: block;
-}
-
-.user-ride-card .card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    transform: translateY(-2px);
 }
 
 .user-ride-card .card-body {
@@ -1568,7 +1303,7 @@ body {
 .user-ride-card .route-info {
     background: var(--eco-white);
     padding: 15px;
-    border-radius: 10px;
+    border-radius: var(--border-radius-sm);
     border: 1px solid var(--eco-light);
 }
 
@@ -1578,7 +1313,6 @@ body {
     border-radius: 8px;
 }
 
-/* Sections paramètres */
 .settings-section {
     margin-bottom: 30px;
     padding-bottom: 20px;
@@ -1618,18 +1352,17 @@ body {
     color: #6c757d;
 }
 
-/* Mode lecture des informations */
 .profile-info-section .info-item {
     padding: 20px;
     background: linear-gradient(135deg, var(--eco-white) 0%, rgba(215, 239, 199, 0.1) 100%);
     border-radius: 12px;
     border: 1px solid var(--eco-light);
-    transition: all 0.3s ease;
+    transition: var(--transition-base);
 }
 
 .profile-info-section .info-item:hover {
     background: var(--eco-white);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-2px);
 }
 
@@ -1650,8 +1383,343 @@ body {
     word-wrap: break-word;
 }
 
-/* Responsive */
+/* ========================================
+   SECTIONS DE TRAJETS - BORDURES COLORÉES
+   ======================================== */
+.rides-section,
+.reservations-section {
+    margin-bottom: 30px;
+}
+
+.rides-section + .rides-section,
+.reservations-section + .reservations-section {
+    margin-top: 25px;
+}
+
+.section-wrapper {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.section-title {
+    font-weight: bold;
+    font-size: 1.3rem;
+    margin-bottom: 0;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.section-title .badge {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.section-title button {
+    margin-left: auto;
+    font-size: 0.85rem;
+}
+
+.rides-container,
+.reservations-container {
+    padding: 20px;
+    margin: 0;
+    transition: var(--transition-base);
+    max-height: 10000px;
+    overflow: hidden;
+}
+
+.reservations-container[style*="display: none"],
+.rides-container[style*="display: none"] {
+    max-height: 0;
+    padding: 0;
+}
+
+.user-ride-card:first-child .card,
+.user-joined-ride-card:first-child .card {
+    margin-top: 0;
+}
+
+.user-ride-card:last-child .card,
+.user-joined-ride-card:last-child .card {
+    margin-bottom: 10px;
+}
+
+/* Sections par couleur */
+.section-wrapper:has(.section-pending-payments) {
+    border-left: 5px solid #ff9800;
+}
+
+.section-pending-payments {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.08));
+    color: #e65100;
+}
+
+.section-pending-payments + .rides-container {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.03), rgba(255, 255, 255, 0.95));
+}
+
+.section-wrapper:has(.section-upcoming) {
+    border-left: 5px solid #2196F3;
+}
+
+.section-upcoming {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(100, 181, 246, 0.08));
+    color: #1565C0;
+}
+
+.section-upcoming + .rides-container {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.03), rgba(255, 255, 255, 0.95));
+}
+
+.section-wrapper:has(.section-archived) {
+    border-left: 5px solid #9e9e9e;
+}
+
+.section-archived {
+    background: linear-gradient(135deg, rgba(158, 158, 158, 0.15), rgba(189, 189, 189, 0.08));
+    color: #424242;
+}
+
+.section-archived + .rides-container,
+#archivedRidesContainer,
+#archivedReservationsContainer {
+    background: linear-gradient(135deg, rgba(158, 158, 158, 0.03), rgba(255, 255, 255, 0.95));
+}
+
+.section-wrapper:has(.section-upcoming-reservations) {
+    border-left: 5px solid var(--eco-accent);
+}
+
+.section-upcoming-reservations {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(129, 199, 132, 0.08));
+    color: var(--eco-primary);
+}
+
+.section-upcoming-reservations + .reservations-container {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.03), rgba(255, 255, 255, 0.95));
+}
+
+/* Cartes de trajets dans profil */
+.user-ride-card .card,
+.user-joined-ride-card .card {
+    margin-bottom: 20px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-base);
+    position: relative;
+}
+
+.user-ride-card .card::before,
+.user-joined-ride-card .card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #e0e0e0;
+    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+    transition: var(--transition-base);
+}
+
+.user-ride-card .card:hover,
+.user-joined-ride-card .card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateX(8px) translateY(-2px);
+}
+
+.user-ride-card .card:hover::before,
+.user-joined-ride-card .card:hover::before {
+    width: 6px;
+}
+
+/* Cartes par section */
+.section-pending-payments + .rides-container .user-ride-card .card {
+    background: linear-gradient(90deg, rgba(255, 152, 0, 0.05) 0%, rgba(255, 152, 0, 0.02) 15%, white 30%);
+    border-left: 3px solid rgba(255, 152, 0, 0.3);
+}
+
+.section-pending-payments + .rides-container .user-ride-card .card::before {
+    background: linear-gradient(to bottom, #ff9800, #ffa726);
+}
+
+.section-pending-payments + .rides-container .user-ride-card .card:hover {
+    background: linear-gradient(90deg, rgba(255, 152, 0, 0.08) 0%, rgba(255, 152, 0, 0.03) 15%, white 30%);
+    border-left-color: #ff9800;
+}
+
+.section-upcoming + .rides-container .user-ride-card .card {
+    background: linear-gradient(90deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.02) 15%, white 30%);
+    border-left: 3px solid rgba(33, 150, 243, 0.3);
+}
+
+.section-upcoming + .rides-container .user-ride-card .card::before {
+    background: linear-gradient(to bottom, #2196F3, #42a5f5);
+}
+
+.section-upcoming + .rides-container .user-ride-card .card:hover {
+    background: linear-gradient(90deg, rgba(33, 150, 243, 0.08) 0%, rgba(33, 150, 243, 0.03) 15%, white 30%);
+    border-left-color: #2196F3;
+}
+
+.section-archived + .rides-container .user-ride-card .card,
+#archivedRidesContainer .user-ride-card .card {
+    background: linear-gradient(90deg, rgba(158, 158, 158, 0.05) 0%, rgba(158, 158, 158, 0.02) 15%, white 30%);
+    border-left: 3px solid rgba(158, 158, 158, 0.3);
+}
+
+.section-archived + .rides-container .user-ride-card .card::before,
+#archivedRidesContainer .user-ride-card .card::before {
+    background: linear-gradient(to bottom, #9e9e9e, #bdbdbd);
+}
+
+.section-archived + .rides-container .user-ride-card .card:hover,
+#archivedRidesContainer .user-ride-card .card:hover {
+    background: linear-gradient(90deg, rgba(158, 158, 158, 0.08) 0%, rgba(158, 158, 158, 0.03) 15%, white 30%);
+    border-left-color: #9e9e9e;
+}
+
+.section-upcoming-reservations + .reservations-container .user-joined-ride-card .card {
+    background: linear-gradient(90deg, rgba(127, 176, 105, 0.05) 0%, rgba(127, 176, 105, 0.02) 15%, white 30%);
+    border-left: 3px solid rgba(127, 176, 105, 0.3);
+}
+
+.section-upcoming-reservations + .reservations-container .user-joined-ride-card .card::before {
+    background: linear-gradient(to bottom, var(--eco-accent), var(--eco-secondary));
+}
+
+.section-upcoming-reservations + .reservations-container .user-joined-ride-card .card:hover {
+    background: linear-gradient(90deg, rgba(127, 176, 105, 0.08) 0%, rgba(127, 176, 105, 0.03) 15%, white 30%);
+    border-left-color: var(--eco-accent);
+}
+
+#archivedReservationsContainer .user-joined-ride-card .card {
+    background: linear-gradient(90deg, rgba(158, 158, 158, 0.05) 0%, rgba(158, 158, 158, 0.02) 15%, white 30%);
+    border-left: 3px solid rgba(158, 158, 158, 0.3);
+}
+
+#archivedReservationsContainer .user-joined-ride-card .card::before {
+    background: linear-gradient(to bottom, #9e9e9e, #bdbdbd);
+}
+
+#archivedReservationsContainer .user-joined-ride-card .card:hover {
+    background: linear-gradient(90deg, rgba(158, 158, 158, 0.08) 0%, rgba(158, 158, 158, 0.03) 15%, white 30%);
+    border-left-color: #9e9e9e;
+}
+
+/* Cartes annulées */
+.user-ride-card .card.border-danger,
+.user-joined-ride-card .card.border-danger {
+    border-left: 4px solid #dc3545 !important;
+    background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, rgba(220, 53, 69, 0.02) 15%, white 30%) !important;
+}
+
+.user-ride-card .card.border-danger::before,
+.user-joined-ride-card .card.border-danger::before {
+    background: linear-gradient(to bottom, #dc3545, #e57373) !important;
+}
+
+.user-ride-card .card.border-danger:hover,
+.user-joined-ride-card .card.border-danger:hover {
+    background: linear-gradient(90deg, rgba(220, 53, 69, 0.08) 0%, rgba(220, 53, 69, 0.03) 15%, white 30%) !important;
+}
+
+/* Badges et alertes */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge i {
+    font-size: 0.9rem;
+}
+
+.alert-danger {
+    border-left: 4px solid #dc3545;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(244, 67, 54, 0.05));
+    border-radius: var(--border-radius-sm);
+}
+
+.alert-info {
+    border-left: 4px solid #2196F3;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(100, 181, 246, 0.05));
+    border-radius: var(--border-radius-sm);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-eco {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.5);
+    }
+}
+
+.ride-card.new-ride {
+    animation: slideInFromTop 0.5s ease-out;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
 @media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .search-form {
+        flex-direction: column;
+    }
+
+    .search-input {
+        min-width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .filters-sidebar {
+        position: relative;
+        top: auto;
+        max-height: none;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
     .profile-header-content {
         flex-direction: column;
         text-align: center;
@@ -1684,5 +1752,52 @@ body {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        padding: 12px 15px;
+        flex-wrap: wrap;
+    }
+
+    .section-title button {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .contact-header h1 {
+        font-size: 2.2rem;
+    }
+
+    .contact-form-container {
+        padding: 30px 20px;
+        margin-top: -40px;
+    }
+
+    .contact-card {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .feature-card {
+        padding: 30px 20px;
+    }
+
+    .ride-card {
+        padding: 15px;
+    }
+
+    .price-highlight {
+        font-size: 1.4rem;
     }
 }

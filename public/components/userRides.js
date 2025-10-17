@@ -87,12 +87,15 @@ function generateSectionsHTML(categorized) {
     if (categorized.paymentPending.length > 0) {
         html += `
             <div class="rides-section mb-4">
-                <h5 class="section-title text-warning">
-                    <i class="fas fa-coins me-2"></i>
-                    Paiements en attente (${categorized.paymentPending.length})
-                </h5>
-                <div class="rides-container">
-                    ${categorized.paymentPending.map(ride => generateUserRideCard(ride)).join('')}
+                <div class="section-wrapper">
+                    <h5 class="section-title section-pending-payments">
+                        <i class="fas fa-coins me-2"></i>
+                        Paiements en attente
+                        <span class="badge bg-warning text-dark">${categorized.paymentPending.length}</span>
+                    </h5>
+                    <div class="rides-container">
+                        ${categorized.paymentPending.map(ride => generateUserRideCard(ride)).join('')}
+                    </div>
                 </div>
             </div>
         `;
@@ -102,12 +105,15 @@ function generateSectionsHTML(categorized) {
     if (categorized.upcoming.length > 0) {
         html += `
             <div class="rides-section mb-4">
-                <h5 class="section-title text-primary">
-                    <i class="fas fa-calendar-alt me-2"></i>
-                    Trajets à venir (${categorized.upcoming.length})
-                </h5>
-                <div class="rides-container">
-                    ${categorized.upcoming.map(ride => generateUserRideCard(ride)).join('')}
+                <div class="section-wrapper">
+                    <h5 class="section-title section-upcoming">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Trajets à venir
+                        <span class="badge bg-primary">${categorized.upcoming.length}</span>
+                    </h5>
+                    <div class="rides-container">
+                        ${categorized.upcoming.map(ride => generateUserRideCard(ride)).join('')}
+                    </div>
                 </div>
             </div>
         `;
@@ -117,15 +123,18 @@ function generateSectionsHTML(categorized) {
     if (categorized.archived.length > 0) {
         html += `
             <div class="rides-section mb-4">
-                <h5 class="section-title text-secondary">
-                    <i class="fas fa-archive me-2"></i>
-                    Trajets terminés (${categorized.archived.length})
-                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleArchivedRides()" id="toggleArchivedBtn">
-                        <i class="fas fa-chevron-down"></i> Afficher
-                    </button>
-                </h5>
-                <div class="rides-container" id="archivedRidesContainer" style="display: none;">
-                    ${categorized.archived.map(ride => generateUserRideCard(ride)).join('')}
+                <div class="section-wrapper">
+                    <h5 class="section-title section-archived">
+                        <i class="fas fa-archive me-2"></i>
+                        Trajets terminés
+                        <span class="badge bg-secondary">${categorized.archived.length}</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleArchivedRides()" id="toggleArchivedBtn">
+                            <i class="fas fa-chevron-down"></i> Afficher
+                        </button>
+                    </h5>
+                    <div class="rides-container" id="archivedRidesContainer" style="display: none;">
+                        ${categorized.archived.map(ride => generateUserRideCard(ride)).join('')}
+                    </div>
                 </div>
             </div>
         `;
@@ -155,6 +164,7 @@ function generateUserRideCard(ride) {
     const pendingEscrow = parseFloat(ride.pending_escrow_amount) || 0;
     const isCancelled = ride.status_id === 5 || ride.status === 'cancelled';
     const isArchived = (hoursSinceDeparture >= 0 && pendingEscrow === 0) || isCancelled;
+    const isPaymentPending = hoursSinceDeparture >= 0 && pendingEscrow > 0;
 
     const statusBadge = getStatusBadge(ride.status, isArchived, isCancelled);
     const canValidatePayment = hoursSinceDeparture >= 24 && ride.pending_escrow_count > 0 && pendingEscrow > 0 && !isCancelled;
@@ -196,9 +206,9 @@ function generateUserRideCard(ride) {
                         </small>
                     </div>
 
-                    ${generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled)}
-                    ${generateAlertsHTML(canValidatePayment, pendingEscrow, hoursSinceDeparture, isCancelled)}
-                    ${generateActionsHTML(ride.id, isArchived, canValidatePayment, pendingEscrow, isCancelled)}
+                    ${generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled, isPaymentPending)}
+                    ${generateAlertsHTML(ride, canValidatePayment, pendingEscrow, hoursSinceDeparture, isCancelled)}
+                    ${generateActionsHTML(ride.id, isArchived, canValidatePayment, pendingEscrow, isCancelled, isPaymentPending)}
                 </div>
             </div>
         </div>
@@ -233,7 +243,7 @@ function getStatusBadge(status, isArchived, isCancelled) {
 }
 
 // Générer le HTML des statistiques
-function generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled) {
+function generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled, isPaymentPending) {
     if (isCancelled) {
         return `
             <div class="ride-stats mb-3">
@@ -245,13 +255,15 @@ function generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled) {
         `;
     }
 
-    if (isArchived) {
-        const totalSeats = ride.total_seats || ride.available_seats;
-        const seatsBooked = totalSeats - ride.available_seats;
-        const totalRevenue = seatsBooked * ride.price_per_seat;
-        const commission = Math.min(2.0 * seatsBooked, totalRevenue * 0.10);
-        const netRevenue = totalRevenue - commission;
+    // Calculer les statistiques financières
+    const totalSeats = ride.total_seats || ride.available_seats;
+    const seatsBooked = totalSeats - ride.available_seats;
+    const totalRevenue = seatsBooked * ride.price_per_seat;
+    const commission = totalRevenue * 0.10; // 10% du prix total brut
+    const netRevenue = totalRevenue - commission;
 
+    // Pour les trajets archivés (terminés)
+    if (isArchived) {
         return `
             <div class="ride-stats mb-3">
                 <span class="me-3">
@@ -269,7 +281,25 @@ function generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled) {
             </div>
         `;
     }
-
+    if (isPaymentPending) {
+        return `
+            <div class="ride-stats mb-3">
+                <span class="me-3">
+                    <i class="fas fa-user-check me-1"></i>
+                    ${seatsBooked} passager${seatsBooked > 1 ? 's' : ''}
+                </span>
+                <span class="me-3 text-success">
+                    <i class="fas fa-coins me-1"></i>
+                    ${totalRevenue.toFixed(2)}€ revenu brut
+                </span>
+                <span class="me-3 text-muted">
+                    <i class="fas fa-percentage me-1"></i>
+                    ${commission.toFixed(2)}€ de frais
+                </span>
+            </div>
+        `;
+    }
+    // Pour les trajets en cours ou à venir
     return `
         <div class="ride-stats mb-3">
             <span class="me-3">
@@ -291,7 +321,13 @@ function generateStatsHTML(ride, isArchived, pendingEscrow, isCancelled) {
 }
 
 // Générer le HTML des alertes
-function generateAlertsHTML(canValidate, pendingEscrow, hoursSince, isCancelled) {
+function generateAlertsHTML(ride, canValidate, pendingEscrow, hoursSince, isCancelled) {
+    const totalSeats = ride.total_seats || ride.available_seats;
+    const seatsBooked = totalSeats - ride.available_seats;
+    const totalRevenue = seatsBooked * ride.price_per_seat;
+    const commission = totalRevenue * 0.10; // 10% du prix total brut
+    const netRevenue = totalRevenue - commission;
+
     if (isCancelled) {
         return ''; // Pas d'alertes pour les trajets annulés
     }
@@ -300,7 +336,7 @@ function generateAlertsHTML(canValidate, pendingEscrow, hoursSince, isCancelled)
         return `
             <div class="alert alert-info mb-3">
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>Paiement disponible!</strong> Vous pouvez maintenant valider le paiement et recevoir ${pendingEscrow.toFixed(2)} crédits.
+                <strong>Paiement disponible!</strong> Vous pouvez maintenant valider le paiement et recevoir ${netRevenue.toFixed(2)}€.
             </div>
         `;
     }
@@ -318,9 +354,26 @@ function generateAlertsHTML(canValidate, pendingEscrow, hoursSince, isCancelled)
 }
 
 // Générer le HTML des boutons d'action
-function generateActionsHTML(rideId, isArchived, canValidate, pendingEscrow, isCancelled) {
+function generateActionsHTML(rideId, isArchived, canValidate, pendingEscrow, isCancelled, isPaymentPending) {
     if (isArchived || isCancelled) return ''; // Pas d'actions pour les trajets archivés ou annulés
 
+    // Pour les trajets dans "Paiements en attente" : pas de boutons Détails/Modifier/Annuler
+    if (isPaymentPending) {
+        return `
+            <div class="ride-actions d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-outline-warning" onclick="manageRidePassengers(${rideId})">
+                    <i class="fas fa-users"></i> Passagers
+                </button>
+                ${canValidate ? `
+                    <button class="btn btn-sm btn-success" onclick="validateRidePayment(${rideId})">
+                        <i class="fas fa-check-circle"></i> Valider le paiement (${pendingEscrow.toFixed(2)}€)
+                    </button>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Pour les trajets "à venir" : afficher tous les boutons
     return `
         <div class="ride-actions d-flex gap-2 flex-wrap">
             <button class="btn btn-sm btn-primary" onclick="viewRideDetails(${rideId})">
@@ -332,11 +385,6 @@ function generateActionsHTML(rideId, isArchived, canValidate, pendingEscrow, isC
             <button class="btn btn-sm btn-outline-warning" onclick="manageRidePassengers(${rideId})">
                 <i class="fas fa-users"></i> Passagers
             </button>
-            ${canValidate ? `
-                <button class="btn btn-sm btn-success" onclick="validateRidePayment(${rideId})">
-                    <i class="fas fa-check-circle"></i> Valider le paiement (${pendingEscrow.toFixed(2)}€)
-                </button>
-            ` : ''}
             <button class="btn btn-sm btn-outline-danger" onclick="cancelUserRide(${rideId})">
                 <i class="fas fa-times"></i> Annuler
             </button>
