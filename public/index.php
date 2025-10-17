@@ -45,6 +45,7 @@ if (preg_match('/^\/api\/rides\/(\d+)\/validate-payments$/', $path, $matches)) {
 
 // Check for ride edit endpoint
 if (preg_match('/^\/api\/rides\/(\d+)\/edit$/', $path, $matches)) {
+    error_log("DEBUG: Route edit détectée pour ID: " . $matches[1]);
     $controller = new RideController($db);
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $controller->getRideForEdit($matches[1]);
@@ -56,6 +57,7 @@ if (preg_match('/^\/api\/rides\/(\d+)\/edit$/', $path, $matches)) {
 
 // Check for ride passengers endpoint
 if (preg_match('/^\/api\/rides\/(\d+)\/passengers$/', $path, $matches)) {
+    error_log("DEBUG: Route passengers détectée pour ID: " . $matches[1]);
     $controller = new RideController($db);
     $controller->getRidePassengers($matches[1]);
     exit;

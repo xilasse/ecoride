@@ -969,6 +969,9 @@ class RideController extends BaseController {
     public function getRideForEdit($rideId) {
         header('Content-Type: application/json');
 
+        // Debug temporaire
+        error_log("DEBUG: getRideForEdit appelée avec ID: " . $rideId);
+
         try {
             // Vérifier que l'utilisateur est connecté
             if (!isset($_SESSION['user_id'])) {
@@ -1168,6 +1171,9 @@ class RideController extends BaseController {
 
     public function getRidePassengers($rideId) {
         header('Content-Type: application/json');
+
+        // Debug temporaire
+        error_log("DEBUG: getRidePassengers appelée avec ID: " . $rideId);
 
         try {
             // Vérifier que l'utilisateur est connecté
