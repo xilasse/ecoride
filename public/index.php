@@ -22,26 +22,7 @@ session_start();
 $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
 
-// Check for dynamic ride endpoints first (before switch)
-if (preg_match('/^\/api\/rides\/(\d+)$/', $path, $matches)) {
-    $controller = new RideController($db);
-    $controller->getRideDetails($matches[1]);
-    exit;
-}
-
-// Check for ride cancel endpoint
-if (preg_match('/^\/api\/rides\/(\d+)\/cancel$/', $path, $matches)) {
-    $controller = new RideController($db);
-    $controller->cancelRide($matches[1]);
-    exit;
-}
-
-// Check for ride validate payments endpoint
-if (preg_match('/^\/api\/rides\/(\d+)\/validate-payments$/', $path, $matches)) {
-    $controller = new RideController($db);
-    $controller->validateRidePayments($matches[1]);
-    exit;
-}
+// Check for specific ride endpoints FIRST (before generic route)
 
 // Check for ride edit endpoint
 if (preg_match('/^\/api\/rides\/(\d+)\/edit$/', $path, $matches)) {
@@ -60,6 +41,27 @@ if (preg_match('/^\/api\/rides\/(\d+)\/passengers$/', $path, $matches)) {
     error_log("DEBUG: Route passengers détectée pour ID: " . $matches[1]);
     $controller = new RideController($db);
     $controller->getRidePassengers($matches[1]);
+    exit;
+}
+
+// Check for ride cancel endpoint
+if (preg_match('/^\/api\/rides\/(\d+)\/cancel$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->cancelRide($matches[1]);
+    exit;
+}
+
+// Check for ride validate payments endpoint
+if (preg_match('/^\/api\/rides\/(\d+)\/validate-payments$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->validateRidePayments($matches[1]);
+    exit;
+}
+
+// Check for generic ride details (MUST BE LAST)
+if (preg_match('/^\/api\/rides\/(\d+)$/', $path, $matches)) {
+    $controller = new RideController($db);
+    $controller->getRideDetails($matches[1]);
     exit;
 }
 
