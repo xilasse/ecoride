@@ -242,4 +242,102 @@ class VehicleController extends BaseController {
             error_log($e->getMessage());
         }
     }
+
+    public function updateVehicle($vehicleId) {
+        header('Content-Type: application/json');
+
+        try {
+            // Vérifier que l'utilisateur est connecté
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Vous devez être connecté'
+                ]);
+                return;
+            }
+
+            // Vérifier que c'est une requête PUT ou POST
+            if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'POST'])) {
+                http_response_code(405);
+                echo json_encode(['error' => 'Méthode non autorisée']);
+                return;
+            }
+
+            $userId = $_SESSION['user_id'];
+            $vehicleId = intval($vehicleId);
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Données JSON invalides']);
+                return;
+            }
+
+            $db = $this->getDatabase();
+
+            // Vérifier que le véhicule appartient à l'utilisateur
+            $sql = "SELECT id FROM vehicles WHERE id = ? AND user_id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$vehicleId, $userId]);
+
+            if (!$stmt->fetch()) {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Véhicule non trouvé ou vous n\'êtes pas le propriétaire'
+                ]);
+                return;
+            }
+
+            // Validation des champs requis
+            $requiredFields = ['brand', 'model', 'fuel_type', 'seat_count'];
+            foreach ($requiredFields as $field) {
+                if (empty($input[$field])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => "Le champ '$field' est requis"]);
+                    return;
+                }
+            }
+
+            // Mettre à jour le véhicule
+            $sql = "UPDATE vehicles
+                    SET brand = ?, model = ?, color = ?, license_plate = ?, fuel_type = ?, seat_count = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ? AND user_id = ?";
+
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([
+                $input['brand'],
+                $input['model'],
+                $input['color'] ?? 'Non spécifiée',
+                $input['license_plate'] ?? '',
+                $input['fuel_type'],
+                intval($input['seat_count']),
+                $vehicleId,
+                $userId
+            ]);
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Véhicule mis à jour avec succès'
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Erreur lors de la mise à jour'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erreur lors de la mise à jour du véhicule',
+                'details' => $e->getMessage()
+            ]);
+            error_log($e->getMessage());
+        }
+    }
 }

@@ -65,11 +65,20 @@ if (preg_match('/^\/api\/rides\/(\d+)$/', $path, $matches)) {
     exit;
 }
 
+// Check for vehicle creation endpoint
+if ($path === '/api/vehicles' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $controller = new \EcoRide\Controllers\VehicleController($db);
+    $controller->createVehicle();
+    exit;
+}
+
 // Check for vehicle endpoints
 if (preg_match('/^\/api\/vehicles\/(\d+)$/', $path, $matches)) {
     $controller = new \EcoRide\Controllers\VehicleController($db);
     if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         $controller->deleteVehicle($matches[1]);
+    } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT' || $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->updateVehicle($matches[1]);
     } else {
         $controller->getVehicle($matches[1]);
     }
