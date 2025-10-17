@@ -991,7 +991,10 @@ class RideController extends BaseController {
                     LEFT JOIN vehicles v ON r.vehicle_id = v.id
                     LEFT JOIN reservations res ON r.id = res.ride_id AND res.status != 'cancelled'
                     WHERE r.id = ? AND r.driver_id = ?
-                    GROUP BY r.id";
+                    GROUP BY r.id, r.departure_city, r.arrival_city, r.departure_datetime, r.estimated_arrival_datetime,
+                             r.duration_minutes, r.price_per_seat, r.available_seats, r.description, r.departure_address,
+                             r.driver_id, r.vehicle_id, r.status_id, r.created_at, r.updated_at,
+                             v.id, v.brand, v.model, v.color, v.fuel_type, v.is_ecological";
 
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId, $userId]);
@@ -1085,7 +1088,9 @@ class RideController extends BaseController {
                     FROM rides r
                     LEFT JOIN reservations res ON r.id = res.ride_id AND res.status != 'cancelled'
                     WHERE r.id = ? AND r.driver_id = ?
-                    GROUP BY r.id";
+                    GROUP BY r.id, r.departure_city, r.arrival_city, r.departure_datetime, r.estimated_arrival_datetime,
+                             r.duration_minutes, r.price_per_seat, r.available_seats, r.description, r.departure_address,
+                             r.driver_id, r.vehicle_id, r.status_id, r.created_at, r.updated_at";
 
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId, $userId]);

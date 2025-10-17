@@ -245,6 +245,13 @@
                         <h3>Mes trajets proposés</h3>
                         <a href="covoiturages.html" class="btn btn-success">➕ Nouveau trajet</a>
                     </div>
+                    <!-- Loading Spinner -->
+                    <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+
                     <div id="myRidesList">
                         <div class="empty-state">
                             <h5>🚗 Aucun trajet proposé</h5>
@@ -388,6 +395,7 @@
     <!-- Components JS -->
     <script src="./components/avatarUtils.js"></script>
     <script src="./components/notifications.js"></script>
+    <script src="./components/loadingSpinner.js"></script>
     <script src="./components/profile.js"></script>
     <script src="./components/userRides.js"></script>
     <script src="./components/userJoinedRides.js"></script>
