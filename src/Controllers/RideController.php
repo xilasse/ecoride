@@ -975,6 +975,7 @@ class RideController extends BaseController {
         try {
             // Vérifier que l'utilisateur est connecté
             if (!isset($_SESSION['user_id'])) {
+                error_log("DEBUG: Utilisateur non connecté");
                 http_response_code(401);
                 echo json_encode([
                     'success' => false,
@@ -985,15 +986,20 @@ class RideController extends BaseController {
 
             $userId = $_SESSION['user_id'];
             $rideId = intval($rideId);
+            error_log("DEBUG: User ID: $userId, Ride ID: $rideId");
+
             $db = $this->getDatabase();
+            error_log("DEBUG: Database connectée");
 
             // Récupérer le trajet d'abord
             $sql = "SELECT r.* FROM rides r WHERE r.id = ? AND r.driver_id = ?";
+            error_log("DEBUG: Exécution requête rides: $sql avec params [$rideId, $userId]");
             $stmt = $db->prepare($sql);
             $stmt->execute([$rideId, $userId]);
             $ride = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$ride) {
+                error_log("DEBUG: Aucun trajet trouvé pour ID $rideId et user $userId");
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
@@ -1001,6 +1007,7 @@ class RideController extends BaseController {
                 ]);
                 return;
             }
+            error_log("DEBUG: Trajet trouvé: " . json_encode($ride));
 
             // Récupérer les infos du véhicule
             $sql = "SELECT * FROM vehicles WHERE id = ?";
@@ -1131,15 +1138,12 @@ class RideController extends BaseController {
             // Recalculer l'heure d'arrivée si nécessaire
             if (!empty($input['from']) && !empty($input['to']) && !empty($input['date']) && !empty($input['time'])) {
                 if (empty($input['arrivalTime'])) {
-                    $routeService = new RouteService();
-                    $arrivalData = $routeService->calculateArrivalTime(
-                        $input['from'],
-                        $input['to'],
-                        $input['date'],
-                        $input['time']
-                    );
-                    $input['estimated_arrival_datetime'] = $arrivalData['arrival_datetime'];
-                    $input['duration_minutes'] = $arrivalData['duration_minutes'];
+                    // Pour l'instant, on estime 2h de trajet par défaut
+                    // TODO: Réintégrer RouteService plus tard
+                    $departure = new DateTime($input['date'] . ' ' . $input['time']);
+                    $departure->add(new DateInterval('PT2H')); // +2 heures
+                    $input['estimated_arrival_datetime'] = $departure->format('Y-m-d H:i:s');
+                    $input['duration_minutes'] = 120;
                 } else {
                     $input['estimated_arrival_datetime'] = $input['date'] . ' ' . $input['arrivalTime'] . ':00';
 
@@ -1178,6 +1182,7 @@ class RideController extends BaseController {
         try {
             // Vérifier que l'utilisateur est connecté
             if (!isset($_SESSION['user_id'])) {
+                error_log("DEBUG: Utilisateur non connecté pour getRidePassengers");
                 http_response_code(401);
                 echo json_encode([
                     'success' => false,
@@ -1188,7 +1193,10 @@ class RideController extends BaseController {
 
             $userId = $_SESSION['user_id'];
             $rideId = intval($rideId);
+            error_log("DEBUG: getRidePassengers - User ID: $userId, Ride ID: $rideId");
+
             $db = $this->getDatabase();
+            error_log("DEBUG: getRidePassengers - Database connectée");
 
             // Vérifier que le trajet appartient à l'utilisateur
             $sql = "SELECT id FROM rides WHERE id = ? AND driver_id = ?";
